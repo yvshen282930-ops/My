@@ -15,6 +15,11 @@ Keybinds: {
 	// "非凡能力: 天气操控.DisplayName": 非凡能力: 天气操控
 	"非凡能力: 冰河.DisplayName": 非凡能力: 冰河
 	// "非凡能力: 征服.DisplayName": 非凡能力: 征服
+	// "非凡能力: 火焰化/巨人形态.DisplayName": 非凡能力: 火焰化/巨人形态
+	// "非凡能力: 闪现.DisplayName": 非凡能力: 闪现
+	// "非凡能力: 斩击.DisplayName": 非凡能力: 斩击
+	// "非凡能力: 黑暗之翼.DisplayName": 非凡能力: 黑暗之翼
+	// "非凡能力: 深渊枷锁.DisplayName": 非凡能力: 深渊枷锁
 }
 
 Items: {
@@ -251,6 +256,11 @@ Items: {
 		// DisplayName: Beast Tamer Whip
 		// Tooltip: ""
 	}
+
+	VampirePotion: {
+		// DisplayName: Vampire Potion
+		// Tooltip: ""
+	}
 }
 
 NPCs: {
@@ -274,6 +284,7 @@ Projectiles: {
 	PyromaniacExplosionVisual.DisplayName: 爆炸特效
 	WeatherStrikeLightning.DisplayName: 天气雷击
 	ConquerorSwordProjectile.DisplayName: 紫色征服之剑
+	// AbyssShackleProjectile.DisplayName: Abyss Shackle Projectile
 }
 
 Conditions: {
@@ -291,5 +302,10 @@ Buffs: {
 	TamedBuff: {
 		// DisplayName: Tamed Buff
 		// Description: Mods.zhashi.Buffs.TamedBuff.Description
+	}
+
+	AbyssShacklesDebuff: {
+		// DisplayName: Abyss Shackles Debuff
+		// Description: Mods.zhashi.Buffs.AbyssShacklesDebuff.Description
 	}
 }
