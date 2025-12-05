@@ -1,0 +1,100 @@
+Mods: {
+    zhashi: {
+        Items: {
+            # === 魔药系列 ===
+            WarriorPotion: {
+                DisplayName: "序列9：战士魔药"
+                Tooltip: "服用以晋升序列9"
+            }
+            PugilistPotion: {
+                DisplayName: "序列8：格斗家魔药"
+                Tooltip: "服用以晋升序列8"
+            }
+            WeaponMasterPotion: {
+                DisplayName: "序列7：武器大师魔药"
+                Tooltip: "服用以晋升序列7"
+            }
+            DawnKnightPotion: {
+                DisplayName: "序列6：黎明骑士魔药"
+                Tooltip: "服用以晋升序列6"
+            }
+            GuardianPotion: {
+                DisplayName: "序列5：守护者魔药"
+                Tooltip: "服用以晋升序列5"
+            }
+            DemonHunterPotion: {
+                DisplayName: "序列4：猎魔者魔药"
+                Tooltip: "服用以晋升序列4 (半神)"
+            }
+            SilverKnightPotion: {
+                DisplayName: "序列3：银骑士魔药"
+                Tooltip: "服用以晋升序列3 (圣者)"
+            }
+            GloryPotion: {
+                DisplayName: "序列2：荣耀者魔药"
+                Tooltip: "服用以晋升序列2 (天使)"
+            }
+
+            # === 材料与特殊道具 ===
+            ExtraordinaryBlood: {
+                DisplayName: "非凡之血"
+                Tooltip: "蕴含着一丝古老神性的鲜血，可用于召唤巨人王。"
+            }
+            BlasphemySlate: {
+                DisplayName: "亵渎石板"
+                Tooltip: "" # 内容由代码动态生成
+            }
+            ResurrectionReset: {
+                DisplayName: "命运之轮 (调试)"
+                Tooltip: "左键重置黄昏重生的冷却时间。"
+            }
+            SpiritualityRefill: {
+                DisplayName: "灵性之源 (调试)"
+                Tooltip: "左键补满灵性。"
+            }
+
+            # === 武器 ===
+            SwordOfDawn: {
+                DisplayName: "晨曦之剑"
+                Tooltip: "黎明骑士的佩剑，每一击都带有净化的效果。\n<right>消耗灵性释放光之风暴。"
+            }
+            SilverRapier: {
+                DisplayName: "银白细剑"
+                Tooltip: "由纯粹的光芒凝聚而成，过度使用会崩解。"
+            }
+            TwilightGiantSword: {
+                DisplayName: "黄昏巨剑"
+                Tooltip: "巨人王曾使用的武器，蕴含衰败之力。\n<right>献祭一切释放毁灭风暴。"
+            }
+        }
+
+        # === NPC (Boss) ===
+        NPCs: {
+            Aurmir: {
+                DisplayName: "巨人王·奥尔米尔"
+            }
+        }
+
+        # === 弹幕 ===
+        Projectiles: {
+            TwilightStormProjectile.DisplayName: "黄昏风暴"
+            TwilightStorm_Final.DisplayName: "黄昏风暴"
+            AurmirSkyLance.DisplayName: "晨曦光枪"
+            AurmirTwilightOrb.DisplayName: "衰败法球"
+            AurmirBossStorm.DisplayName: "神罚风暴"
+            TwilightSwordBeam.DisplayName: "黄昏剑气"
+            GuardianShieldProjectile.DisplayName: "守护光墙"
+            
+            # 如果有晨曦之剑的特效弹幕，也可以加在这里，例如：
+            LightStormController.DisplayName: "光之风暴"
+            DawnBladeProjectile.DisplayName: "晨曦光刃"
+        }
+        
+        # === 按键名称 ===
+        Keybinds: {
+            "非凡能力: 黎明铠甲": "非凡能力: 黎明铠甲 (Z)"
+            "非凡能力: 守护姿态": "非凡能力: 守护姿态 (X)"
+            "非凡能力: 水银化": "非凡能力: 水银化 (C)"
+        }
+    }
+}

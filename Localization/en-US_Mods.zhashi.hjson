@@ -1,0 +1,201 @@
+Keybinds: {
+	"非凡能力: 黎明铠甲.DisplayName": 非凡能力: 黎明铠甲
+	"非凡能力: 守护姿态.DisplayName": 非凡能力: 守护姿态
+	"非凡能力: 水银化.DisplayName": 非凡能力: 水银化
+	"非凡能力: 操纵火焰.DisplayName": 非凡能力: 操纵火焰
+	"非凡能力: 火焰披风.DisplayName": 非凡能力: 火焰披风
+	"非凡能力: 火焰炸弹.DisplayName": 非凡能力: 火焰炸弹
+	"非凡能力: 火焰闪现.DisplayName": 非凡能力: 火焰闪现
+	"非凡能力: 屠杀.DisplayName": 非凡能力: 屠杀
+	"非凡能力: 操纵火焰(火球).DisplayName": 非凡能力: 操纵火焰(火球)
+	"非凡能力: 武器附火.DisplayName": 非凡能力: 武器附火
+	"非凡能力: 火焰化.DisplayName": 非凡能力: 火焰化
+	"非凡能力: 集众.DisplayName": 非凡能力: 集众
+	"非凡能力: 天气操控(雷击).DisplayName": 非凡能力: 天气操控(雷击)
+	"非凡能力: 天气操控.DisplayName": 非凡能力: 天气操控
+	"非凡能力: 冰河.DisplayName": 非凡能力: 冰河
+	"非凡能力: 征服.DisplayName": 非凡能力: 征服
+}
+
+Items: {
+	BlasphemySlate: {
+		DisplayName: Blasphemy Slate
+		Tooltip: ""
+	}
+
+	ResurrectionReset: {
+		DisplayName: Resurrection Reset
+		Tooltip: ""
+	}
+
+	SpiritualityRefill: {
+		DisplayName: Spirituality Refill
+		Tooltip: ""
+	}
+
+	ExtraordinaryBlood: {
+		DisplayName: Extraordinary Blood
+		Tooltip: ""
+	}
+
+	DawnKnightPotion: {
+		DisplayName: Dawn Knight Potion
+		Tooltip: ""
+	}
+
+	DemonHunterPotion: {
+		DisplayName: Demon Hunter Potion
+		Tooltip: ""
+	}
+
+	GloryPotion: {
+		DisplayName: Glory Potion
+		Tooltip: ""
+	}
+
+	GuardianPotion: {
+		DisplayName: Guardian Potion
+		Tooltip: ""
+	}
+
+	PugilistPotion: {
+		DisplayName: Pugilist Potion
+		Tooltip: ""
+	}
+
+	SilverKnightPotion: {
+		DisplayName: Silver Knight Potion
+		Tooltip: ""
+	}
+
+	WarriorPotion: {
+		DisplayName: Warrior Potion
+		Tooltip: ""
+	}
+
+	WeaponMasterPotion: {
+		DisplayName: Weapon Master Potion
+		Tooltip: ""
+	}
+
+	SilverRapier: {
+		DisplayName: Silver Rapier
+		Tooltip: ""
+	}
+
+	SwordOfDawn: {
+		DisplayName: Sword Of Dawn
+		Tooltip: ""
+	}
+
+	TwilightGiantSword: {
+		DisplayName: Twilight Giant Sword
+		Tooltip: ""
+	}
+
+	TestSummon: {
+		DisplayName: Test Summon
+		Tooltip: ""
+	}
+
+	HunterPotion: {
+		DisplayName: Hunter Potion
+		Tooltip: ""
+	}
+
+	ProvokerPotion: {
+		DisplayName: Provoker Potion
+		Tooltip: ""
+	}
+
+	PyromaniacPotion: {
+		DisplayName: Pyromaniac Potion
+		Tooltip: ""
+	}
+
+	ConspiratorPotion: {
+		DisplayName: Conspirator Potion
+		Tooltip: ""
+	}
+
+	ReaperPotion: {
+		DisplayName: Reaper Potion
+		Tooltip: ""
+	}
+
+	RitualInstaComplete: {
+		DisplayName: Ritual Insta Complete
+		Tooltip: ""
+	}
+
+	IronBloodedKnightPotion: {
+		DisplayName: Iron Blooded Knight Potion
+		Tooltip: ""
+	}
+
+	WarBishopPotion: {
+		DisplayName: War Bishop Potion
+		Tooltip: ""
+	}
+
+	WeatherRune: {
+		DisplayName: Weather Rune
+		Tooltip: ""
+	}
+
+	WeatherWarlockPotion: {
+		DisplayName: Weather Warlock Potion
+		Tooltip: ""
+	}
+
+	ConquerorCharacteristic: {
+		DisplayName: Conqueror Characteristic
+		Tooltip: ""
+	}
+
+	ConquerorPotion: {
+		DisplayName: Conqueror Potion
+		Tooltip: ""
+	}
+
+	ConquerorSword: {
+		DisplayName: Conqueror Sword
+		Tooltip: ""
+	}
+}
+
+NPCs: {
+	Aurmir.DisplayName: Aurmir
+	TestBoss.DisplayName: Test Boss
+}
+
+Projectiles: {
+	AurmirBossStorm.DisplayName: Aurmir Boss Storm
+	AurmirSkyLance.DisplayName: Aurmir Sky Lance
+	AurmirTwilightOrb.DisplayName: Aurmir Twilight Orb
+	DawnBladeProjectile.DisplayName: Dawn Blade Projectile
+	GuardianShieldProjectile.DisplayName: Guardian Shield Projectile
+	LightStormController.DisplayName: Light Storm Controller
+	TwilightStormProjectile.DisplayName: Twilight Storm Projectile
+	TwilightSwordBeam.DisplayName: Twilight Sword Beam
+	PyromaniacFireball.DisplayName: Pyromaniac Fireball
+	PyromaniacBomb.DisplayName: Pyromaniac Bomb
+	PyromaniacFireballWhite.DisplayName: Pyromaniac Fireball White
+	ReaperSlashProjectile.DisplayName: Reaper Slash Projectile
+	PyromaniacExplosionVisual.DisplayName: Pyromaniac Explosion Visual
+	WeatherStrikeLightning.DisplayName: Weather Strike Lightning
+	ConquerorSwordProjectile.DisplayName: Conqueror Sword Projectile
+}
+
+Conditions: {
+	IsSequence9: 需序列9及以上
+	IsSequence6: 需 序列6: 黎明骑士
+	ConquerorOnly: Mods.zhashi.Conditions.ConquerorOnly
+}
+
+Buffs: {
+	ConquerorWill: {
+		DisplayName: Conqueror Will
+		Description: Mods.zhashi.Buffs.ConquerorWill.Description
+	}
+}
