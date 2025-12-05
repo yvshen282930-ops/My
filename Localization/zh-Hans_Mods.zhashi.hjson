@@ -236,6 +236,21 @@ Items: {
 			挥舞时凝聚仿佛能击碎山峰的紫色火焰巨剑。
 			'''
 	}
+
+	ApothecaryPotion: {
+		// DisplayName: Apothecary Potion
+		// Tooltip: ""
+	}
+
+	BeastTamerPotion: {
+		// DisplayName: Beast Tamer Potion
+		// Tooltip: ""
+	}
+
+	BeastTamerWhip: {
+		// DisplayName: Beast Tamer Whip
+		// Tooltip: ""
+	}
 }
 
 NPCs: {
@@ -271,5 +286,10 @@ Buffs: {
 	ConquerorWill: {
 		DisplayName: 征服意志
 		Description: 你的防御已瓦解，生命在征服者的威压下流逝...
+	}
+
+	TamedBuff: {
+		// DisplayName: Tamed Buff
+		// Description: Mods.zhashi.Buffs.TamedBuff.Description
 	}
 }

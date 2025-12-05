@@ -162,6 +162,21 @@ Items: {
 		DisplayName: Conqueror Sword
 		Tooltip: ""
 	}
+
+	ApothecaryPotion: {
+		DisplayName: Apothecary Potion
+		Tooltip: ""
+	}
+
+	BeastTamerPotion: {
+		DisplayName: Beast Tamer Potion
+		Tooltip: ""
+	}
+
+	BeastTamerWhip: {
+		DisplayName: Beast Tamer Whip
+		Tooltip: ""
+	}
 }
 
 NPCs: {
@@ -197,5 +212,10 @@ Buffs: {
 	ConquerorWill: {
 		DisplayName: Conqueror Will
 		Description: Mods.zhashi.Buffs.ConquerorWill.Description
+	}
+
+	TamedBuff: {
+		DisplayName: Tamed Buff
+		Description: Mods.zhashi.Buffs.TamedBuff.Description
 	}
 }
