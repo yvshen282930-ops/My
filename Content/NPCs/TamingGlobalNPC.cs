@@ -4,6 +4,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using zhashi.Content.Buffs;
+using zhashi.Content;
 
 namespace zhashi.Content.NPCs
 {
@@ -14,85 +15,100 @@ namespace zhashi.Content.NPCs
         public int attackCooldown = 0;
         public int originalDamage = -1;
 
-        // 【核心修改】将续命逻辑移至 PreAI，确保在 Buff 消失前执行
-        public override bool PreAI(NPC npc)
+        public override void ResetEffects(NPC npc)
         {
-            // 检查怪物是否有“驯服”Buff
+            // 移除此处的逻辑，统一在 PreAI 处理
+        }
+
+        // 【核心修复1】强制禁止接触伤害
+        // 只要有驯服 Buff，无论它想不想打你，系统都判定为打不到
+        public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
+        {
             if (npc.HasBuff(ModContent.BuffType<TamedBuff>()))
             {
-                // --- 1. 永久存在逻辑 (吸血鬼) ---
+                return false;
+            }
+            return base.CanHitPlayer(npc, target, ref cooldownSlot);
+        }
+
+        public override bool PreAI(NPC npc)
+        {
+            if (npc.HasBuff(ModContent.BuffType<TamedBuff>()))
+            {
+                // --- 1. 永久存在逻辑 ---
                 Player player = Main.LocalPlayer;
                 if (player.active && !player.dead)
                 {
                     var modPlayer = player.GetModPlayer<LotMPlayer>();
-                    // 如果是 序列7：吸血鬼 或更高阶
+                    // 吸血鬼及以上：血仆永久
                     if (modPlayer.currentMoonSequence <= 7)
                     {
-                        // 找到 Buff 的索引
                         int buffIndex = npc.FindBuffIndex(ModContent.BuffType<TamedBuff>());
-                        if (buffIndex != -1)
-                        {
-                            // 强行锁定时间为 30000 帧 (如果不死，永远不会耗尽)
-                            npc.buffTime[buffIndex] = 30000;
-                        }
+                        if (buffIndex != -1) npc.buffTime[buffIndex] = 30000;
                     }
                 }
 
-                // --- 2. 基础属性初始化 ---
                 if (originalDamage == -1) originalDamage = npc.damage;
 
+                // --- 2. 属性修正 ---
                 npc.friendly = true;
                 npc.dontTakeDamageFromHostiles = false;
 
+                // 【核心修复2】强制清除仇恨
+                // 每一帧都告诉它：你没有攻击目标（针对玩家）
+                npc.target = -1;
+
                 // 序列7加成：伤害提升
                 float damageMult = 1.0f;
-                if (Main.LocalPlayer.GetModPlayer<LotMPlayer>().currentMoonSequence <= 7) damageMult = 1.5f;
+                if (player.GetModPlayer<LotMPlayer>().currentMoonSequence <= 7) damageMult = 1.5f;
 
                 if (npc.damage < npc.defDamage * damageMult) npc.damage = (int)(npc.defDamage * damageMult);
                 if (npc.damage < 10) npc.damage = 10;
 
-                // --- 3. 索敌 ---
+                // --- 3. 索敌与AI接管 ---
                 NPC target = FindClosestEnemy(npc);
 
-                // --- 4. 行为逻辑 ---
                 if (target != null)
                 {
-                    // 战斗模式：追敌人
+                    // 战斗模式
+                    // 欺骗原版AI，让它以为敌怪是它的攻击目标（有助于触发某些怪的远程攻击）
+                    npc.target = target.whoAmI;
+
                     MoveTowards(npc, target.Center, 6f, 15f);
                     CheckCollisionDamage(npc, target);
                 }
                 else
                 {
-                    // 跟随模式：追玩家
+                    // 跟随模式
+                    // 再次清除目标，防止它闲着没事想打玩家
+                    npc.target = -1;
+
                     Player owner = Main.LocalPlayer;
                     float dist = npc.Distance(owner.Center);
 
-                    // 距离太远直接传送 (防丢失)
                     if (dist > 1500f)
                     {
                         npc.Center = owner.Center;
                         npc.velocity = Vector2.Zero;
                     }
-                    // 距离较远开始跟随
                     else if (dist > 200f)
                     {
                         MoveTowards(npc, owner.Center, 5f, 20f);
                     }
-                    // 距离近了减速停下
                     else
                     {
                         npc.velocity.X *= 0.9f;
                         if (npc.velocity.Y == 0 && Math.Abs(npc.velocity.X) < 0.1f)
                         {
                             npc.velocity.X = 0;
-                            // 闲置时看向玩家
                             npc.direction = npc.spriteDirection = (owner.Center.X > npc.Center.X) ? 1 : -1;
                         }
                     }
                 }
 
-                // --- 5. 屏蔽原版 AI ---
-                if (npc.aiStyle == 3 || npc.aiStyle == 1 || npc.aiStyle == 26 || npc.aiStyle == 14)
+                // --- 4. 屏蔽原版 AI ---
+                // 屏蔽常见 AI，防止乱跑
+                if (npc.aiStyle == 3 || npc.aiStyle == 1 || npc.aiStyle == 26 || npc.aiStyle == 14 || npc.aiStyle == 2)
                 {
                     return false;
                 }
@@ -100,7 +116,6 @@ namespace zhashi.Content.NPCs
             return true;
         }
 
-        // 移动逻辑 (包含跳跃)
         private void MoveTowards(NPC npc, Vector2 targetPos, float speedBase, float inertia)
         {
             float speed = speedBase;
@@ -110,10 +125,8 @@ namespace zhashi.Content.NPCs
             direction.Normalize();
             direction *= speed;
 
-            // 水平移动
             npc.velocity.X = (npc.velocity.X * (inertia - 1) + direction.X) / inertia;
 
-            // 跳跃判定
             bool isTargetAbove = targetPos.Y < npc.Center.Y - 50;
             bool onGround = npc.velocity.Y == 0;
             bool hitWall = npc.collideX;
@@ -127,12 +140,10 @@ namespace zhashi.Content.NPCs
                 }
             }
 
-            // 更新朝向
             if (npc.velocity.X != 0)
                 npc.direction = npc.spriteDirection = (targetPos.X > npc.Center.X) ? 1 : -1;
         }
 
-        // 碰撞伤害逻辑
         private void CheckCollisionDamage(NPC me, NPC target)
         {
             if (attackCooldown > 0) { attackCooldown--; return; }
@@ -143,7 +154,6 @@ namespace zhashi.Content.NPCs
                 int hitDirection = (target.Center.X > me.Center.X) ? 1 : -1;
                 target.SimpleStrikeNPC(damage, hitDirection, false, 0f, DamageClass.Generic, false, 0f, true);
 
-                // 吸血鬼加成：吸血
                 if (Main.LocalPlayer.GetModPlayer<LotMPlayer>().currentMoonSequence <= 7)
                 {
                     int heal = damage / 10;
@@ -166,6 +176,7 @@ namespace zhashi.Content.NPCs
             }
         }
 
+        // 允许被驯服的怪物攻击其他敌人
         public override bool CanHitNPC(NPC npc, NPC target)
         {
             if (npc.HasBuff(ModContent.BuffType<TamedBuff>()) && !target.friendly) return true;

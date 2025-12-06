@@ -36,6 +36,7 @@ namespace zhashi.System
         public static ModKeybind Moon_BatSwarm { get; private set; }     // T键
         public static ModKeybind Moon_PaperFigurine { get; private set; } // J键
         public static ModKeybind Moon_Gaze { get; private set; }          // F键
+        public static ModKeybind Moon_SummonGate { get; private set; } // 召唤之门 (R)
 
         // 猎人 (红祭司)
         public static ModKeybind RP_Transformation { get; private set; }
@@ -73,11 +74,13 @@ namespace zhashi.System
             Moon_Elixir = KeybindLoader.RegisterKeybind(Mod, "月亮: 生命灵液", "Z");
             Moon_Moonlight = KeybindLoader.RegisterKeybind(Mod, "月亮: 月光化", "C");
             Moon_FullMoon = KeybindLoader.RegisterKeybind(Mod, "月亮: 满月领域", "G");
+            Moon_SummonGate = KeybindLoader.RegisterKeybind(Mod, "月亮: 召唤之门", "R");
 
             // 【新增注册】
             Moon_BatSwarm = KeybindLoader.RegisterKeybind(Mod, "月亮: 蝙蝠化身", "T");
             Moon_PaperFigurine = KeybindLoader.RegisterKeybind(Mod, "月亮: 月亮纸人", "J");
             Moon_Gaze = KeybindLoader.RegisterKeybind(Mod, "月亮: 黑暗凝视", "F");
+            Moon_SummonGate = KeybindLoader.RegisterKeybind(Mod, "月亮: 召唤之门", "R");
         }
 
         public override void Unload()
@@ -88,7 +91,7 @@ namespace zhashi.System
 
             Moon_Wings = null; Moon_Shackles = null; Moon_Grenade = null; Moon_Elixir = null; Moon_Moonlight = null; Moon_FullMoon = null;
 
-            Moon_BatSwarm = null; Moon_PaperFigurine = null; Moon_Gaze = null;
+            Moon_BatSwarm = null; Moon_PaperFigurine = null; Moon_Gaze = null; Moon_SummonGate = null;
         }
     }
 }

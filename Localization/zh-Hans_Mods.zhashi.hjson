@@ -46,6 +46,7 @@ Keybinds: {
 	// "月亮: 蝙蝠化身.DisplayName": 月亮: 蝙蝠化身
 	// "月亮: 月亮纸人.DisplayName": 月亮: 月亮纸人
 	// "月亮: 黑暗凝视.DisplayName": 月亮: 黑暗凝视
+	// "月亮: 召唤之门.DisplayName": 月亮: 召唤之门
 }
 
 Items: {
@@ -302,6 +303,26 @@ Items: {
 		// DisplayName: Witch King Potion
 		// Tooltip: ""
 	}
+
+	TrueNameInscription: {
+		// DisplayName: True Name Inscription
+		// Tooltip: ""
+	}
+
+	WhisperOfSpiritWorld: {
+		// DisplayName: Whisper Of Spirit World
+		// Tooltip: ""
+	}
+
+	SummoningMasterPotion: {
+		// DisplayName: Summoning Master Potion
+		// Tooltip: ""
+	}
+
+	LifeGiverPotion: {
+		// DisplayName: Life Giver Potion
+		// Tooltip: ""
+	}
 }
 
 NPCs: {
@@ -329,6 +350,8 @@ Projectiles: {
 	// AlchemicalGrenade.DisplayName: Alchemical Grenade
 	// FullMoonCircle.DisplayName: Full Moon Circle
 	// BatSwarmProjectile.DisplayName: Bat Swarm Projectile
+	// SummoningDoorProjectile.DisplayName: Summoning Door Projectile
+	// CreationDomainProjectile.DisplayName: Creation Domain Projectile
 }
 
 Conditions: {
