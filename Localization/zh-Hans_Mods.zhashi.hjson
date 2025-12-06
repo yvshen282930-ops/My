@@ -1,19 +1,19 @@
 Keybinds: {
-	"非凡能力: 黎明铠甲.DisplayName": 非凡能力: 黎明铠甲
-	"非凡能力: 守护姿态.DisplayName": 非凡能力: 守护姿态
-	"非凡能力: 水银化.DisplayName": 非凡能力: 水银化
-	"非凡能力: 操纵火焰.DisplayName": 非凡能力: 操纵火焰
-	"非凡能力: 火焰披风.DisplayName": 非凡能力: 火焰披风
-	"非凡能力: 火焰炸弹.DisplayName": 非凡能力: 火焰炸弹
-	"非凡能力: 火焰闪现.DisplayName": 非凡能力: 火焰闪现
-	"非凡能力: 屠杀.DisplayName": 非凡能力: 屠杀
-	"非凡能力: 操纵火焰(火球).DisplayName": 非凡能力: 操纵火焰(火球)
-	"非凡能力: 武器附火.DisplayName": 非凡能力: 武器附火
-	"非凡能力: 火焰化.DisplayName": 非凡能力: 火焰化
-	"非凡能力: 集众.DisplayName": 非凡能力: 集众
-	"非凡能力: 天气操控(雷击).DisplayName": 非凡能力: 天气操控(雷击)
+	// "非凡能力: 黎明铠甲.DisplayName": 非凡能力: 黎明铠甲
+	// "非凡能力: 守护姿态.DisplayName": 非凡能力: 守护姿态
+	// "非凡能力: 水银化.DisplayName": 非凡能力: 水银化
+	// "非凡能力: 操纵火焰.DisplayName": 非凡能力: 操纵火焰
+	// "非凡能力: 火焰披风.DisplayName": 非凡能力: 火焰披风
+	// "非凡能力: 火焰炸弹.DisplayName": 非凡能力: 火焰炸弹
+	// "非凡能力: 火焰闪现.DisplayName": 非凡能力: 火焰闪现
+	// "非凡能力: 屠杀.DisplayName": 非凡能力: 屠杀
+	// "非凡能力: 操纵火焰(火球).DisplayName": 非凡能力: 操纵火焰(火球)
+	// "非凡能力: 武器附火.DisplayName": 非凡能力: 武器附火
+	// "非凡能力: 火焰化.DisplayName": 非凡能力: 火焰化
+	// "非凡能力: 集众.DisplayName": 非凡能力: 集众
+	// "非凡能力: 天气操控(雷击).DisplayName": 非凡能力: 天气操控(雷击)
 	// "非凡能力: 天气操控.DisplayName": 非凡能力: 天气操控
-	"非凡能力: 冰河.DisplayName": 非凡能力: 冰河
+	// "非凡能力: 冰河.DisplayName": 非凡能力: 冰河
 	// "非凡能力: 征服.DisplayName": 非凡能力: 征服
 	// "非凡能力: 火焰化/巨人形态.DisplayName": 非凡能力: 火焰化/巨人形态
 	// "非凡能力: 闪现.DisplayName": 非凡能力: 闪现
@@ -51,222 +51,148 @@ Keybinds: {
 
 Items: {
 	BlasphemySlate: {
-		DisplayName: 亵渎石板
-		Tooltip: 记载着成神秘密的古老石板。
+		// DisplayName: Blasphemy Slate
+		// Tooltip: ""
 	}
 
 	ResurrectionReset: {
-		DisplayName: 命运之轮 (调试)
-		Tooltip: 左键重置黄昏重生的冷却时间。
+		// DisplayName: Resurrection Reset
+		// Tooltip: ""
 	}
 
 	SpiritualityRefill: {
-		DisplayName: 灵性之源 (调试)
-		Tooltip: 左键补满灵性。
+		// DisplayName: Spirituality Refill
+		// Tooltip: ""
 	}
 
 	ExtraordinaryBlood: {
-		DisplayName: 非凡之血
-		Tooltip: 蕴含着一丝古老神性的鲜血，可用于召唤巨人王。
+		// DisplayName: Extraordinary Blood
+		// Tooltip: ""
 	}
 
 	DawnKnightPotion: {
-		DisplayName: 序列6：黎明骑士魔药
-		Tooltip: 需序列7
+		// DisplayName: Dawn Knight Potion
+		// Tooltip: ""
 	}
 
 	DemonHunterPotion: {
-		DisplayName: 序列4：猎魔者魔药
-		Tooltip:
-			'''
-			需序列5。
-			[仪式：击杀10只红魔鬼]
-			'''
+		// DisplayName: Demon Hunter Potion
+		// Tooltip: ""
 	}
 
 	GloryPotion: {
-		DisplayName: 序列2：荣耀者魔药
-		Tooltip:
-			'''
-			需序列3。
-			[仪式：击败月球领主（示例）]
-			'''
+		// DisplayName: Glory Potion
+		// Tooltip: ""
 	}
 
 	GuardianPotion: {
-		DisplayName: 序列5：守护者魔药
-		Tooltip:
-			'''
-			需序列6。
-			[仪式：在城镇NPC附近累计承受1000点伤害]
-			'''
+		// DisplayName: Guardian Potion
+		// Tooltip: ""
 	}
 
 	PugilistPotion: {
-		DisplayName: 序列8：格斗家魔药
-		Tooltip: 需序列9
+		// DisplayName: Pugilist Potion
+		// Tooltip: ""
 	}
 
 	SilverKnightPotion: {
-		DisplayName: 序列3：银骑士魔药
-		Tooltip:
-			'''
-			需序列4。
-			[仪式：击败机械毁灭者（示例）]
-			'''
+		// DisplayName: Silver Knight Potion
+		// Tooltip: ""
 	}
 
 	WarriorPotion: {
-		DisplayName: 序列9：战士魔药
-		Tooltip: 服用以晋升序列9
+		// DisplayName: Warrior Potion
+		// Tooltip: ""
 	}
 
 	WeaponMasterPotion: {
-		DisplayName: 序列7：武器大师魔药
-		Tooltip: 需序列8
+		// DisplayName: Weapon Master Potion
+		// Tooltip: ""
 	}
 
 	SilverRapier: {
-		DisplayName: 银白细剑
-		Tooltip: 由纯粹的光芒凝聚而成，过度使用会崩解。
+		// DisplayName: Silver Rapier
+		// Tooltip: ""
 	}
 
 	SwordOfDawn: {
-		DisplayName: 晨曦之剑
-		Tooltip:
-			'''
-			黎明骑士的佩剑，每一击都带有净化的效果。
-			<right>消耗灵性释放光之风暴。
-			'''
+		// DisplayName: Sword Of Dawn
+		// Tooltip: ""
 	}
 
 	TwilightGiantSword: {
-		DisplayName: 黄昏巨剑
-		Tooltip:
-			'''
-			巨人王曾使用的武器，蕴含衰败之力。
-			<right>献祭一切释放毁灭风暴。
-			'''
+		// DisplayName: Twilight Giant Sword
+		// Tooltip: ""
 	}
 
 	TestSummon: {
-		DisplayName: 测试召唤物
-		Tooltip: ""
+		// DisplayName: Test Summon
+		// Tooltip: ""
 	}
 
 	HunterPotion: {
-		DisplayName: 序列9：猎人魔药
-		Tooltip:
-			'''
-			服用以晋升序列9：猎人。
-			[仪式：无]
-			'''
+		// DisplayName: Hunter Potion
+		// Tooltip: ""
 	}
 
 	ProvokerPotion: {
-		DisplayName: 序列8：挑衅者魔药
-		Tooltip:
-			'''
-			需序列9。
-			[仪式：无]
-			'''
+		// DisplayName: Provoker Potion
+		// Tooltip: ""
 	}
 
 	PyromaniacPotion: {
-		DisplayName: 序列7：纵火家魔药
-		Tooltip:
-			'''
-			需序列8。
-			[仪式：无]
-			'''
+		// DisplayName: Pyromaniac Potion
+		// Tooltip: ""
 	}
 
 	ConspiratorPotion: {
-		DisplayName: 序列6：阴谋家魔药
-		Tooltip:
-			'''
-			需序列7。
-			[仪式：无]
-			'''
+		// DisplayName: Conspirator Potion
+		// Tooltip: ""
 	}
 
 	ReaperPotion: {
-		DisplayName: 序列5：收割者魔药
-		Tooltip:
-			'''
-			需序列6。
-			[仪式：击杀10只红魔鬼]
-			'''
+		// DisplayName: Reaper Potion
+		// Tooltip: ""
 	}
 
 	RitualInstaComplete: {
-		DisplayName: 仪式瞬间完成 (调试)
-		Tooltip: ""
+		// DisplayName: Ritual Insta Complete
+		// Tooltip: ""
 	}
 
 	IronBloodedKnightPotion: {
-		DisplayName: 序列4：铁血骑士魔药
-		Tooltip:
-			'''
-			需序列5。
-			[仪式：拥有至少5个召唤栏位并击杀100个敌人]
-			'''
+		// DisplayName: Iron Blooded Knight Potion
+		// Tooltip: ""
 	}
 
 	WarBishopPotion: {
-		DisplayName: 序列3：战争主教魔药
-		Tooltip:
-			'''
-			需序列4。
-			[仪式：无 (半神无需外力)]
-			'''
+		// DisplayName: War Bishop Potion
+		// Tooltip: ""
 	}
 
 	WeatherRune: {
-		DisplayName: 天气符文
-		Tooltip:
-			'''
-			用于晋升序列2：天气术士的仪式道具。
-			<left> 使用。请在10秒内连续点击10次以完成仪式。
-			'''
+		// DisplayName: Weather Rune
+		// Tooltip: ""
 	}
 
 	WeatherWarlockPotion: {
-		DisplayName: 序列2：天气术士魔药
-		Tooltip:
-			'''
-			需序列3。
-			[仪式：使用【天气符文】在10秒内连续引动10次风暴]
-			'''
+		// DisplayName: Weather Warlock Potion
+		// Tooltip: ""
 	}
 
 	ConquerorCharacteristic: {
-		DisplayName: 征服者特性
-		Tooltip:
-			'''
-			红祭司途径的高位非凡特性。
-			<left> 使用：释放征服者的威压，使全世界的生物停止生成。
-			再次使用以恢复生态。
-			'''
+		// DisplayName: Conqueror Characteristic
+		// Tooltip: ""
 	}
 
 	ConquerorPotion: {
-		DisplayName: 序列1：征服者魔药
-		Tooltip:
-			'''
-			需序列2。
-			[仪式：使用【征服者特性】静止世界，并清除所有敌对生物]
-			'''
+		// DisplayName: Conqueror Potion
+		// Tooltip: ""
 	}
 
 	ConquerorSword: {
-		DisplayName: 铁血大剑
-		Tooltip:
-			'''
-			“战争的红，与权柄的紫。”
-			序列1征服者专属。
-			挥舞时凝聚仿佛能击碎山峰的紫色火焰巨剑。
-			'''
+		// DisplayName: Conqueror Sword
+		// Tooltip: ""
 	}
 
 	ApothecaryPotion: {
@@ -323,29 +249,34 @@ Items: {
 		// DisplayName: Life Giver Potion
 		// Tooltip: ""
 	}
+
+	BeautyGoddessPotion: {
+		// DisplayName: Beauty Goddess Potion
+		// Tooltip: ""
+	}
 }
 
 NPCs: {
-	Aurmir.DisplayName: 巨人王·奥尔米尔
-	TestBoss.DisplayName: 测试Boss
+	// Aurmir.DisplayName: Aurmir
+	// TestBoss.DisplayName: Test Boss
 }
 
 Projectiles: {
-	AurmirBossStorm.DisplayName: 神罚风暴
-	AurmirSkyLance.DisplayName: 晨曦光枪
-	AurmirTwilightOrb.DisplayName: 衰败法球
-	DawnBladeProjectile.DisplayName: 晨曦光刃
-	GuardianShieldProjectile.DisplayName: 守护光墙
-	LightStormController.DisplayName: 光之风暴
-	TwilightStormProjectile.DisplayName: 黄昏风暴
-	TwilightSwordBeam.DisplayName: 黄昏剑气
-	PyromaniacFireball.DisplayName: 纵火家火球
-	PyromaniacBomb.DisplayName: 火焰炸弹
-	PyromaniacFireballWhite.DisplayName: 炽白火球
-	ReaperSlashProjectile.DisplayName: 收割斩击
-	PyromaniacExplosionVisual.DisplayName: 爆炸特效
-	WeatherStrikeLightning.DisplayName: 天气雷击
-	ConquerorSwordProjectile.DisplayName: 紫色征服之剑
+	// AurmirBossStorm.DisplayName: Aurmir Boss Storm
+	// AurmirSkyLance.DisplayName: Aurmir Sky Lance
+	// AurmirTwilightOrb.DisplayName: Aurmir Twilight Orb
+	// DawnBladeProjectile.DisplayName: Dawn Blade Projectile
+	// GuardianShieldProjectile.DisplayName: Guardian Shield Projectile
+	// LightStormController.DisplayName: Light Storm Controller
+	// TwilightStormProjectile.DisplayName: Twilight Storm Projectile
+	// TwilightSwordBeam.DisplayName: Twilight Sword Beam
+	// PyromaniacFireball.DisplayName: Pyromaniac Fireball
+	// PyromaniacBomb.DisplayName: Pyromaniac Bomb
+	// PyromaniacFireballWhite.DisplayName: Pyromaniac Fireball White
+	// ReaperSlashProjectile.DisplayName: Reaper Slash Projectile
+	// PyromaniacExplosionVisual.DisplayName: Pyromaniac Explosion Visual
+	// WeatherStrikeLightning.DisplayName: Weather Strike Lightning
+	// ConquerorSwordProjectile.DisplayName: Conqueror Sword Projectile
 	// AbyssShackleProjectile.DisplayName: Abyss Shackle Projectile
 	// AlchemicalGrenade.DisplayName: Alchemical Grenade
 	// FullMoonCircle.DisplayName: Full Moon Circle
@@ -355,15 +286,15 @@ Projectiles: {
 }
 
 Conditions: {
-	IsSequence9: 需序列9及以上
-	IsSequence6: 需 序列6: 黎明骑士
+	// IsSequence9: 需序列9及以上
+	// IsSequence6: 需 序列6: 黎明骑士
 	// ConquerorOnly: Mods.zhashi.Conditions.ConquerorOnly
 }
 
 Buffs: {
 	ConquerorWill: {
-		DisplayName: 征服意志
-		Description: 你的防御已瓦解，生命在征服者的威压下流逝...
+		// DisplayName: Conqueror Will
+		// Description: Mods.zhashi.Buffs.ConquerorWill.Description
 	}
 
 	TamedBuff: {

@@ -1,26 +1,35 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.ModLoader;
 using Terraria.UI;
+using Terraria.ID;
 using zhashi.Content;
+using System;
 
 namespace zhashi.Content.UI
 {
     public class SequenceStatusUI : UIState
     {
         private UIImage sequenceIcon;
-        private string currentTexturePath = "";
+        private UIText statusText; // 用于显示简略状态（可选）
+
+        // 上次检测的序列，用于减少Update频率
+        private int lastSeq = -100;
+        private int lastHunter = -100;
+        private int lastMoon = -100;
 
         public override void OnInitialize()
         {
-            sequenceIcon = new UIImage(ModContent.Request<Texture2D>("zhashi/Content/Items/Potions/Hunter/HunterPotion"));
+            // 初始化图标位置 (左上角，向下偏移一点以免遮挡原版条)
+            // 使用一个原版贴图作为默认占位符，防止加载失败
+            sequenceIcon = new UIImage(Main.Assets.Request<Texture2D>("Images/Item_" + ItemID.FallenStar));
             sequenceIcon.Left.Set(20, 0f);
-            sequenceIcon.Top.Set(80, 0f);
+            sequenceIcon.Top.Set(120, 0f); // 放在血条/魔力条下面
             sequenceIcon.Width.Set(44, 0f);
             sequenceIcon.Height.Set(44, 0f);
+
             Append(sequenceIcon);
         }
 
@@ -29,193 +38,154 @@ namespace zhashi.Content.UI
             base.Update(gameTime);
 
             Player player = Main.LocalPlayer;
+            if (player == null || !player.active) return;
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            string newPath = GetTexturePath(modPlayer);
-
-            if (newPath != currentTexturePath)
+            // 只有当序列发生变化时才尝试切换图标，节省性能
+            if (modPlayer.currentSequence != lastSeq ||
+                modPlayer.currentHunterSequence != lastHunter ||
+                modPlayer.currentMoonSequence != lastMoon)
             {
-                currentTexturePath = newPath;
-
-                if (!string.IsNullOrEmpty(newPath))
-                {
-                    sequenceIcon.SetImage(ModContent.Request<Texture2D>(newPath, ReLogic.Content.AssetRequestMode.ImmediateLoad));
-                    sequenceIcon.Color = Color.White;
-                }
-                else
-                {
-                    sequenceIcon.SetImage(ModContent.Request<Texture2D>("zhashi/Content/Items/Potions/Hunter/HunterPotion"));
-                    sequenceIcon.Color = Color.Transparent;
-                }
+                UpdateIconTexture(modPlayer);
+                lastSeq = modPlayer.currentSequence;
+                lastHunter = modPlayer.currentHunterSequence;
+                lastMoon = modPlayer.currentMoonSequence;
             }
+        }
+
+        private void UpdateIconTexture(LotMPlayer modPlayer)
+        {
+            string texturePath = "";
+            int itemId = 0; // 如果找不到模组贴图，使用原版物品ID作为备选
+
+            // 优先级：月亮 > 猎人 > 巨人
+            if (modPlayer.currentMoonSequence <= 9)
+            {
+                // 这里尝试加载模组魔药贴图，你需要确保路径完全正确
+                // 如果不想折腾路径，可以直接用 ItemID.MoonLordTrophy 之类的代替
+                texturePath = "zhashi/Content/Items/Potions/Moon/BeautyGoddessPotion"; // 示例：最高级
+                itemId = ItemID.MoonStone; // 备选：月亮石
+            }
+            else if (modPlayer.currentHunterSequence <= 9)
+            {
+                texturePath = "zhashi/Content/Items/Potions/Hunter/ConquerorPotion";
+                itemId = ItemID.RangerEmblem; // 备选：游侠徽章
+            }
+            else if (modPlayer.currentSequence <= 9)
+            {
+                texturePath = "zhashi/Content/Items/Potions/GloryPotion";
+                itemId = ItemID.WarriorEmblem; // 备选：战士徽章
+            }
+            else
+            {
+                // 凡人状态
+                sequenceIcon.Color = Color.Transparent; // 隐藏
+                return;
+            }
+
+            // 尝试加载
+            if (ModContent.HasAsset(texturePath))
+            {
+                sequenceIcon.SetImage(ModContent.Request<Texture2D>(texturePath));
+            }
+            else
+            {
+                // 加载备选原版贴图，保证UI不消失
+                sequenceIcon.SetImage(Main.Assets.Request<Texture2D>("Images/Item_" + itemId));
+            }
+            sequenceIcon.Color = Color.White;
         }
 
         public override void Draw(SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
 
-            if (sequenceIcon.IsMouseHovering && !string.IsNullOrEmpty(currentTexturePath) && sequenceIcon.Color == Color.White)
+            // 鼠标悬停显示详细信息
+            if (sequenceIcon.IsMouseHovering && sequenceIcon.Color.A > 0)
             {
                 Player player = Main.LocalPlayer;
                 var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-                string tooltip = GetTooltipText(modPlayer);
-                if (!string.IsNullOrEmpty(tooltip))
-                {
-                    Main.instance.MouseText(tooltip);
-                }
+                string info = GenerateFullStatusText(player, modPlayer);
+                Main.instance.MouseText(info);
             }
         }
 
-        private string GetTexturePath(LotMPlayer modPlayer)
+        // --- 生成超级详细的数据面板 ---
+        private string GenerateFullStatusText(Player player, LotMPlayer modPlayer)
         {
-            string baseHunter = "zhashi/Content/Items/Potions/Hunter/";
-            string baseWarrior = "zhashi/Content/Items/Potions/";
-            string baseMoon = "zhashi/Content/Items/Potions/Moon/";
+            string title = "";
+            string colorHex = "";
+            string content = "";
 
-            // --- 月亮途径 ---
+            // 1. 确定称号和颜色
             if (modPlayer.currentMoonSequence <= 9)
             {
-                switch (modPlayer.currentMoonSequence)
-                {
-                    case 9: return baseMoon + "ApothecaryPotion";
-                    case 8: return baseMoon + "BeastTamerPotion";
-                    case 7: return baseMoon + "VampirePotion";
-                    case 6: return baseMoon + "PotionsProfessorPotion";
-                    case 5: return baseMoon + "ScarletScholarPotion";
-                    // 【核心修复】这里之前写成了 ShamanKingPotion，现已更正为 WitchKingPotion
-                    case 4: return baseMoon + "WitchKingPotion";
-                    case 3: return baseMoon + "SummoningMasterPotion";
-                    case 2: return baseMoon + "LifeGiverPotion";
-                    case 1: return baseMoon + "BeautyGoddessPotion";
-                    default: return "";
-                }
-            }
-            // --- 猎人途径 ---
-            else if (modPlayer.currentHunterSequence <= 9)
-            {
-                switch (modPlayer.currentHunterSequence)
-                {
-                    case 9: return baseHunter + "HunterPotion";
-                    case 8: return baseHunter + "ProvokerPotion";
-                    case 7: return baseHunter + "PyromaniacPotion";
-                    case 6: return baseHunter + "ConspiratorPotion";
-                    case 5: return baseHunter + "ReaperPotion";
-                    case 4: return baseHunter + "IronBloodedKnightPotion";
-                    case 3: return baseHunter + "WarBishopPotion";
-                    case 2: return baseHunter + "WeatherWarlockPotion";
-                    case 1: return baseHunter + "ConquerorPotion";
-                    default: return "";
-                }
-            }
-            // --- 巨人途径 ---
-            else if (modPlayer.currentSequence <= 9)
-            {
-                switch (modPlayer.currentSequence)
-                {
-                    case 9: return baseWarrior + "WarriorPotion";
-                    case 8: return baseWarrior + "PugilistPotion";
-                    case 7: return baseWarrior + "WeaponMasterPotion";
-                    case 6: return baseWarrior + "DawnKnightPotion";
-                    case 5: return baseWarrior + "GuardianPotion";
-                    case 4: return baseWarrior + "DemonHunterPotion";
-                    case 3: return baseWarrior + "SilverKnightPotion";
-                    case 2: return baseWarrior + "GloryPotion";
-                    default: return "";
-                }
-            }
-            return "";
-        }
+                int s = modPlayer.currentMoonSequence;
+                string[] names = { "", "美神", "创生者", "召唤大师", "巫王", "深红学者", "魔药教授", "吸血鬼", "驯兽师", "药师" };
+                title = (s >= 1 && s <= 9) ? names[s] : "月亮途径";
+                colorHex = "DC143C"; // 深红
 
-        private string GetTooltipText(LotMPlayer modPlayer)
-        {
-            if (modPlayer.currentMoonSequence <= 9)
-            {
-                switch (modPlayer.currentMoonSequence)
-                {
-                    case 9:
-                        return "[c/00FF7F:序列9：药师]\n----------------\n[c/00FF00:属性]\n• 生命上限 +20\n• 回复 +2/s\n[c/00FFFF:被动]\n• 抗毒 & 灵视";
-                    case 8:
-                        return "[c/00FF7F:序列8：驯兽师]\n----------------\n[c/00FF00:属性]\n• 力量敏捷提升\n[c/FFFF00:技能]\n• 驯化: 鞭打残血生物";
-                    case 7:
-                        return "[c/FF0000:序列7：吸血鬼]\n----------------\n[c/00FF00:属性]\n• 超强自愈与速度\n[c/FFFF00:技能]\n• K键: 黑暗之翼\n• V键: 深渊枷锁\n[c/FFA500:被动]\n• 腐蚀之爪 & 厌恶阳光";
-                    case 6:
-                        return "[c/00FF7F:序列6：魔药教授]\n----------------\n[c/00FF00:属性]\n• 魔法伤害 +15%\n[c/FFFF00:技能]\n• X键: 炼金手雷\n• Z键: 生命灵液\n[c/00FFFF:被动]\n• 药剂双倍 & 炼金石";
-                    case 5:
-                        return "[c/DC143C:序列5：深红学者]\n----------------\n[c/00FF00:属性]\n• 免疫精神控制\n[c/FFFF00:满月技]\n• G键: 开启满月领域\n• V键(满月): 闪现\n• C键: 月光化(无敌)";
-                    case 4:
-                        return "[c/8B0000:序列4：巫王]\n----------------\n[c/FF0000:半神]\n• 寿命极长\n• 召唤/魔法伤害 +20%\n[c/FFFF00:技能]\n• T键: 蝙蝠化身 (无敌飞行)\n• J键: 月亮纸人 (替身)\n• F键: 黑暗凝视 (高伤)";
-                        // ... (序列3-1 预留)
-                }
+                // 月亮专属数据
+                content += $"\n[c/AAAAAA:灵性]: {modPlayer.spiritualityCurrent:F0} / {modPlayer.spiritualityMax}";
+                content += $"\n[c/AAAAAA:状态]: {(modPlayer.isBatSwarm ? "蝙蝠化身" : (modPlayer.isMoonlightized ? "月光化" : "正常"))}";
+
+                // 技能列表
+                content += "\n\n[c/FFD700:--- 主动技能 ---]";
+                if (s <= 9) content += "\n(无主动技, 被动生效)";
+                if (s <= 7) content += "\n[K] 黑暗之翼 (飞行)\n[V] 深渊枷锁 (束缚)";
+                if (s <= 6) content += "\n[X] 炼金手雷\n[Z] 生命灵液 (治疗)";
+                if (s <= 5) content += "\n[G] 满月领域 (强化)\n[C] 月光化 (无敌移动)";
+                if (s <= 4) content += "\n[T] 蝙蝠化身 (隐身/飞行)\n[J] 月亮纸人 (替身)\n[F] 黑暗凝视 (单体爆发)";
+                if (s <= 3) content += "\n[R] 召唤之门 (召唤大军)";
+                if (s <= 2) content += "\n[G] 创生领域 (群体回血/花靴)\n[J] 群体转化 (强控/秒杀)\n[X] 净化大地\n[Z] 生命奇迹 (满血)";
             }
             else if (modPlayer.currentHunterSequence <= 9)
             {
-                switch (modPlayer.currentHunterSequence)
-                {
-                    case 9: return "[c/FF4500:序列9：猎人]\n----------------\n[c/00FF00:属性]\n• 移速+15% / 远程伤+10%\n[c/00FFFF:能力]\n• 危险感知 & 生物探测";
-                    case 8: return "[c/FF4500:序列8：挑衅者]\n----------------\n[c/00FF00:属性]\n• 防御+8 / 仇恨+300\n[c/FFFF00:技能]\n• 挑衅 (F键)";
-                    case 7: return "[c/FF4500:序列7：纵火家]\n----------------\n[c/00FF00:属性]\n• 全伤+15% / 免疫火焰\n[c/FFFF00:技能]\n• 火球术 (按住G)";
-                    case 6: return "[c/FF4500:序列6：阴谋家]\n----------------\n[c/00FF00:属性]\n• 暴击+10%\n[c/FFFF00:技能]\n• 闪现 (V键)";
-                    case 5: return "[c/FF4500:序列5：收割者]\n----------------\n[c/00FF00:属性]\n• 破甲+20 / 暴伤+50%\n[c/FFA500:被动]\n• 弱点收割";
-                    case 4: return "[c/FF4500:序列4：铁血骑士]\n----------------\n[c/00FF00:属性]\n• 防御+40 / 免伤+15%\n[c/FFFF00:技能]\n• 火焰化 (K键)\n• 集众 (Z键)";
-                    case 3: return "[c/FF4500:序列3：战争主教]\n----------------\n[c/00FF00:属性]\n• 召唤伤+30%\n[c/00FFFF:能力]\n• 战争光环";
-                    case 2: return "[c/FF4500:序列2：天气术士]\n----------------\n[c/00FF00:属性]\n• 生命+500 / 全伤+30%\n[c/FFFF00:技能]\n• 灾祸巨人 (K键)\n• 雷击(U) / 冰河(I)";
-                    case 1: return "[c/FF00FF:序列1：征服者]\n----------------\n[c/FF0000:征服权柄]\n• 怪物停止刷新\n[c/00FF00:属性]\n• 攻防大幅提升\n[c/FFFF00:技]\n• 紫焰长枪冲锋";
-                }
+                int s = modPlayer.currentHunterSequence;
+                string[] names = { "", "征服者", "天气术士", "战争主教", "铁血骑士", "收割者", "阴谋家", "纵火家", "挑衅者", "猎人" };
+                title = (s >= 1 && s <= 9) ? names[s] : "猎人途径";
+                colorHex = "FF4500"; // 橙红
+
+                content += $"\n[c/AAAAAA:灵性]: {modPlayer.spiritualityCurrent:F0} / {modPlayer.spiritualityMax}";
+
+                content += "\n\n[c/FFD700:--- 主动技能 ---]";
+                if (s <= 8) content += "\n[F] 挑衅";
+                if (s <= 7) content += "\n[X] 火焰炸弹\n[Z] 火焰披风\n[F] 操纵火焰";
+                if (s <= 6) content += "\n[V] 闪现\n[T] 武器附火";
+                if (s <= 5) content += "\n[G] 致命斩击";
+                if (s <= 4) content += "\n[K] 火焰形态\n[J] 集众";
+                if (s <= 2) content += "\n[K] 灾祸巨人\n[右键] 天气雷击\n[R] 冰河世纪";
             }
             else if (modPlayer.currentSequence <= 9)
             {
-                switch (modPlayer.currentSequence)
-                {
-                    case 9: return "[c/C0C0C0:序列9：战士]\n----------------\n• 防御+5 / 近战伤+10%";
-                    case 8: return "[c/C0C0C0:序列8：格斗家]\n----------------\n• 攻速+10% / 免疫击退";
-                    case 7: return "[c/C0C0C0:序列7：武器大师]\n----------------\n• 全伤+10% / 破甲+5";
-                    case 6: return "[c/C0C0C0:序列6：黎明骑士]\n----------------\n• 自身发光 / 防御+10\n• 技能: 黎明铠甲 (C键)";
-                    case 5: return "[c/C0C0C0:序列5：守护者]\n----------------\n• 防御+15 / 免伤+5%\n• 技能: 守护姿态 (按住Z)";
-                    case 4: return "[c/C0C0C0:序列4：猎魔者]\n----------------\n• 免疫诅咒、暗影焰\n• 获得夜视";
-                    case 3: return "[c/C0C0C0:序列3：银骑士]\n----------------\n• 获得闪避能力\n• 技能: 水银化 (C键)";
-                    case 2: return "[c/C0C0C0:序列2：荣耀者]\n----------------\n• 生命+400 / 防御+30\n• 被动: 黄昏复活 (5分冷却)";
-                }
+                int s = modPlayer.currentSequence;
+                string[] names = { "", "未知", "荣耀者", "银骑士", "猎魔者", "守护者", "黎明骑士", "武器大师", "格斗家", "战士" };
+                title = (s >= 1 && s <= 9) ? names[s] : "巨人途径";
+                colorHex = "C0C0C0"; // 银色
+
+                content += $"\n[c/AAAAAA:灵性]: {modPlayer.spiritualityCurrent:F0} / {modPlayer.spiritualityMax}";
+
+                content += "\n\n[c/FFD700:--- 主动技能 ---]";
+                if (s <= 6) content += "\n[Z] 黎明铠甲 (护盾)";
+                if (s <= 5) content += "\n[X] 守护姿态 (减伤)";
+                if (s <= 3) content += "\n[C] 水银化 (潜行)";
             }
-            return "";
-        }
-    }
 
-    public class SequenceUISystem : ModSystem
-    {
-        internal SequenceStatusUI MyUIState;
-        private UserInterface _myUserInterface;
+            // 通用属性面板
+            string stats = "\n\n[c/FFD700:--- 当前属性加成 ---]";
+            stats += $"\n防御力: {player.statDefense}";
+            stats += $"\n生命再生: {player.lifeRegen / 2}/s";
+            stats += $"\n移动速度: +{(int)((player.moveSpeed - 1f) * 100)}%";
+            stats += $"\n伤害倍率: {modPlayer.GetSequenceMultiplier(Math.Min(modPlayer.currentSequence, Math.Min(modPlayer.currentHunterSequence, modPlayer.currentMoonSequence))):F1}x";
 
-        public override void Load()
-        {
-            if (!Main.dedServ)
+            if (modPlayer.currentMoonSequence <= 3 || modPlayer.currentHunterSequence <= 4)
             {
-                MyUIState = new SequenceStatusUI();
-                MyUIState.Activate();
-                _myUserInterface = new UserInterface();
-                _myUserInterface.SetState(MyUIState);
+                stats += $"\n召唤栏位: {player.maxMinions}";
+                stats += $"\n召唤伤害: +{(int)((player.GetDamage(DamageClass.Summon).Additive - 1f) * 100)}%";
             }
-        }
 
-        public override void UpdateUI(GameTime gameTime)
-        {
-            _myUserInterface?.Update(gameTime);
-        }
-
-        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
-        {
-            int resourceBarIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Resource Bars"));
-            if (resourceBarIndex != -1)
-            {
-                layers.Insert(resourceBarIndex, new LegacyGameInterfaceLayer(
-                    "zhashi: Sequence UI",
-                    delegate {
-                        _myUserInterface.Draw(Main.spriteBatch, new GameTime());
-                        return true;
-                    },
-                    InterfaceScaleType.UI)
-                );
-            }
+            return $"[c/{colorHex}:{title} (序列{Math.Min(modPlayer.currentSequence, Math.Min(modPlayer.currentHunterSequence, modPlayer.currentMoonSequence))})]{content}{stats}";
         }
     }
 }
