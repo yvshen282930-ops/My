@@ -20,6 +20,29 @@ Keybinds: {
 	// "非凡能力: 斩击.DisplayName": 非凡能力: 斩击
 	// "非凡能力: 黑暗之翼.DisplayName": 非凡能力: 黑暗之翼
 	// "非凡能力: 深渊枷锁.DisplayName": 非凡能力: 深渊枷锁
+	// "月亮: 黑暗之翼 (飞行).DisplayName": 月亮: 黑暗之翼 (飞行)
+	// "月亮: 黑暗之翼.DisplayName": 月亮: 黑暗之翼
+	// "月亮: 深渊枷锁 (束缚).DisplayName": 月亮: 深渊枷锁 (束缚)
+	// "月亮: 炼金手雷 (攻击).DisplayName": 月亮: 炼金手雷 (攻击)
+	// "月亮: 炼金手雷.DisplayName": 月亮: 炼金手雷
+	// "月亮: 生命灵液 (治疗).DisplayName": 月亮: 生命灵液 (治疗)
+	// "月亮: 生命灵液.DisplayName": 月亮: 生命灵液
+	// "红祭司: 形态切换 (火焰/巨人).DisplayName": 红祭司: 形态切换 (火焰/巨人)
+	// "红祭司: 闪现.DisplayName": 红祭司: 闪现
+	// "红祭司: 火焰炸弹.DisplayName": 红祭司: 火焰炸弹
+	// "红祭司: 火焰披风.DisplayName": 红祭司: 火焰披风
+	// "红祭司: 收割/斩击.DisplayName": 红祭司: 收割/斩击
+	// "红祭司: 武器附魔.DisplayName": 红祭司: 武器附魔
+	// "红祭司: 操纵火焰/挑衅.DisplayName": 红祭司: 操纵火焰/挑衅
+	// "红祭司: 集众.DisplayName": 红祭司: 集众
+	// "红祭司: 雷击.DisplayName": 红祭司: 雷击
+	// "红祭司: 冰河.DisplayName": 红祭司: 冰河
+	// "巨人: 水银化.DisplayName": 巨人: 水银化
+	// "巨人: 守护姿态.DisplayName": 巨人: 守护姿态
+	// "巨人: 黎明铠甲.DisplayName": 巨人: 黎明铠甲
+	// "月亮: 深渊枷锁/闪现.DisplayName": 月亮: 深渊枷锁/闪现
+	// "月亮: 月光化.DisplayName": 月亮: 月光化
+	// "月亮: 满月领域.DisplayName": 月亮: 满月领域
 }
 
 Items: {
@@ -261,6 +284,16 @@ Items: {
 		// DisplayName: Vampire Potion
 		// Tooltip: ""
 	}
+
+	PotionsProfessorPotion: {
+		// DisplayName: Potions Professor Potion
+		// Tooltip: ""
+	}
+
+	ScarletScholarPotion: {
+		// DisplayName: Scarlet Scholar Potion
+		// Tooltip: ""
+	}
 }
 
 NPCs: {
@@ -285,6 +318,8 @@ Projectiles: {
 	WeatherStrikeLightning.DisplayName: 天气雷击
 	ConquerorSwordProjectile.DisplayName: 紫色征服之剑
 	// AbyssShackleProjectile.DisplayName: Abyss Shackle Projectile
+	// AlchemicalGrenade.DisplayName: Alchemical Grenade
+	// FullMoonCircle.DisplayName: Full Moon Circle
 }
 
 Conditions: {
