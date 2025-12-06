@@ -43,6 +43,9 @@ Keybinds: {
 	// "月亮: 深渊枷锁/闪现.DisplayName": 月亮: 深渊枷锁/闪现
 	// "月亮: 月光化.DisplayName": 月亮: 月光化
 	// "月亮: 满月领域.DisplayName": 月亮: 满月领域
+	// "月亮: 蝙蝠化身.DisplayName": 月亮: 蝙蝠化身
+	// "月亮: 月亮纸人.DisplayName": 月亮: 月亮纸人
+	// "月亮: 黑暗凝视.DisplayName": 月亮: 黑暗凝视
 }
 
 Items: {
@@ -294,6 +297,11 @@ Items: {
 		// DisplayName: Scarlet Scholar Potion
 		// Tooltip: ""
 	}
+
+	WitchKingPotion: {
+		// DisplayName: Witch King Potion
+		// Tooltip: ""
+	}
 }
 
 NPCs: {
@@ -320,6 +328,7 @@ Projectiles: {
 	// AbyssShackleProjectile.DisplayName: Abyss Shackle Projectile
 	// AlchemicalGrenade.DisplayName: Alchemical Grenade
 	// FullMoonCircle.DisplayName: Full Moon Circle
+	// BatSwarmProjectile.DisplayName: Bat Swarm Projectile
 }
 
 Conditions: {
