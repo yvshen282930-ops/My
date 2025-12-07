@@ -225,8 +225,8 @@ namespace zhashi.Content
             if (currentHunterSequence <= 7) { Player.GetDamage(DamageClass.Generic) += 0.15f * hunterMult; Player.buffImmune[BuffID.OnFire] = true; Player.buffImmune[BuffID.OnFire3] = true; Player.buffImmune[BuffID.Frostburn] = true; Player.resistCold = true; }
             if (currentHunterSequence <= 6) { Player.GetCritChance(DamageClass.Generic) += 15; Player.manaCost -= 0.20f; }
             if (currentHunterSequence <= 5) { Player.GetArmorPenetration(DamageClass.Generic) += 30 * hunterMult; Player.GetCritChance(DamageClass.Generic) += 20; }
-            if (currentHunterSequence <= 4) { Player.statDefense += (int)(50 * hunterMult); Player.endurance += 0.10f; Player.maxMinions += 3; Player.noKnockback = true; }
-            if (currentHunterSequence <= 3) { Player.maxMinions += 4; Player.maxTurrets += 3; Player.GetDamage(DamageClass.Summon) += 0.40f; }
+            if (currentHunterSequence <= 4) { Player.statDefense += (int)(50 * hunterMult); Player.endurance += 0.10f; Player.maxMinions += 5; Player.noKnockback = true; }
+            if (currentHunterSequence <= 3) { Player.maxMinions += 10; Player.maxTurrets += 3; Player.GetDamage(DamageClass.Summon) += 0.40f; }
             if (currentHunterSequence <= 2) { Player.statLifeMax2 += 600; Player.statManaMax2 += 300; Player.GetDamage(DamageClass.Generic) += 0.40f; Player.buffImmune[BuffID.WindPushed] = true; }
             if (currentHunterSequence <= 1) { Player.statDefense += 100; Player.endurance += 0.25f; Player.GetDamage(DamageClass.Generic) += 1.0f; Player.GetCritChance(DamageClass.Generic) += 40; Player.aggro += 2000; Player.buffImmune[BuffID.Weak] = true; Player.buffImmune[BuffID.BrokenArmor] = true; Player.buffImmune[BuffID.WitheredArmor] = true; Player.buffImmune[BuffID.WitheredWeapon] = true; }
 
@@ -312,7 +312,7 @@ namespace zhashi.Content
 
             // 猎人/巨人特效
             if (isCalamityGiant) { if (!TryConsumeSpirituality(100.0f, true)) isCalamityGiant = false; else { Player.statDefense += 300; Player.wingsLogic = 0; Player.wingTime = 9999; Player.gravity = 0f; Player.statLifeMax2 += 3000; Player.invis = true; if (Main.rand.NextBool(2)) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Electric, 0, 0, 0, default, 1.5f); } }
-            if (isArmyOfOne) { if (currentHunterSequence <= 4 && TryConsumeSpirituality(5.0f, true)) { Player.maxMinions += 5; } else isArmyOfOne = false; }
+            if (isArmyOfOne){ if (currentHunterSequence <= 4 && TryConsumeSpirituality(5.0f, true)){int bonusMinions = 5;  if (currentHunterSequence <= 1) bonusMinions = 40;else if (currentHunterSequence <= 2) bonusMinions = 20;else if (currentHunterSequence <= 3) bonusMinions = 10;  Player.maxMinions += bonusMinions; } else{ isArmyOfOne = false;} }
 
             if (isFireForm)
             {
