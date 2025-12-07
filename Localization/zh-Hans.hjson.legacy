@@ -1,100 +1,418 @@
-Mods: {
+﻿Mods: {
     zhashi: {
         Items: {
-            # === 魔药系列 ===
-            WarriorPotion: {
-                DisplayName: "序列9：战士魔药"
-                Tooltip: "服用以晋升序列9"
+            # ==========================================
+            #             特殊武器 (Weapons)
+            # ==========================================
+            # 巨人途径
+            TwilightGiantSword: {
+                DisplayName: 黄昏巨剑
+                Tooltip:
+                    '''
+                    序列2：荣耀者的象征武器。
+                    每一击都以此为终结，蕴含着衰败与黄昏的权柄。
+                    攻击时会释放黄昏风暴，瓦解敌人的防御。
+                    '''
             }
-            PugilistPotion: {
-                DisplayName: "序列8：格斗家魔药"
-                Tooltip: "服用以晋升序列8"
-            }
-            WeaponMasterPotion: {
-                DisplayName: "序列7：武器大师魔药"
-                Tooltip: "服用以晋升序列7"
-            }
-            DawnKnightPotion: {
-                DisplayName: "序列6：黎明骑士魔药"
-                Tooltip: "服用以晋升序列6"
-            }
-            GuardianPotion: {
-                DisplayName: "序列5：守护者魔药"
-                Tooltip: "服用以晋升序列5"
-            }
-            DemonHunterPotion: {
-                DisplayName: "序列4：猎魔者魔药"
-                Tooltip: "服用以晋升序列4 (半神)"
-            }
-            SilverKnightPotion: {
-                DisplayName: "序列3：银骑士魔药"
-                Tooltip: "服用以晋升序列3 (圣者)"
-            }
-            GloryPotion: {
-                DisplayName: "序列2：荣耀者魔药"
-                Tooltip: "服用以晋升序列2 (天使)"
-            }
-
-            # === 材料与特殊道具 ===
-            ExtraordinaryBlood: {
-                DisplayName: "非凡之血"
-                Tooltip: "蕴含着一丝古老神性的鲜血，可用于召唤巨人王。"
-            }
-            BlasphemySlate: {
-                DisplayName: "亵渎石板"
-                Tooltip: "" # 内容由代码动态生成
-            }
-            ResurrectionReset: {
-                DisplayName: "命运之轮 (调试)"
-                Tooltip: "左键重置黄昏重生的冷却时间。"
-            }
-            SpiritualityRefill: {
-                DisplayName: "灵性之源 (调试)"
-                Tooltip: "左键补满灵性。"
-            }
-
-            # === 武器 ===
             SwordOfDawn: {
-                DisplayName: "晨曦之剑"
-                Tooltip: "黎明骑士的佩剑，每一击都带有净化的效果。\n<right>消耗灵性释放光之风暴。"
+                DisplayName: 黎明巨剑
+                Tooltip:
+                    '''
+                    序列6：黎明骑士的伴生武器。
+                    挥舞时会斩出破晓的光辉，对不死生物造成毁灭性打击。
+                    “黎明到来，黑暗消散。”
+                    '''
             }
             SilverRapier: {
-                DisplayName: "银白细剑"
-                Tooltip: "由纯粹的光芒凝聚而成，过度使用会崩解。"
+                DisplayName: 银白细剑
+                Tooltip:
+                    '''
+                    序列3：银骑士的佩剑。
+                    剑身如水银般流动，攻击速度极快。
+                    '''
             }
-            TwilightGiantSword: {
-                DisplayName: "黄昏巨剑"
-                Tooltip: "巨人王曾使用的武器，蕴含衰败之力。\n<right>献祭一切释放毁灭风暴。"
-            }
-        }
-
-        # === NPC (Boss) ===
-        NPCs: {
-            Aurmir: {
-                DisplayName: "巨人王·奥尔米尔"
-            }
-        }
-
-        # === 弹幕 ===
-        Projectiles: {
-            TwilightStormProjectile.DisplayName: "黄昏风暴"
-            TwilightStorm_Final.DisplayName: "黄昏风暴"
-            AurmirSkyLance.DisplayName: "晨曦光枪"
-            AurmirTwilightOrb.DisplayName: "衰败法球"
-            AurmirBossStorm.DisplayName: "神罚风暴"
-            TwilightSwordBeam.DisplayName: "黄昏剑气"
-            GuardianShieldProjectile.DisplayName: "守护光墙"
             
-            # 如果有晨曦之剑的特效弹幕，也可以加在这里，例如：
-            LightStormController.DisplayName: "光之风暴"
-            DawnBladeProjectile.DisplayName: "晨曦光刃"
+            # 猎人途径
+            ConquerorSword: {
+                DisplayName: 铁血长剑
+                Tooltip:
+                    '''
+                    序列4：铁血骑士的佩剑。
+                    在鲜血与火焰中铸造，渴望战斗。
+                    击中敌人可能使其燃烧。
+                    '''
+            }
+            ReaperScythe: {
+                DisplayName: 收割者镰刀
+                Tooltip:
+                    '''
+                    序列5：收割者的武器。
+                    专门用于收割生命的弱点，必定暴击。
+                    '''
+            }
+            ConquerorLance: {
+                DisplayName: 征服者长枪
+                Tooltip:
+                    '''
+                    序列1：征服者的武器。
+                    一往无前，征服一切不服。
+                    '''
+            }
+
+            # ==========================================
+            #             核心材料 (Materials)
+            # ==========================================
+            WeatherRune: {
+                DisplayName: 天气符文
+                Tooltip:
+                    '''
+                    蕴含着古老天气力量的符文，表面闪烁着雷光与冰霜。
+                    用于晋升序列2：天气术士的关键媒介。
+                    '''
+            }
+            ConquerorCharacteristic: {
+                DisplayName: 征服者非凡特性
+                Tooltip:
+                    '''
+                    析出红祭司途径序列1特性的结晶。
+                    握在手中能感受到统御万军的威严。
+                    用于晋升序列1：征服者。
+                    '''
+            }
+            WhisperOfSpiritWorld: {
+                DisplayName: 灵界低语
+                Tooltip:
+                    '''
+                    来自灵界深处的模糊信息。
+                    使用它尝试解析'真名'。
+                    [警告]：如果解析失败，你将遭受月亮的反噬（重伤/Debuff）。
+                    '''
+            }
+            TrueNameInscription: {
+                DisplayName: 真名拓本
+                Tooltip:
+                    '''
+                    一段被定义的、与你命运缠绕的特殊信息。
+                    序列3：召唤大师魔药的核心材料。
+                    '''
+            }
+
+            # ==========================================
+            #             月亮途径魔药 (Moon)
+            # ==========================================
+            ApothecaryPotion: {
+                DisplayName: 序列9：药师魔药
+                Tooltip:
+                    '''
+                    服用后晋升为药师。
+                    获得抗毒能力，生命回复提升。
+                    擅长调配药剂和治疗。
+                    '''
+            }
+            BeastTamerPotion: {
+                DisplayName: 序列8：驯兽师魔药
+                Tooltip:
+                    '''
+                    服用后晋升为驯兽师。
+                    允许你驯化野兽，增加召唤栏位。
+                    获得危险感知能力。
+                    '''
+            }
+            VampirePotion: {
+                DisplayName: 序列7：吸血鬼魔药
+                Tooltip:
+                    '''
+                    服用后晋升为吸血鬼。
+                    获得黑暗之翼与超强自愈力。
+                    即使在黑夜中也是优雅的猎手，但厌恶阳光。
+                    '''
+            }
+            PotionsProfessorPotion: {
+                DisplayName: 序列6：魔药教授魔药
+                Tooltip:
+                    '''
+                    服用后晋升为魔药教授。
+                    掌握炼金术的奥秘。
+                    可以使用炼金手雷和生命灵液。
+                    '''
+            }
+            ScarletScholarPotion: {
+                DisplayName: 序列5：深红学者魔药
+                Tooltip:
+                    '''
+                    服用后晋升为深红学者。
+                    掌控月光与阴影。
+                    开启满月领域，获得月光化能力。
+                    '''
+            }
+            WitchKingPotion: {
+                DisplayName: 序列4：巫王魔药
+                Tooltip:
+                    '''
+                    服用后晋升为巫王。
+                    半神之始，寿命极长。
+                    获得蝙蝠化身、纸人替身与黑暗凝视。
+                    '''
+            }
+            SummoningMasterPotion: {
+                DisplayName: 序列3：召唤大师魔药
+                Tooltip:
+                    '''
+                    服用后晋升为召唤大师。
+                    能打开召唤之门，召唤灵界生物助战。
+                    大幅提升召唤能力。
+                    '''
+            }
+            LifeGiverPotion: {
+                DisplayName: 序列2：创生者魔药
+                Tooltip:
+                    '''
+                    服用后晋升为创生者。
+                    生命的主宰，拥有不可思议的治愈与创造力。
+                    开启创生领域，净化大地，创造生命奇迹。
+                    '''
+            }
+            BeautyGoddessPotion: {
+                DisplayName: 序列1：美神魔药
+                Tooltip:
+                    '''
+                    服用后晋升为美神。
+                    美的具象化，万物倾倒。
+                    [警告]：服用后性别将转化为女性。
+                    获得魅惑光环与神级力量。
+                    '''
+            }
+
+            # ==========================================
+            #             猎人途径魔药 (Hunter)
+            # ==========================================
+            HunterPotion: {
+                DisplayName: 序列9：猎人魔药
+                Tooltip:
+                    '''
+                    服用后晋升为猎人。
+                    优秀的身体素质与感官。
+                    获得生物探测能力。
+                    '''
+            }
+            ProvokerPotion: {
+                DisplayName: 序列8：挑衅者魔药
+                Tooltip:
+                    '''
+                    服用后晋升为挑衅者。
+                    擅长吸引仇恨与陷阱制作。
+                    '''
+            }
+            PyromaniacPotion: {
+                DisplayName: 序列7：纵火家魔药
+                Tooltip:
+                    '''
+                    服用后晋升为纵火家。
+                    掌控火焰的力量。
+                    获得操纵火焰、火球术与火焰抗性。
+                    '''
+            }
+            ConspiratorPotion: {
+                DisplayName: 序列6：阴谋家魔药
+                Tooltip:
+                    '''
+                    服用后晋升为阴谋家。
+                    思维敏捷，擅长引导战斗。
+                    获得闪现与武器附魔能力。
+                    '''
+            }
+            ReaperPotion: {
+                DisplayName: 序列5：收割者魔药
+                Tooltip:
+                    '''
+                    服用后晋升为收割者。
+                    致命的弱点攻击。
+                    获得致命斩击能力，暴击大幅提升。
+                    '''
+            }
+            IronBloodedKnightPotion: {
+                DisplayName: 序列4：铁血骑士魔药
+                Tooltip:
+                    '''
+                    服用后晋升为铁血骑士。
+                    钢铁般的意志与身躯。
+                    获得火焰形态与集众能力。
+                    '''
+            }
+            WarBishopPotion: {
+                DisplayName: 序列3：战争主教魔药
+                Tooltip:
+                    '''
+                    服用后晋升为战争主教。
+                    战场的指挥官，心灵连接。
+                    '''
+            }
+            WeatherWarlockPotion: {
+                DisplayName: 序列2：天气术士魔药
+                Tooltip:
+                    '''
+                    服用后晋升为天气术士。
+                    呼风唤雨，掌控天象。
+                    获得雷击与冰河世纪能力。
+                    '''
+            }
+            ConquerorPotion: {
+                DisplayName: 序列1：征服者魔药
+                Tooltip:
+                    '''
+                    服用后晋升为征服者。
+                    征服一切不服。
+                    周围敌怪停止刷新，属性碾压。
+                    '''
+            }
+
+            # ==========================================
+            #             巨人途径魔药 (Giant)
+            # ==========================================
+            WarriorPotion: {
+                DisplayName: 序列9：战士魔药
+                Tooltip: 提升近战能力。
+            }
+            PugilistPotion: {
+                DisplayName: 序列8：格斗家魔药
+                Tooltip: 提升格斗技巧与抗击退。
+            }
+            WeaponMasterPotion: {
+                DisplayName: 序列7：武器大师魔药
+                Tooltip: 精通各类武器。
+            }
+            DawnKnightPotion: {
+                DisplayName: 序列6：黎明骑士魔药
+                Tooltip: 获得黎明铠甲，光耀四方。
+            }
+            GuardianPotion: {
+                DisplayName: 序列5：守护者魔药
+                Tooltip: 守护姿态，坚不可摧。
+            }
+            DemonHunterPotion: {
+                DisplayName: 序列4：猎魔者魔药
+                Tooltip: 免疫诅咒，克制邪恶。
+            }
+            SilverKnightPotion: {
+                DisplayName: 序列3：银骑士魔药
+                Tooltip: 化身水银，难以捉摸。
+            }
+            GloryPotion: {
+                DisplayName: 序列2：荣耀者魔药
+                Tooltip: 黄昏复活，不朽荣光。
+            }
         }
-        
-        # === 按键名称 ===
+
+        # ==========================================
+        #             弹幕 (Projectiles)
+        # ==========================================
+        Projectiles: {
+            AlchemicalGrenade.DisplayName: 炼金手雷
+            BatSwarmProjectile.DisplayName: 吸血蝙蝠
+            SummoningDoorProjectile.DisplayName: 召唤之门
+            CreationDomainProjectile.DisplayName: 创生领域
+            FullMoonCircle.DisplayName: 满月法阵
+            AbyssShackleProjectile.DisplayName: 深渊枷锁
+            PyromaniacBomb.DisplayName: 火焰炸弹
+            PyromaniacFireball.DisplayName: 火球
+            ReaperSlashProjectile.DisplayName: 收割斩击
+            WeatherStrikeLightning.DisplayName: 天气雷击
+            GuardianShieldProjectile.DisplayName: 守护之盾
+        }
+
+        # ==========================================
+        #                 Buffs
+        # ==========================================
+        Buffs: {
+            TamedBuff: {
+                DisplayName: 血仆契约
+                Description: 这个生物已经被你驯服，将为你而战！
+            }
+            ConquerorWill: {
+                DisplayName: 征服意志
+                Description: 被征服者的威压震慑，无法动弹。
+            }
+        }
+
+        # ==========================================
+        #             按键绑定 (Keybinds)
+        # ==========================================
         Keybinds: {
-            "非凡能力: 黎明铠甲": "非凡能力: 黎明铠甲 (Z)"
-            "非凡能力: 守护姿态": "非凡能力: 守护姿态 (X)"
-            "非凡能力: 水银化": "非凡能力: 水银化 (C)"
+            # --- 猎人 ---
+            "红祭司: 形态切换 (火焰/巨人)": {
+                DisplayName: 红祭司: 形态切换 (K)
+            }
+            "红祭司: 闪现": {
+                DisplayName: 红祭司: 闪现 (V)
+            }
+            "红祭司: 火焰炸弹": {
+                DisplayName: 红祭司: 火焰炸弹 (X)
+            }
+            "红祭司: 火焰披风": {
+                DisplayName: 红祭司: 火焰披风 (Z)
+            }
+            "红祭司: 收割/斩击": {
+                DisplayName: 红祭司: 斩击 (G)
+            }
+            "红祭司: 武器附魔": {
+                DisplayName: 红祭司: 附魔 (T)
+            }
+            "红祭司: 操纵火焰/挑衅": {
+                DisplayName: 红祭司: 操纵火焰 (F)
+            }
+            "红祭司: 集众": {
+                DisplayName: 红祭司: 集众 (J)
+            }
+            "红祭司: 雷击": {
+                DisplayName: 红祭司: 雷击 (Mouse2)
+            }
+            "红祭司: 冰河": {
+                DisplayName: 红祭司: 冰河 (R)
+            }
+
+            # --- 巨人 ---
+            "巨人: 水银化": {
+                DisplayName: 巨人: 水银化 (C)
+            }
+            "巨人: 守护姿态": {
+                DisplayName: 巨人: 守护姿态 (X)
+            }
+            "巨人: 黎明铠甲": {
+                DisplayName: 巨人: 黎明铠甲 (Z)
+            }
+
+            # --- 月亮 ---
+            "月亮: 黑暗之翼": {
+                DisplayName: 月亮: 黑暗之翼 (K)
+            }
+            "月亮: 深渊枷锁/闪现": {
+                DisplayName: 月亮: 深渊枷锁 (V)
+            }
+            "月亮: 炼金手雷": {
+                DisplayName: 月亮: 炼金手雷 (X)
+            }
+            "月亮: 生命灵液": {
+                DisplayName: 月亮: 生命灵液 (Z)
+            }
+            "月亮: 月光化": {
+                DisplayName: 月亮: 月光化 (C)
+            }
+            "月亮: 满月领域": {
+                DisplayName: 月亮: 满月/创生领域 (G)
+            }
+            "月亮: 蝙蝠化身": {
+                DisplayName: 月亮: 蝙蝠化身 (T)
+            }
+            "月亮: 月亮纸人": {
+                DisplayName: 月亮: 纸人/转化 (J)
+            }
+            "月亮: 黑暗凝视": {
+                DisplayName: 月亮: 凝视 (F)
+            }
+            "月亮: 召唤之门": {
+                DisplayName: 月亮: 召唤之门 (R)
+            }
         }
     }
 }
+
