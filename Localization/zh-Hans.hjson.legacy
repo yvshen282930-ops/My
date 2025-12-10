@@ -2,7 +2,7 @@
     zhashi: {
         Items: {
             # ==========================================
-            #             特殊武器 (Weapons)
+            #              特殊武器 (Weapons)
             # ==========================================
             # 巨人途径
             TwilightGiantSword: {
@@ -58,9 +58,23 @@
                     一往无前，征服一切不服。
                     '''
             }
+            
+            # 愚者途径 (新增)
+            AirBullet: {
+                DisplayName: 空气弹
+                Tooltip:
+                    '''
+                    由空气压缩而成的无形子弹
+                    威力随序列晋升而提升
+                    序列7: 手枪
+                    序列5: 步枪
+                    序列4: 炮弹
+                    序列3: 岸防炮
+                    '''
+            }
 
             # ==========================================
-            #             核心材料 (Materials)
+            #              核心材料 (Materials)
             # ==========================================
             WeatherRune: {
                 DisplayName: 天气符文
@@ -98,7 +112,7 @@
             }
 
             # ==========================================
-            #             月亮途径魔药 (Moon)
+            #              月亮途径魔药 (Moon)
             # ==========================================
             ApothecaryPotion: {
                 DisplayName: 序列9：药师魔药
@@ -184,7 +198,7 @@
             }
 
             # ==========================================
-            #             猎人途径魔药 (Hunter)
+            #              猎人途径魔药 (Hunter)
             # ==========================================
             HunterPotion: {
                 DisplayName: 序列9：猎人魔药
@@ -267,7 +281,7 @@
             }
 
             # ==========================================
-            #             巨人途径魔药 (Giant)
+            #              巨人途径魔药 (Giant)
             # ==========================================
             WarriorPotion: {
                 DisplayName: 序列9：战士魔药
@@ -301,10 +315,86 @@
                 DisplayName: 序列2：荣耀者魔药
                 Tooltip: 黄昏复活，不朽荣光。
             }
+
+            # ==========================================
+            #              愚者途径魔药 (Fool)
+            # ==========================================
+            SeerPotion: {
+                DisplayName: 序列9：占卜家魔药
+                Tooltip:
+                    '''
+                    服用后晋升为占卜家。
+                    获得灵视与占卜能力，趋吉避凶。
+                    '''
+            }
+            ClownPotion: {
+                DisplayName: 序列8：小丑魔药
+                Tooltip:
+                    '''
+                    服用后晋升为小丑。
+                    获得火焰跳跃与纸人替身。
+                    '''
+            }
+            MagicianPotion: {
+                DisplayName: 序列7：魔术师魔药
+                Tooltip:
+                    '''
+                    服用后晋升为魔术师。
+                    获得伤害转移、骨骼软化与空气弹。
+                    '''
+            }
+            FacelessPotion: {
+                DisplayName: 序列6：无面人魔药
+                Tooltip:
+                    '''
+                    服用后晋升为无面人。
+                    千变万化，获得无面伪装能力。
+                    '''
+            }
+            MarionettistPotion: {
+                DisplayName: 序列5：秘偶大师魔药
+                Tooltip:
+                    '''
+                    服用后晋升为秘偶大师。
+                    掌控灵体之线，将万物转化为傀儡。
+                    '''
+            }
+            BizarroSorcererPotion: {
+                DisplayName: 序列4：诡法师魔药
+                Tooltip:
+                    '''
+                    服用后晋升为诡法师 (半神)。
+                    拥有灵之虫、秘偶互换与控灵能力。
+                    '''
+            }
+            ScholarOfYorePotion: {
+                DisplayName: 序列3：古代学者魔药
+                Tooltip:
+                    '''
+                    服用后晋升为古代学者 (圣者)。
+                    向历史借取力量，召唤旧日幻影。
+                    '''
+            }
+            MiracleInvokerPotion: {
+                DisplayName: 序列2：奇迹师魔药
+                Tooltip:
+                    '''
+                    服用后晋升为奇迹师 (天使)。
+                    行走于现实的奇迹，干扰命运，实现愿望。
+                    '''
+            }
+            AttendantPotion: {
+                DisplayName: 序列1：诡秘侍者魔药
+                Tooltip:
+                    '''
+                    服用后晋升为诡秘侍者 (天使之王)。
+                    支配灵界，概念嫁接，建立神国。
+                    '''
+            }
         }
 
         # ==========================================
-        #             弹幕 (Projectiles)
+        #              弹幕 (Projectiles)
         # ==========================================
         Projectiles: {
             AlchemicalGrenade.DisplayName: 炼金手雷
@@ -318,10 +408,16 @@
             ReaperSlashProjectile.DisplayName: 收割斩击
             WeatherStrikeLightning.DisplayName: 天气雷击
             GuardianShieldProjectile.DisplayName: 守护之盾
+            
+            # 愚者途径新增
+            AirBulletProjectile.DisplayName: 空气弹
+            MarionetteMinion.DisplayName: 秘偶
+            HistoricalBossProjectile.DisplayName: 历史投影
+            HistoricalSceneProjectile.DisplayName: 历史场景
         }
 
         # ==========================================
-        #                 Buffs
+        #                  Buffs
         # ==========================================
         Buffs: {
             TamedBuff: {
@@ -332,10 +428,24 @@
                 DisplayName: 征服意志
                 Description: 被征服者的威压震慑，无法动弹。
             }
+            
+            # 愚者途径新增
+            YesterdayBuff: {
+                DisplayName: 昨日重现
+                Description: 你向过去的自己借取了力量，全属性大幅提升！
+            }
+            MarionetteTownNPCBuff: {
+                DisplayName: 秘偶化
+                Description: 这个人已经成为了你的提线木偶...
+            }
+            SpiritControlDebuff: {
+                DisplayName: 灵体受控
+                Description: 思维迟缓，身体僵硬。
+            }
         }
 
         # ==========================================
-        #             按键绑定 (Keybinds)
+        #              按键绑定 (Keybinds)
         # ==========================================
         Keybinds: {
             # --- 猎人 ---
@@ -412,7 +522,47 @@
             "月亮: 召唤之门": {
                 DisplayName: 月亮: 召唤之门 (R)
             }
+            
+            # --- 愚者 (新增) ---
+            "愚者: 灵视开关": {
+                DisplayName: 愚者: 灵视 (C)
+            }
+            "愚者: 占卜术": {
+                DisplayName: 愚者: 占卜 (J)
+            }
+            "愚者: 火焰跳跃": {
+                DisplayName: 愚者: 火焰跳跃 (F)
+            }
+            "愚者: 无面伪装": {
+                DisplayName: 愚者: 无面伪装/灵肉转化 (V)
+            }
+            "愚者: 干扰直觉": {
+                DisplayName: 愚者: 干扰/嫁接 (G)
+            }
+            "愚者: 灵体之线": {
+                DisplayName: 愚者: 灵体之线 (Z)
+            }
+            "愚者: 秘偶互换": {
+                DisplayName: 愚者: 秘偶互换 (T)
+            }
+            "愚者: 控灵/麻痹": {
+                DisplayName: 愚者: 控灵 (R)
+            }
+            "愚者: 历史投影": {
+                DisplayName: 愚者: 历史投影 (Y)
+            }
+            "愚者: 昨日重现": {
+                DisplayName: 愚者: 昨日重现 (U)
+            }
+            "愚者: 奇迹愿望": {
+                DisplayName: 愚者: 奇迹愿望 (Shift+V)
+            }
+            "愚者: 嫁接": {
+                DisplayName: 愚者: 嫁接 (G)
+            }
+            "愚者: 灵肉转化": {
+                DisplayName: 愚者: 灵肉转化 (V)
+            }
         }
     }
 }
-

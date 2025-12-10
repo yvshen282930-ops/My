@@ -1,27 +1,40 @@
 Keybinds: {
-	"巨人: 水银化.DisplayName": 巨人: 水银化 (C)
-	"巨人: 守护姿态.DisplayName": 巨人: 守护姿态 (X)
-	"巨人: 黎明铠甲.DisplayName": 巨人: 黎明铠甲 (Z)
-	"红祭司: 形态切换 (火焰/巨人).DisplayName": 红祭司: 形态切换 (K)
-	"红祭司: 闪现.DisplayName": 红祭司: 闪现 (V)
-	"红祭司: 火焰炸弹.DisplayName": 红祭司: 火焰炸弹 (X)
-	"红祭司: 火焰披风.DisplayName": 红祭司: 火焰披风 (Z)
-	"红祭司: 收割/斩击.DisplayName": 红祭司: 斩击 (G)
-	"红祭司: 武器附魔.DisplayName": 红祭司: 附魔 (T)
-	"红祭司: 操纵火焰/挑衅.DisplayName": 红祭司: 操纵火焰 (F)
-	"红祭司: 集众.DisplayName": 红祭司: 集众 (J)
-	"红祭司: 雷击.DisplayName": 红祭司: 雷击 (Mouse2)
-	"红祭司: 冰河.DisplayName": 红祭司: 冰河 (R)
 	"月亮: 黑暗之翼.DisplayName": 月亮: 黑暗之翼 (K)
-	"月亮: 深渊枷锁/闪现.DisplayName": 月亮: 深渊枷锁 (V)
+	"月亮: 蝙蝠化身.DisplayName": 月亮: 蝙蝠化身 (T)
+	// "月亮: 纸人替身.DisplayName": 月亮: 纸人替身
+	"月亮: 黑暗凝视.DisplayName": 月亮: 凝视 (F)
+	// "月亮: 深渊枷锁.DisplayName": 月亮: 深渊枷锁
 	"月亮: 炼金手雷.DisplayName": 月亮: 炼金手雷 (X)
 	"月亮: 生命灵液.DisplayName": 月亮: 生命灵液 (Z)
 	"月亮: 月光化.DisplayName": 月亮: 月光化 (C)
-	"月亮: 满月领域.DisplayName": 月亮: 满月/创生领域 (G)
+	// "月亮: 满月/创生.DisplayName": 月亮: 满月/创生
 	"月亮: 召唤之门.DisplayName": 月亮: 召唤之门 (R)
-	"月亮: 蝙蝠化身.DisplayName": 月亮: 蝙蝠化身 (T)
-	"月亮: 月亮纸人.DisplayName": 月亮: 纸人/转化 (J)
-	"月亮: 黑暗凝视.DisplayName": 月亮: 凝视 (F)
+	// "猎人: 形态切换.DisplayName": 猎人: 形态切换
+	// "猎人: 火焰闪现.DisplayName": 猎人: 火焰闪现
+	// "猎人: 炸弹.DisplayName": 猎人: 炸弹
+	// "猎人: 火焰披风.DisplayName": 猎人: 火焰披风
+	// "猎人: 收割斩击.DisplayName": 猎人: 收割斩击
+	// "猎人: 武器附魔.DisplayName": 猎人: 武器附魔
+	// "猎人: 蓄力火球.DisplayName": 猎人: 蓄力火球
+	// "猎人: 集众.DisplayName": 猎人: 集众
+	// "猎人: 天气操控.DisplayName": 猎人: 天气操控
+	// "猎人: 冰河世纪.DisplayName": 猎人: 冰河世纪
+	"巨人: 水银化.DisplayName": 巨人: 水银化 (C)
+	// "巨人: 晨曦之铠.DisplayName": 巨人: 晨曦之铠
+	"巨人: 守护姿态.DisplayName": 巨人: 守护姿态 (X)
+	"愚者: 灵视开关.DisplayName": 愚者: 灵视 (C)
+	"愚者: 占卜术.DisplayName": 愚者: 占卜 (J)
+	"愚者: 火焰跳跃.DisplayName": 愚者: 火焰跳跃 (F)
+	"愚者: 无面伪装.DisplayName": 愚者: 无面伪装/灵肉转化 (V)
+	"愚者: 干扰直觉.DisplayName": 愚者: 干扰/嫁接 (G)
+	"愚者: 灵体之线.DisplayName": 愚者: 灵体之线 (Z)
+	"愚者: 秘偶互换.DisplayName": 愚者: 秘偶互换 (T)
+	"愚者: 控灵/麻痹.DisplayName": 愚者: 控灵 (R)
+	"愚者: 历史投影.DisplayName": 愚者: 历史投影 (Y)
+	"愚者: 昨日重现.DisplayName": 愚者: 昨日重现 (U)
+	"愚者: 奇迹愿望.DisplayName": 愚者: 奇迹愿望 (Shift+V)
+	"愚者: 嫁接.DisplayName": 愚者: 嫁接 (G)
+	"愚者: 灵肉转化.DisplayName": 愚者: 灵肉转化 (V)
 }
 
 Buffs: {
@@ -35,9 +48,24 @@ Buffs: {
 		Description: 被征服者的威压震慑，无法动弹。
 	}
 
+	MarionetteTownNPCBuff: {
+		DisplayName: 秘偶化
+		Description: 这个人已经成为了你的提线木偶...
+	}
+
+	SpiritControlDebuff: {
+		DisplayName: 灵体受控
+		Description: 思维迟缓，身体僵硬。
+	}
+
 	TamedBuff: {
 		DisplayName: 血仆契约
 		Description: 这个生物已经被你驯服，将为你而战！
+	}
+
+	YesterdayBuff: {
+		DisplayName: 昨日重现
+		Description: 你向过去的自己借取了力量，全属性大幅提升！
 	}
 }
 
@@ -113,6 +141,87 @@ Items: {
 	DemonHunterPotion: {
 		DisplayName: 序列4：猎魔者魔药
 		Tooltip: 免疫诅咒，克制邪恶。
+	}
+
+	AttendantPotion: {
+		DisplayName: 序列1：诡秘侍者魔药
+		Tooltip:
+			'''
+			服用后晋升为诡秘侍者 (天使之王)。
+			支配灵界，概念嫁接，建立神国。
+			'''
+	}
+
+	BizarroSorcererPotion: {
+		DisplayName: 序列4：诡法师魔药
+		Tooltip:
+			'''
+			服用后晋升为诡法师 (半神)。
+			拥有灵之虫、秘偶互换与控灵能力。
+			'''
+	}
+
+	ClownPotion: {
+		DisplayName: 序列8：小丑魔药
+		Tooltip:
+			'''
+			服用后晋升为小丑。
+			获得火焰跳跃与纸人替身。
+			'''
+	}
+
+	FacelessPotion: {
+		DisplayName: 序列6：无面人魔药
+		Tooltip:
+			'''
+			服用后晋升为无面人。
+			千变万化，获得无面伪装能力。
+			'''
+	}
+
+	MagicianPotion: {
+		DisplayName: 序列7：魔术师魔药
+		Tooltip:
+			'''
+			服用后晋升为魔术师。
+			获得伤害转移、骨骼软化与空气弹。
+			'''
+	}
+
+	MarionettistPotion: {
+		DisplayName: 序列5：秘偶大师魔药
+		Tooltip:
+			'''
+			服用后晋升为秘偶大师。
+			掌控灵体之线，将万物转化为傀儡。
+			'''
+	}
+
+	MiracleInvokerPotion: {
+		DisplayName: 序列2：奇迹师魔药
+		Tooltip:
+			'''
+			服用后晋升为奇迹师 (天使)。
+			行走于现实的奇迹，干扰命运，实现愿望。
+			'''
+	}
+
+	ScholarOfYorePotion: {
+		DisplayName: 序列3：古代学者魔药
+		Tooltip:
+			'''
+			服用后晋升为古代学者 (圣者)。
+			向历史借取力量，召唤旧日幻影。
+			'''
+	}
+
+	SeerPotion: {
+		DisplayName: 序列9：占卜家魔药
+		Tooltip:
+			'''
+			服用后晋升为占卜家。
+			获得灵视与占卜能力，趋吉避凶。
+			'''
 	}
 
 	GloryPotion: {
@@ -324,11 +433,6 @@ Items: {
 		Tooltip: 精通各类武器。
 	}
 
-	TestSummon: {
-		// DisplayName: Test Summon
-		// Tooltip: ""
-	}
-
 	ConquerorSword: {
 		DisplayName: 铁血长剑
 		Tooltip:
@@ -337,6 +441,24 @@ Items: {
 			在鲜血与火焰中铸造，渴望战斗。
 			击中敌人可能使其燃烧。
 			'''
+	}
+
+	AirBullet: {
+		DisplayName: 空气弹
+		Tooltip:
+			'''
+			由空气压缩而成的无形子弹
+			威力随序列晋升而提升
+			序列7: 手枪
+			序列5: 步枪
+			序列4: 炮弹
+			序列3: 岸防炮
+			'''
+	}
+
+	PaperCard: {
+		// DisplayName: Paper Card
+		// Tooltip: ""
 	}
 
 	SilverRapier: {
@@ -369,12 +491,10 @@ Items: {
 	}
 }
 
-NPCs: {
-	// Aurmir.DisplayName: Aurmir
-	// TestBoss.DisplayName: Test Boss
-}
+// NPCs.Aurmir.DisplayName: Aurmir
 
 Projectiles: {
+	// PaperCardProjectile.DisplayName: Paper Card Projectile
 	AbyssShackleProjectile.DisplayName: 深渊枷锁
 	AlchemicalGrenade.DisplayName: 炼金手雷
 	// AurmirBossStorm.DisplayName: Aurmir Boss Storm
@@ -386,7 +506,10 @@ Projectiles: {
 	// DawnBladeProjectile.DisplayName: Dawn Blade Projectile
 	FullMoonCircle.DisplayName: 满月法阵
 	GuardianShieldProjectile.DisplayName: 守护之盾
+	HistoricalBossProjectile.DisplayName: 历史投影
+	HistoricalSceneProjectile.DisplayName: 历史场景
 	// LightStormController.DisplayName: Light Storm Controller
+	MarionetteMinion.DisplayName: 秘偶
 	PyromaniacBomb.DisplayName: 火焰炸弹
 	// PyromaniacExplosionVisual.DisplayName: Pyromaniac Explosion Visual
 	PyromaniacFireball.DisplayName: 火球
@@ -395,6 +518,7 @@ Projectiles: {
 	SummoningDoorProjectile.DisplayName: 召唤之门
 	// TwilightStormProjectile.DisplayName: Twilight Storm Projectile
 	// TwilightSwordBeam.DisplayName: Twilight Sword Beam
+	AirBulletProjectile.DisplayName: 空气弹
 	WeatherStrikeLightning.DisplayName: 天气雷击
 }
 
