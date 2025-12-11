@@ -2,7 +2,8 @@
 using Terraria.ID;
 using Terraria.ModLoader;
 using zhashi.Content;
-using zhashi.Content.Buffs; // 引用 Buff
+using zhashi.Content.Buffs;
+using System.Collections.Generic;
 
 namespace zhashi.Content.Items.Potions.Fool
 {
@@ -26,27 +27,15 @@ namespace zhashi.Content.Items.Potions.Fool
             Item.value = Item.sellPrice(platinum: 50);
         }
 
-        // 【核心修改】检测转化 NPC 的数量
+        // 【核心修复】不再数身边的NPC，而是读取 LotMPlayer 中保存的进度
         public override bool CanUseItem(Player player)
         {
-            int convertedCount = 0;
+            LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            // 遍历所有 NPC
-            foreach (NPC npc in Main.ActiveNPCs)
-            {
-                // 如果是城镇NPC，且拥有"秘偶化"Buff
-                if (npc.townNPC && npc.HasBuff(ModContent.BuffType<MarionetteTownNPCBuff>()))
-                {
-                    // 距离判定 (可选，必须在身边才算)
-                    if (npc.Distance(player.Center) < 2000f)
-                    {
-                        convertedCount++;
-                    }
-                }
-            }
+            // 只要仪式完成标记为 true，或者进度计数达到 10，就允许使用
+            bool conditionMet = modPlayer.attendantRitualComplete || modPlayer.attendantRitualProgress >= 10;
 
-            // 要求：10个
-            if (convertedCount < 10)
+            if (!conditionMet)
             {
                 return false;
             }
@@ -68,32 +57,31 @@ namespace zhashi.Content.Items.Potions.Fool
             return true;
         }
 
-        public override void ModifyTooltips(System.Collections.Generic.List<TooltipLine> tooltips)
+        // 【UI修复】显示存档中的真实进度
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             base.ModifyTooltips(tooltips);
 
-            int convertedCount = 0;
-            foreach (NPC npc in Main.ActiveNPCs)
-            {
-                if (npc.townNPC && npc.HasBuff(ModContent.BuffType<MarionetteTownNPCBuff>()) && npc.Distance(Main.LocalPlayer.Center) < 2000f)
-                {
-                    convertedCount++;
-                }
-            }
+            Player player = Main.LocalPlayer;
+            LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            string c = convertedCount >= 10 ? "00FF00" : "FF0000";
-            tooltips.Add(new TooltipLine(Mod, "Ritual", $"[c/{c}:仪式要求：转化NPC为秘偶 ({convertedCount}/10)]"));
+            // 读取保存的进度
+            int count = modPlayer.attendantRitualProgress;
+            bool complete = modPlayer.attendantRitualComplete || count >= 10;
+
+            if (count > 10) count = 10; // 显示上限锁定为10
+
+            string color = complete ? "00FF00" : "FF0000"; // 完成变绿，未完成变红
+            string status = complete ? " (已完成)" : "";
+
+            tooltips.Add(new TooltipLine(Mod, "Ritual", $"[c/{color}:仪式要求：转化10个城镇NPC ({count}/10){status}]"));
         }
 
         public override void AddRecipes()
         {
             CreateRecipe()
                 .AddIngredient(ItemID.BottledWater, 1)
-
-                // 【核心修复】将 LuminiteBar 改为 LunarBar
-                .AddIngredient(ItemID.LunarBar, 20)       // 诡秘侍者特性 (夜明锭)
-
-                // 九种灵界特产
+                .AddIngredient(ItemID.LunarBar, 20)       // 诡秘侍者特性
                 .AddIngredient(ItemID.Ectoplasm, 5)       // 灵气
                 .AddIngredient(ItemID.SoulofFlight, 5)    // 飞翔之魂
                 .AddIngredient(ItemID.SoulofLight, 5)     // 光明之魂
@@ -103,7 +91,6 @@ namespace zhashi.Content.Items.Potions.Fool
                 .AddIngredient(ItemID.CrystalShard, 5)    // 水晶碎块
                 .AddIngredient(ItemID.CursedFlame, 5)     // 咒火
                 .AddIngredient(ItemID.Ichor, 5)           // 灵液
-
                 .AddTile(TileID.LunarCraftingStation)     // 远古操纵机
                 .Register();
         }

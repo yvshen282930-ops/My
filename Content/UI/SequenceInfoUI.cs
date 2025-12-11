@@ -10,7 +10,8 @@ using zhashi.Content; // 引用 Player 类
 using zhashi.Content.Items.Potions;        // 巨人途径 (Warrior等)
 using zhashi.Content.Items.Potions.Hunter; // 猎人途径
 using zhashi.Content.Items.Potions.Moon;   // 月亮途径
-using zhashi.Content.Items.Potions.Fool;   // 愚者途径
+using zhashi.Content.Items.Potions.Fool; //愚者魔
+using zhashi.Content.Items.Potions.Marauder; //错误
 
 namespace zhashi.Content.UI
 {
@@ -41,7 +42,6 @@ namespace zhashi.Content.UI
             Texture2D texture = TextureAssets.Item[itemType].Value;
 
             // 3. 计算绘制位置 (屏幕左上角)
-            // 如果你想让它随波浪移动或其它特效，可以在这里修改 vector
             Vector2 drawPos = new Vector2(LEFT_MARGIN, TOP_MARGIN);
             Rectangle iconRect = new Rectangle((int)drawPos.X, (int)drawPos.Y, ICON_SIZE, ICON_SIZE);
 
@@ -76,8 +76,8 @@ namespace zhashi.Content.UI
         private int GetCurrentSequencePotionID(LotMPlayer p)
         {
             // 优先检测低序列 (数值越小代表序列越高)
-            // 这里逻辑是：显示你当前最高等级的那条途径的图标
 
+            // 1. 猎人途径
             if (p.currentHunterSequence <= 9)
             {
                 switch (p.currentHunterSequence)
@@ -94,7 +94,8 @@ namespace zhashi.Content.UI
                     default: return ModContent.ItemType<HunterPotion>();
                 }
             }
-            if (p.currentSequence <= 9) // 巨人
+            // 2. 巨人途径
+            if (p.currentSequence <= 9)
             {
                 switch (p.currentSequence)
                 {
@@ -109,7 +110,8 @@ namespace zhashi.Content.UI
                     default: return ModContent.ItemType<WarriorPotion>();
                 }
             }
-            if (p.currentMoonSequence <= 9) // 月亮
+            // 3. 月亮途径
+            if (p.currentMoonSequence <= 9)
             {
                 switch (p.currentMoonSequence)
                 {
@@ -125,7 +127,8 @@ namespace zhashi.Content.UI
                     default: return ModContent.ItemType<ApothecaryPotion>();
                 }
             }
-            if (p.currentFoolSequence <= 9) // 愚者途径
+            // 4. 愚者途径
+            if (p.currentFoolSequence <= 9)
             {
                 switch (p.currentFoolSequence)
                 {
@@ -141,11 +144,23 @@ namespace zhashi.Content.UI
                     default: return ModContent.ItemType<SeerPotion>();
                 }
             }
-
+            // 5.错误途径
+            if (p.currentMarauderSequence <= 9)
+            {
+                switch (p.currentMarauderSequence)
+                {
+                    case 9: return ModContent.ItemType<MarauderPotion>(); 
+                    case 8: return ModContent.ItemType<SwindlerPotion>();
+                    case 7: return ModContent.ItemType<CryptologistPotion>();
+                    case 6: return ModContent.ItemType<PrometheusPotion>(); // [新增]
+                    case 5: return ModContent.ItemType<DreamStealerPotion>();
+                    default: return ModContent.ItemType<MarauderPotion>();
+                }
+            }
             return 0;
         }
 
-        // --- 辅助方法：生成纯文本介绍 (去掉了之前的 [i:ID] 图标代码，保持整洁) ---
+        // --- 辅助方法：生成纯文本介绍 ---
         private string GetSequenceDescription(LotMPlayer p)
         {
             string text = "";
@@ -187,6 +202,7 @@ namespace zhashi.Content.UI
                 if (p.currentMoonSequence <= 2) text += "- [技能] 创生领域 (主宰战场)\n";
                 if (p.currentMoonSequence <= 1) text += "- [神性] 美神：魅惑万物\n";
             }
+
             else if (p.currentFoolSequence <= 9)
             {
                 text += $"[c/8A2BE2:愚者途径 序列{p.currentFoolSequence}]\n"; // 紫色标题
@@ -242,17 +258,55 @@ namespace zhashi.Content.UI
                 }
                 if (p.currentFoolSequence <= 2)
                 {
-                    text += "- [技能] 奇迹愿望 (V键, 短按切换/长按实现)\n";
-                    text += "- [技能] 干扰命运 (G键, 开启光环/满幸运)\n";
-                    text += "- [强化] 历史投影 (上限9 / Shift+Y 召唤历史场景)\n";
-                    text += "- [被动] 复活奇迹 (1200灵虫, 死亡清屏)\n";
+                    text += "- 奇迹愿望: 按 V 切换愿望，长按 V 实现\n";
+                    text += "- 命运干扰: 按 G 开启光环\n";
+                    text += "- 历史场景: Shift + Y 召唤\n";
                 }
                 if (p.currentFoolSequence <= 1)
                 {
-                    text += "- [技能] 灵肉转化 (V键, 穿墙/物免)\n";
-                    text += "- [技能] 概念嫁接 (G键, 空间反弹/必杀)\n";
-                    text += "- [被动] 诡秘之境 (吞噬掉落物/压制敌人)\n";
-                    text += "- [被动] 概念不死 (致死伤害自动嫁接)\n";
+                    text += "- 灵肉转化: 按 V (物理免疫/穿墙)\n";
+                    text += "- 奇迹愿望: Shift + V (切换/长按实现)\n";
+                    text += "- 概念嫁接: 按 G (空间反弹/攻击必杀)\n";
+                    text += "- 命运干扰: Shift + G (开启/关闭光环)\n";
+                    text += "- 诡秘之境: 被动 (吞噬掉落物/压制敌人)\n";
+                }
+            }
+
+            else if (p.currentMarauderSequence <= 9)
+            {
+                text += $"[c/3232C8:错误途径 序列{p.currentMarauderSequence}]\n";
+
+                if (p.currentMarauderSequence <= 9)
+                {
+                    text += "- 卓越观察: 常驻探宝药水效果\n";
+                    text += "- 窃取: 拾取范围扩大，攻击几率偷钱\n";
+                    text += "- 敏捷之手: 挖掘/放置速度提升\n";
+                    text += "- 短兵精通: 短剑类武器大幅增强\n";
+                }
+                if (p.currentMarauderSequence <= 8) // 诈骗师
+                {
+                    text += "- [被动] 魅力与口才: 商店购物打折\n";
+                    text += "- [被动] 欺诈大师: 移动速度大幅提升\n";
+                    text += "- [被动] 精神干扰: 攻击有概率使敌人混乱\n";
+                }
+                if (p.currentMarauderSequence <= 7) // 解密学者
+                {
+                    text += "- [被动] 灵性直觉: 获得狩猎与危险感知视野\n";
+                    text += "- [被动] 弱点解析: 护甲穿透+10 / 暴击+5%\n";
+                }
+                if (p.currentMarauderSequence <= 6) // 盗火人
+                {
+                    text += "- [被动] 窃取: 攻击概率直接获得怪物掉落物\n";
+                    text += "- [被动] 窃取能力: 攻击吸取生命与魔力\n";
+                    text += "- [被动] 精神抗性: 免疫大部分精神干扰Debuff\n";
+                }
+                if (p.currentMarauderSequence <= 5) // 窃梦家
+                {
+                    text += "- [被动] 窃取意图: 攻击使敌人呆滞/混乱\n";
+                    text += "- [被动] 梦魇光环: 附近敌人减速且减防\n";
+                    text += "- [特效] 记忆窃取: 攻击削弱敌人并回血\n";
+                    text += "- [被动] 盗天机: 战斗中随机窃取强力Buff\n";
+                    text += "- [能力] 梦境主宰: 拾取范围极大提升\n";
                 }
             }
 

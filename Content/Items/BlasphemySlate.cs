@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Linq; // 需要引用 Linq 进行筛选
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+using zhashi.Content; // [修复1] 必须引用 LotMPlayer 所在的命名空间
 
 namespace zhashi.Content.Items
 {
@@ -14,10 +15,7 @@ namespace zhashi.Content.Items
         // -1 代表混沌状态（未观测/未锁定）
         public int recipeIndex = -1;
 
-        // ==========================================
-        // 1. 升级版配方数据库 (增加了序列等级字段)
-        // ==========================================
-        // (序列等级, 名称, 配方内容, 颜色)
+        // 配方数据库
         private static readonly List<(int level, string name, string content, Color color)> RecipeDatabase = new()
         {
             // --- 愚者途径 (紫色) ---
@@ -61,7 +59,10 @@ namespace zhashi.Content.Items
             (4, "序列4 巫王", "水瓶 + 破损蝙蝠翼 + 灵气(10) + 恐惧之魂(5)", Color.Crimson),
             (3, "序列3 召唤大师", "水瓶 + 真名拓本(特殊掉落) + 幽灵锭(10)", Color.Crimson),
             (2, "序列2 创生者", "水瓶 + 星旋碎片(10) + 星尘碎片(10) + 生命果(5)", Color.Crimson),
-            (1, "序列1 美神", "水瓶 + 棱镜(光之女皇掉落) + 夜明锭(20) + 爱情药水", Color.Crimson)
+            (1, "序列1 美神", "水瓶 + 棱镜(光之女皇掉落) + 夜明锭(20) + 爱情药水", Color.Crimson),
+
+            // --- 错误途径 (深蓝) ---
+            (9, "序列9 偷盗者", "水瓶 + 毒刺 + 粉凝胶 + 蓝宝石", Color.DarkBlue),
         };
 
         public override void SetDefaults()
@@ -76,42 +77,32 @@ namespace zhashi.Content.Items
             Item.useAnimation = 20;
         }
 
-        // 保存与读取数据 (保证锁定后不再变)
         public override void SaveData(TagCompound tag) => tag["SlateRecipeIndex"] = recipeIndex;
         public override void LoadData(TagCompound tag) => recipeIndex = tag.GetInt("SlateRecipeIndex");
 
-        // ==========================================
-        // 2. 核心逻辑：在背包中更新时"坍缩"
-        // ==========================================
         public override void UpdateInventory(Player player)
         {
-            // 如果配方还没有确定 (-1)，则根据玩家当前等级进行判定
             if (recipeIndex == -1)
             {
                 RollRecipeForPlayer(player);
             }
         }
 
-        // 算法：根据玩家等级加权随机
         private void RollRecipeForPlayer(Player player)
         {
+            // 确保 LotMPlayer 是 public class 且位于引用空间内
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            // 1. 获取玩家当前的序列等级 (数值越小越强, 10为凡人)
-            int currentSeq = modPlayer.currentSequence; // 巨人
+            // 获取玩家当前最强的序列等级 (数值越小越强)
+            // 注意：请确保这些字段在 LotMPlayer 中已定义且初始值为高数值(如10或99)，否则默认0会导致直接判定为序列1
+            int currentSeq = modPlayer.currentSequence;
             if (modPlayer.currentFoolSequence < currentSeq) currentSeq = modPlayer.currentFoolSequence;
             if (modPlayer.currentHunterSequence < currentSeq) currentSeq = modPlayer.currentHunterSequence;
             if (modPlayer.currentMoonSequence < currentSeq) currentSeq = modPlayer.currentMoonSequence;
 
-            // 2. 确定目标序列 (玩家想看什么)
-            // 凡人(10) -> 想看 序列9
-            // 序列9 -> 想看 序列8
-            // 序列1 -> 想看 序列1 (或无)
             int targetLevel = currentSeq - 1;
-            if (targetLevel < 1) targetLevel = 1; // 最低是序列1
+            if (targetLevel < 1) targetLevel = 1;
 
-            // 3. 构建权重池
-            // 我们把所有配方的索引放入池子，符合条件的放多次，增加中奖率
             List<int> weightedPool = new List<int>();
 
             for (int i = 0; i < RecipeDatabase.Count; i++)
@@ -120,44 +111,33 @@ namespace zhashi.Content.Items
 
                 if (itemLevel == targetLevel)
                 {
-                    // 极大概率：正好是下一阶的配方 (放入 50 次)
                     for (int k = 0; k < 50; k++) weightedPool.Add(i);
                 }
                 else if (itemLevel == targetLevel + 1)
                 {
-                    // 中等概率：同阶的配方 (放入 10 次)
                     for (int k = 0; k < 10; k++) weightedPool.Add(i);
                 }
                 else if (itemLevel == targetLevel - 1)
                 {
-                    // 小概率：跨两阶 (放入 5 次)
                     for (int k = 0; k < 5; k++) weightedPool.Add(i);
                 }
                 else
                 {
-                    // 极小概率：其他杂七杂八的配方 (放入 1 次)
                     weightedPool.Add(i);
                 }
             }
 
-            // 4. 抽取并在物品上永久锁定
             recipeIndex = weightedPool[Main.rand.Next(weightedPool.Count)];
         }
 
-        // ==========================================
-        // 3. 显示逻辑
-        // ==========================================
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             TooltipLine lore = new TooltipLine(Mod, "Lore", "这块古老的石板上刻满了亵渎的文字...");
             lore.OverrideColor = new Color(150, 150, 150);
             tooltips.Add(lore);
 
-            // A. 如果是 -1 (通常在箱子里，或扔在地上)，显示混沌变幻的效果
             if (recipeIndex == -1)
             {
-                // 每一帧随机显示一个，制造"文字在跳动"的视觉效果
-                // 并不保存，只是视觉欺骗
                 int tempIndex = Main.rand.Next(RecipeDatabase.Count);
                 var tempData = RecipeDatabase[tempIndex];
 
@@ -166,7 +146,6 @@ namespace zhashi.Content.Items
                 chaosLine.OverrideColor = Color.Lerp(Color.Gray, tempData.color, 0.5f);
                 tooltips.Add(chaosLine);
             }
-            // B. 如果已锁定 (在背包里)
             else if (recipeIndex >= 0 && recipeIndex < RecipeDatabase.Count)
             {
                 var data = RecipeDatabase[recipeIndex];
@@ -179,6 +158,16 @@ namespace zhashi.Content.Items
                 contentLine.OverrideColor = Color.White;
                 tooltips.Add(contentLine);
             }
+        }
+
+        // [修复2] 加回合成配方，否则无法制作
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient(ItemID.StoneBlock, 10)
+                .AddIngredient(ItemID.Book, 1)
+                .AddTile(TileID.WorkBenches)
+                .Register();
         }
     }
 }

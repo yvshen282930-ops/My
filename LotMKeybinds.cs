@@ -38,19 +38,22 @@ namespace zhashi
         public static ModKeybind Giant_Guardian { get; private set; }
 
         // --- 愚者途径 (Fool) [新增] ---
-        public static ModKeybind Fool_SpiritVision { get; private set; } // 灵视
-        public static ModKeybind Fool_Divination { get; private set; }   // 占卜
-        public static ModKeybind Fool_FlameJump { get; private set; }    // 火焰跳跃
-        public static ModKeybind Fool_Faceless { get; private set; }     // 无面伪装
-        public static ModKeybind Fool_Distort { get; private set; }      // 干扰直觉
-        public static ModKeybind Fool_Threads { get; private set; }      // 灵体之线
-        public static ModKeybind Fool_Swap { get; private set; }    // 秘偶互换
-        public static ModKeybind Fool_Control { get; private set; } // 控灵
-        public static ModKeybind Fool_History { get; private set; } // 历史投影
-        public static ModKeybind Fool_Borrow { get; private set; }  // 昨日重现
-        public static ModKeybind Fool_Miracle { get; private set; }     // 奇迹/愿望
-        public static ModKeybind Fool_Grafting { get; private set; }   // 嫁接
-        public static ModKeybind Fool_SpiritForm { get; private set; } // 灵肉转化
+        public static ModKeybind Fool_SpiritVision { get; private set; } // 灵视 (C)
+        public static ModKeybind Fool_Divination { get; private set; }   // 占卜 (J)
+        public static ModKeybind Fool_FlameJump { get; private set; }    // 火焰跳跃 (F)
+        public static ModKeybind Fool_Faceless { get; private set; }     // 无面伪装 (V)
+        public static ModKeybind Fool_Distort { get; private set; }      // 干扰直觉 (G)
+        public static ModKeybind Fool_Threads { get; private set; }      // 灵体之线 (Z)
+        public static ModKeybind Fool_Swap { get; private set; }         // 秘偶互换 (T)
+        public static ModKeybind Fool_Control { get; private set; }      // 控灵 (R)
+        public static ModKeybind Fool_History { get; private set; }      // 历史投影 (Y)
+        public static ModKeybind Fool_Borrow { get; private set; }       // 昨日重现 (U)
+        public static ModKeybind Fool_Miracle { get; private set; }      // 奇迹愿望 (V - 序列2)
+        public static ModKeybind Fool_Grafting { get; private set; }     // 嫁接 (G - 序列1)
+        public static ModKeybind Fool_SpiritForm { get; private set; }   // 灵肉转化 (V - 序列1)
+
+        // --- 错误途径 (Fool) [新增] ---
+        public static ModKeybind MarauderSteal;
 
         // ===================================================
         // 2. 注册按键 (Load)
@@ -97,9 +100,12 @@ namespace zhashi
             Fool_Control = KeybindLoader.RegisterKeybind(Mod, "愚者: 控灵/麻痹", "R");
             Fool_History = KeybindLoader.RegisterKeybind(Mod, "愚者: 历史投影", "Y");
             Fool_Borrow = KeybindLoader.RegisterKeybind(Mod, "愚者: 昨日重现", "U");
-            Fool_Miracle = KeybindLoader.RegisterKeybind(Mod, "愚者: 奇迹愿望", "Z");
-            Fool_Grafting = KeybindLoader.RegisterKeybind(Mod, "愚者: 嫁接", "G");
-            Fool_SpiritForm = KeybindLoader.RegisterKeybind(Mod, "愚者: 灵肉转化", "V");
+            Fool_Miracle = KeybindLoader.RegisterKeybind(Mod, "愚者: 奇迹愿望", "V"); // 默认也设为 V
+            Fool_Grafting = KeybindLoader.RegisterKeybind(Mod, "愚者: 嫁接", "G");    // 默认设为 G
+            Fool_SpiritForm = KeybindLoader.RegisterKeybind(Mod, "愚者: 灵肉转化", "V"); // 默认设为 V
+
+            // Marauder [新增]
+            MarauderSteal = KeybindLoader.RegisterKeybind(Mod, "错误: 偷窃", "O");
 
         }
 
@@ -151,6 +157,9 @@ namespace zhashi
             Fool_Miracle = null;
             Fool_Grafting = null;
             Fool_SpiritForm = null;
+
+            // Marauder
+            MarauderSteal = null;
         }
     }
 }

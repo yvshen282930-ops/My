@@ -35,6 +35,7 @@ Keybinds: {
 	"愚者: 奇迹愿望.DisplayName": 愚者: 奇迹愿望 (Shift+V)
 	"愚者: 嫁接.DisplayName": 愚者: 嫁接 (G)
 	"愚者: 灵肉转化.DisplayName": 愚者: 灵肉转化 (V)
+	"错误: 偷窃.DisplayName": 错误: 偷窃
 }
 
 Buffs: {
@@ -319,6 +320,31 @@ Items: {
 		DisplayName: Twilight Giant Sword
 		Tooltip: ""
 	}
+
+	MarauderPotion: {
+		DisplayName: Marauder Potion
+		Tooltip: ""
+	}
+
+	SwindlerPotion: {
+		DisplayName: Swindler Potion
+		Tooltip: ""
+	}
+
+	CryptologistPotion: {
+		DisplayName: Cryptologist Potion
+		Tooltip: ""
+	}
+
+	PrometheusPotion: {
+		DisplayName: Prometheus Potion
+		Tooltip: ""
+	}
+
+	DreamStealerPotion: {
+		DisplayName: Dream Stealer Potion
+		Tooltip: ""
+	}
 }
 
 NPCs.Aurmir.DisplayName: Aurmir
@@ -356,4 +382,38 @@ Conditions: {
 	IsSequence9: 需序列9及以上
 	ConquerorOnly: Mods.zhashi.Conditions.ConquerorOnly
 	IsSequence6: 需 序列6: 黎明骑士
+}
+
+Configs: {
+	LotMConfig: {
+		DisplayName: Lot M Config
+		Headers.平衡性设置: 平衡性设置 Header
+
+		DynamicProgression: {
+			Label: 启用动态世界等级
+			Tooltip:
+				'''
+				根据当前世界击败的Boss（包括灾厄/瑟银等）动态调整属性。
+				建议开启以获得最佳体验。
+				'''
+		}
+
+		NerfDivineAbilities: {
+			Label: 机制软化
+			Tooltip:
+				'''
+				将“绝对无敌/秒杀”替换为“高额减伤/百分比伤害”。
+				关闭此项将回归变态强度。
+				'''
+		}
+
+		GlobalPowerMultiplier: {
+			Label: 属性强度倍率
+			Tooltip:
+				'''
+				全局调整模组增加的生命值、伤害和防御。
+				1.0 为标准，0.5 为减半。
+				'''
+		}
+	}
 }
