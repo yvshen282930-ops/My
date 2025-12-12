@@ -27,7 +27,7 @@ namespace zhashi.Content
         public int currentHunterSequence = 10; // 猎人途径 (9-1)
         public int currentMoonSequence = 10;   // 月亮途径 (9-1)
         public int currentFoolSequence = 10;   // 愚者途径 (9-1)
-        public int currentMarauderSequence = 10; // 错误途径 (9-?)
+        public int currentMarauderSequence = 10; // 错误途径 (9-1)
 
 
         public bool IsBeyonder => currentSequence < 10 || currentHunterSequence < 10 || currentMoonSequence < 10 || currentFoolSequence < 10 || currentMarauderSequence < 10;
@@ -107,6 +107,30 @@ namespace zhashi.Content
         // --- 错误途径技能状态 ---
         public int dreamWalkCooldown = 0;      // 梦境穿行冷却
         public const int DREAM_WALK_MAX = 180; // 3秒冷却
+        public bool isParasitizing = false;     // 是否正在寄生
+        public int parasiteTargetIndex = -1;    // 寄生目标的 NPC 索引
+        public bool parasiteIsTownNPC = false;  // 寄生的是否为城镇 NPC
+        public int wormificationCooldown = 0;   // 半虫化不死能力的冷却
+        public const int WORMIFICATION_COOLDOWN_MAX = 36000; // 10分钟冷却
+        public int conceptStealCooldown = 0;    // 概念窃取（窃取距离/位置）冷却
+        public int parasiteRitualProgress = 0; // 寄生者仪式进度
+        public const int PARASITE_RITUAL_TARGET = 9; // 目标次数
+        // --- 错误途径 序列3 欺瞒导师 ---
+        public int mentorRitualProgress = 0;   // 仪式进度
+        public const int MENTOR_RITUAL_TARGET = 9; // 需要误导9个冤魂
+        public bool isDeceitDomainActive = false; // 欺瞒领域开关
+        public int deceitCooldown = 0;         // 技能冷却
+        public int trojanRitualTimer = 0;      // 仪式计时器
+        public const int TROJAN_RITUAL_TARGET = 18000; // 目标：5分钟 (60帧 * 300秒)
+        public int fateTheftCooldown = 0;      // 命运窃取冷却
+        public bool isTrojanResurrection = false; // 是否触发了木马替死
+        // --- 错误途径：窃取系统 ---
+        public bool stealMode = false;         // 是否开启窃取模式
+        public int stealAggroTimer = 0;        // 被发现后的惩罚计时器
+        public int wormRitualTimer = 0;        // 仪式计时
+        public const int WORM_RITUAL_TARGET = 25200; // 7分钟 (60帧 * 420秒)
+        public int timeTheftCooldown = 0;      // 窃取时间冷却
+        public bool isTimeClockActive = false; // 时之虫领域是否开启
 
         // 标记日期变化
         public bool lastDayState = false;
@@ -128,9 +152,6 @@ namespace zhashi.Content
         public int attendantRitualProgress = 0;
         public const int ATTENDANT_RITUAL_TARGET = 10;
         public bool attendantRitualComplete = false;
-        // --- 错误途径：窃取系统 ---
-        public bool stealMode = false;         // 是否开启窃取模式
-        public int stealAggroTimer = 0;        // 被发现后的惩罚计时器
 
         // ===================================================
         // 2. 数据存档与读取
@@ -152,6 +173,12 @@ namespace zhashi.Content
             tag["MarauderSequence"] = currentMarauderSequence;
             tag["AttendantRitual"] = attendantRitualProgress;
             tag["AttendantRitualComplete"] = attendantRitualComplete;
+            tag["MarauderSequence"] = currentMarauderSequence;
+            tag["WormificationCD"] = wormificationCooldown;
+            tag["ParasiteRitual"] = parasiteRitualProgress;
+            tag["MentorRitual"] = mentorRitualProgress;
+            tag["TrojanRitual"] = trojanRitualTimer;
+            tag["WormRitual"] = wormRitualTimer;
         }
 
         public override void LoadData(TagCompound tag)
@@ -172,6 +199,12 @@ namespace zhashi.Content
             if (tag.ContainsKey("MarauderSequence")) currentMarauderSequence = tag.GetInt("MarauderSequence");
             if (tag.ContainsKey("AttendantRitual")) attendantRitualProgress = tag.GetInt("AttendantRitual");
             if (tag.ContainsKey("AttendantRitualComplete")) attendantRitualComplete = tag.GetBool("AttendantRitualComplete");
+            if (tag.ContainsKey("MarauderSequence")) currentMarauderSequence = tag.GetInt("MarauderSequence");
+            if (tag.ContainsKey("WormificationCD")) wormificationCooldown = tag.GetInt("WormificationCD");
+            if (tag.ContainsKey("ParasiteRitual")) parasiteRitualProgress = tag.GetInt("ParasiteRitual");
+            if (tag.ContainsKey("MentorRitual")) mentorRitualProgress = tag.GetInt("MentorRitual");
+            if (tag.ContainsKey("TrojanRitual")) trojanRitualTimer = tag.GetInt("TrojanRitual");
+            if (tag.ContainsKey("WormRitual")) wormRitualTimer = tag.GetInt("WormRitual");
         }
 
         // ===================================================
@@ -179,6 +212,158 @@ namespace zhashi.Content
         // ===================================================
         public override void PreUpdate()
         {
+            if (isParasitizing)
+            {
+                // 1. 检查目标是否有效
+                NPC target = null;
+                if (parasiteTargetIndex >= 0 && parasiteTargetIndex < Main.maxNPCs)
+                {
+                    target = Main.npc[parasiteTargetIndex];
+                }
+
+                if (target == null || !target.active || target.life <= 0)
+                {
+                    // 目标不存在或死亡，强制解除
+                    isParasitizing = false;
+                    parasiteTargetIndex = -1;
+                    Player.invis = false; // 解除隐身
+                    Main.NewText("寄生对象已死亡，被迫显形！", 255, 100, 100);
+                }
+                else
+                {
+                    Player.Center = target.Center;
+                    Player.velocity = target.velocity;
+                    Player.gfxOffY = 0;
+
+                    // 玩家隐身且无敌 (只要在寄生中)
+                    Player.invis = true;
+                    Player.immune = true;
+                    Player.immuneTime = 2;
+
+                    float cost = parasiteIsTownNPC ? 0.5f : 5.0f;
+
+                    if (!TryConsumeSpirituality(cost / 60f, true)) // 每帧扣除
+                    {
+                        isParasitizing = false;
+                        Main.NewText("灵性耗尽，寄生中断！", 255, 50, 50);
+                    }
+
+                    // 4. 寄生效果
+                    if (parasiteIsTownNPC)
+                    {
+                        // --- 浅层寄生 (友军) ---
+                        // 玩家快速恢复生命
+                        Player.lifeRegen += 10;
+                        // 宿主不会受到伤害 (或者你可以选择不保护宿主)
+                    }
+                    else
+                    {
+                        // --- 深层寄生 (敌人) ---
+                        // 窃取生命：对敌人造成伤害，恢复自己
+                        if (Main.GameUpdateCount % 60 == 0) // 每秒
+                        {
+                            int damage = 50; // 寄生伤害
+                            Player.ApplyDamageToNPC(target, damage, 0, 0, false);
+
+                            int heal = 5;
+                            Player.statLife += heal;
+                            Player.HealEffect(heal);
+
+                            // 控制效果：几率混乱或定身
+                            target.AddBuff(BuffID.Confused, 120);
+                            target.AddBuff(BuffID.Slow, 120);
+                        }
+                    }
+                }
+                if (currentMarauderSequence == 3 && parasiteIsTownNPC)
+                {
+                    trojanRitualTimer++;
+
+                    // 每30秒提示一次进度，避免刷屏
+                    if (trojanRitualTimer % 1800 == 0)
+                    {
+                        int seconds = trojanRitualTimer / 60;
+                        int targetSeconds = TROJAN_RITUAL_TARGET / 60;
+                        Main.NewText($"正在利用该身份编织命运... ({seconds}s / {targetSeconds}s)", 150, 150, 255);
+                    }
+
+                    if (trojanRitualTimer == TROJAN_RITUAL_TARGET)
+                    {
+                        Main.NewText("仪式完成：你已完全取代了‘他’的命运，无人察觉。(完成)", 0, 255, 255);
+                        Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, Player.position);
+                    }
+                }
+            }
+            if (isDeceitDomainActive)
+            {
+                // 持续消耗灵性
+                if (!TryConsumeSpirituality(1.5f, true))
+                {
+                    isDeceitDomainActive = false;
+                    Main.NewText("灵性枯竭，欺瞒领域消散。", 150, 150, 150);
+                }
+                else
+                {
+                    // 视觉特效：扭曲的空气
+                    if (Main.GameUpdateCount % 10 == 0)
+                    {
+                        Vector2 pos = Player.Center + Main.rand.NextVector2Circular(400, 400);
+                        Dust d = Dust.NewDustPerfect(pos, DustID.Vortex, Vector2.Zero, 150, default, 0.5f);
+                        d.noGravity = true;
+                    }
+
+                    // 1. 误导生物 (混乱)
+                    foreach (NPC npc in Main.ActiveNPCs)
+                    {
+                        if (!npc.friendly && !npc.dontTakeDamage && npc.Distance(Player.Center) < 500f)
+                        {
+                            npc.AddBuff(BuffID.Confused, 60); // 强行误导
+                            // 欺诈规则：让敌人防御力由于“判断错误”而失效
+                            npc.defense = (int)(npc.defDefense * 0.5f);
+                        }
+                    }
+
+                    // 2. 误导攻击 (弹幕偏转)
+                    // 遍历敌对弹幕，使其偏离玩家
+                    for (int i = 0; i < Main.maxProjectiles; i++)
+                    {
+                        Projectile p = Main.projectile[i];
+                        if (p.active && p.hostile && p.Distance(Player.Center) < 200f)
+                        {
+                            // 给一个与玩家方向相反的力
+                            Vector2 push = (p.Center - Player.Center).SafeNormalize(Vector2.Zero) * 2f;
+                            p.velocity += push;
+                            // 甚至可能直接把弹幕“骗”成友军 (仅限非Boss弹幕)
+                            if (currentMarauderSequence <= 2 && Main.rand.NextBool(50))
+                            {
+                                p.hostile = false;
+                                p.friendly = true;
+                            }
+                        }
+                    }
+                }
+                if (currentMarauderSequence == 2)
+                {
+                    // 条件：欺瞒领域开启 + 处于城镇中 (周围有NPC)
+                    if (isDeceitDomainActive && Player.townNPCs >= 3f)
+                    {
+                        wormRitualTimer++;
+
+                        // 视觉提示：每60秒提示一次
+                        if (wormRitualTimer % 3600 == 0)
+                        {
+                            int minutes = wormRitualTimer / 3600;
+                            Main.NewText($"周边的时光正在发生错乱... ({minutes}/7 分钟)", 150, 150, 255);
+                        }
+
+                        if (wormRitualTimer == WORM_RITUAL_TARGET)
+                        {
+                            Main.NewText("仪式完成：古老的壁钟虚影已笼罩这座城市！(7/7)", 0, 255, 255);
+                            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item119, Player.position); // 神秘的声音
+                        }
+                    }
+                }
+            }
             // 序列1：美神 强制转变为女性
             if (currentMoonSequence <= 1) Player.Male = false;
             base.PreUpdate();
@@ -261,6 +446,10 @@ namespace zhashi.Content
             if (miracleCooldown > 0) miracleCooldown--;
             if (graftingCooldown > 0) graftingCooldown--;
             if (dreamWalkCooldown > 0) dreamWalkCooldown--;
+            if (wormificationCooldown > 0) wormificationCooldown--;
+            if (conceptStealCooldown > 0) conceptStealCooldown--;
+            if (fateTheftCooldown > 0) fateTheftCooldown--;
+            if (timeTheftCooldown > 0) timeTheftCooldown--;
 
             // ==========================================
             // 3. 灵之虫自动再生系统 (整合版)
@@ -540,6 +729,89 @@ namespace zhashi.Content
                     Player.GetCritChance(DamageClass.Generic) += 100;
                     Player.GetArmorPenetration(DamageClass.Generic) += 9999;
                 }
+            }
+            // ==========================================
+            //错误途径 (Marauder) 
+            // ==========================================
+            if (currentMarauderSequence <= 9) // 偷盗者
+            {
+                // 基础：少量血量成长
+                Player.statLifeMax2 += (int)(10 * worldMult);
+                Player.moveSpeed += 0.05f;
+            }
+
+            if (currentMarauderSequence <= 8) // 诈骗师
+            {
+                Player.statLifeMax2 += (int)(20 * worldMult);
+                Player.statDefense += (int)(2 * worldMult);
+            }
+
+            if (currentMarauderSequence <= 7) // 解密学者
+            {
+                Player.statLifeMax2 += (int)(30 * worldMult);
+                Player.GetCritChance(DamageClass.Generic) += 5;
+                Player.GetArmorPenetration(DamageClass.Generic) += 5;
+            }
+
+            // --- 中序列 (6-5) ---
+            if (currentMarauderSequence <= 6) // 盗火人
+            {
+                // 此时约肉山后，血量加成约 50*1.5 = 75
+                Player.statLifeMax2 += (int)(50 * worldMult);
+                Player.statDefense += (int)(5 * worldMult);
+                Player.GetDamage(DamageClass.Generic) += 0.05f; // 固定 5% 伤害
+            }
+
+            if (currentMarauderSequence <= 5) // 窃梦家
+            {
+                Player.statLifeMax2 += (int)(80 * worldMult);
+                Player.statManaMax2 += 50;
+                Player.endurance += 0.05f; // 5% 减伤
+            }
+
+            // --- 半神 (4-3) ---
+            if (currentMarauderSequence <= 4) // 寄生者 (半神)
+            {
+                // 此时约花后/石巨人，Mult ≈ 4.0 -> 加成 320 HP
+                Player.statLifeMax2 += (int)(120 * worldMult);
+                Player.statDefense += (int)(10 * worldMult);
+                Player.lifeRegen += 3;
+            }
+
+            if (currentMarauderSequence <= 3) // 欺瞒导师
+            {
+                Player.statLifeMax2 += (int)(150 * worldMult);
+                Player.GetDamage(DamageClass.Generic) += 0.10f; // 累计 +15%
+                Player.GetCritChance(DamageClass.Generic) += 5;
+            }
+
+            // --- 天使 (2-1) ---
+            if (currentMarauderSequence <= 2) // 命运木马 (天使)
+            {
+                // 月后初期 Mult ≈ 6.0 -> 加成 1080 HP (很肉，但不离谱)
+                Player.statLifeMax2 += (int)(180 * worldMult);
+                Player.statDefense += (int)(15 * worldMult);
+                Player.statManaMax2 += 100;
+                Player.endurance += 0.05f; // 累计 10% 减伤
+            }
+
+            if (currentMarauderSequence <= 1) // 时之虫 (天使之王)
+            {
+                // 灾厄终局 Mult ≈ 15.0 -> 加成 3000 HP (足够应对神吞/终灾)
+                Player.statLifeMax2 += (int)(200 * worldMult);
+
+                // 防御加成：20 * 15 = 300 (配合装备可达 500+，很硬)
+                Player.statDefense += (int)(20 * worldMult);
+
+                // 伤害加成：固定增加，避免溢出
+                Player.GetDamage(DamageClass.Generic) += 0.15f; // 累计 +30% 独立增伤
+                Player.GetAttackSpeed(DamageClass.Generic) += 0.15f; // 攻速加成(时间权柄)
+
+                // 减伤上限控制
+                Player.endurance += 0.05f; // 累计 15% (很安全)
+
+                // 续航
+                Player.manaCost -= 0.25f;  // 减少 25% 蓝耗
             }
         }
         private void ProcessRealmOfMysteries()
@@ -825,6 +1097,57 @@ namespace zhashi.Content
                     }
                 }
             }
+            // =================================================
+            // 序列1：时之虫领域 (Time Clock Domain)
+            // =================================================
+            if (isTimeClockActive)
+            {
+                // 1. 消耗灵性
+                if (!TryConsumeSpirituality(3.0f, true))
+                {
+                    isTimeClockActive = false;
+                    Main.NewText("灵性枯竭，时钟虚影消散。", 150, 150, 150);
+                    return;
+                }
+
+                if (Player.ownedProjectileCounts[ModContent.ProjectileType<TimeClockVisual>()] < 1)
+                {
+                    Projectile.NewProjectile(
+                        Player.GetSource_FromThis(),
+                        Player.Center,
+                        Vector2.Zero,
+                        ModContent.ProjectileType<TimeClockVisual>(),
+                        0, // 伤害为0，纯视觉
+                        0,
+                        Player.whoAmI
+                    );
+                }
+
+                // 3. 领域效果：时间缓慢 & 衰老
+                foreach (NPC npc in Main.ActiveNPCs)
+                {
+                    if (!npc.friendly && !npc.dontTakeDamage && npc.Distance(Player.Center) < 800f)
+                    {
+                        // A. 时间缓慢 (强力减速)
+                        npc.velocity *= 0.5f; // 速度减半
+                        if (Main.GameUpdateCount % 60 == 0)
+                        {
+                            // B. 衰老 (流逝生命)
+                            // 每秒扣除 1% 当前生命值 + 固定伤害 (模拟寿命流逝)
+                            int decay = (int)(npc.life * 0.01f) + 50;
+                            // 对Boss效果减弱
+                            if (npc.boss) decay = (int)(npc.life * 0.001f) + 20;
+
+                            Player.ApplyDamageToNPC(npc, decay, 0, 0, false);
+                        }
+
+                        // 甚至可以增加 Debuff
+                        npc.AddBuff(BuffID.Slow, 10);
+                        npc.AddBuff(BuffID.WitheredArmor, 10); // 护甲衰老
+                        npc.AddBuff(BuffID.WitheredWeapon, 10); // 攻击衰老
+                    }
+                }
+            }
 
             if (isFireEnchanted) { if (currentHunterSequence <= 6 && TryConsumeSpirituality(0.16f, true)) { } else isFireEnchanted = false; }
             if (isFlameCloakActive) { if (currentHunterSequence <= 7 && TryConsumeSpirituality(1.0f, true)) { Player.buffImmune[BuffID.Chilled] = true; } else isFlameCloakActive = false; }
@@ -848,12 +1171,7 @@ namespace zhashi.Content
                 }
                 if (currentMarauderSequence <= 6)
                 {
-                    // 1. 计算动态概率
-                    // 基础概率: 普通怪 2%, Boss 0.2%
                     float baseChance = target.boss ? 0.002f : 0.02f;
-
-                    // 序列加成: 每提升一级，概率增加 30% (即 1.3倍, 1.6倍...)
-                    // 序列6 = 1.0x | 序列5 = 1.3x | 序列4 = 1.6x | ... | 序列1 = 2.5x
                     float multiplier = 1f + (6 - currentMarauderSequence) * 0.3f;
                     float finalChance = baseChance * multiplier;
 
@@ -863,45 +1181,84 @@ namespace zhashi.Content
                     if (target.boss && finalChance > 0.01f) finalChance = 0.01f;
 
                     // 2. 触发判定
-                    if (Main.rand.NextFloat() < finalChance && target.life > 0)
+                    int stealAttempts = (currentMarauderSequence <= 2) ? 6 : (currentMarauderSequence <= 3 ? 3 : 1);
+
+                    // 这里的变量名改成了 n
+                    for (int n = 0; n < stealAttempts; n++)
                     {
-                        var dropInfo = new DropAttemptInfo
+                        if (Main.rand.NextFloat() < finalChance && target.life > 0)
                         {
-                            player = Player,
-                            npc = target,
-                            IsExpertMode = Main.expertMode,
-                            IsMasterMode = Main.masterMode,
-                            IsInSimulation = false,
-                            rng = Main.rand
-                        };
+                            var dropInfo = new Terraria.GameContent.ItemDropRules.DropAttemptInfo
+                            {
+                                player = Player,
+                                npc = target,
+                                IsExpertMode = Main.expertMode,
+                                IsMasterMode = Main.masterMode,
+                                IsInSimulation = false,
+                                rng = Main.rand
+                            };
+                            Main.ItemDropSolver.TryDropping(dropInfo);
 
-                        Main.ItemDropSolver.TryDropping(dropInfo);
+                            // 只在第一次循环显示文字
+                            if (n == 0)
+                            {
+                                string text = "窃取!";
+                                if (currentMarauderSequence <= 2) text = "命运窃取 (x6)!"; // 序列 2/1 提示
+                                else if (currentMarauderSequence <= 3) text = "三重窃取!";   // 序列 3 提示
 
-                        CombatText.NewText(target.getRect(), new Color(255, 165, 0), "窃取!", true);
-                        // 只有偷到了才显示特效，减少卡顿
-                        for (int i = 0; i < 5; i++)
-                            Dust.NewDust(target.position, target.width, target.height, DustID.GoldFlame, 0, 0, 0, default, 1.0f);
+                                CombatText.NewText(target.getRect(), new Color(255, 165, 0), text, true);
+                            }
+
+                            // 窃取成功时的金光特效 (这里可能用的是 i，没关系)
+                            for (int i = 0; i < 5; i++)
+                                Dust.NewDust(target.position, target.width, target.height, DustID.GoldFlame, 0, 0, 0, default, 1.0f);
+
+                            // --- 仪式逻辑 (这里面可能原本包含了一个 int k 的循环) ---
+                            if (currentMarauderSequence == 5 && parasiteRitualProgress < PARASITE_RITUAL_TARGET)
+                            {
+                                parasiteRitualProgress++;
+                                if (parasiteRitualProgress >= PARASITE_RITUAL_TARGET)
+                                {
+                                    Main.NewText("仪式完成：命运的馈赠已集齐... (9/9)", 220, 20, 60);
+                                    SoundEngine.PlaySound(SoundID.Roar, Player.position);
+
+                                    // 【这里就是冲突的根源】原来的代码里有 int k
+                                    // 现在外层改成了 n，这里就可以安全地使用 k 了
+                                    for (int k = 0; k < 20; k++)
+                                    {
+                                        Dust.NewDust(Player.position, Player.width, Player.height, DustID.PurpleCrystalShard, 0, 0, 0, default, 1.5f);
+                                    }
+                                }
+                                else
+                                {
+                                    Main.NewText($"从目标处获得了‘供养’... ({parasiteRitualProgress}/{PARASITE_RITUAL_TARGET})", 150, 150, 150);
+                                }
+                            }
+                    for (int i = 0; i < 5; i++)
+                                Dust.NewDust(target.position, target.width, target.height, DustID.GoldFlame, 0, 0, 0, default, 1.0f);
+                        }
+
+                        // 2. 窃取能力 (模拟：吸取生命/魔力/Buff)
+                        // 每次攻击有概率回复生命或魔力，模拟“偷走了对方的力量”
+                        if (Main.rand.NextBool(10))
+                        {
+                            int stealAmount = (int)(damageDone * 0.1f); // 偷取 10% 伤害值的生命/蓝
+                            if (stealAmount < 1) stealAmount = 1;
+                            if (stealAmount > 20) stealAmount = 20;
+
+                            if (Main.rand.NextBool())
+                            {
+                                Player.statLife += stealAmount;
+                                Player.HealEffect(stealAmount);
+                            }
+                            else
+                            {
+                                Player.statMana += stealAmount;
+                                Player.ManaEffect(stealAmount);
+                            }
+                        }
                     }
 
-                    // 2. 窃取能力 (模拟：吸取生命/魔力/Buff)
-                    // 每次攻击有概率回复生命或魔力，模拟“偷走了对方的力量”
-                    if (Main.rand.NextBool(10))
-                    {
-                        int stealAmount = (int)(damageDone * 0.1f); // 偷取 10% 伤害值的生命/蓝
-                        if (stealAmount < 1) stealAmount = 1;
-                        if (stealAmount > 20) stealAmount = 20;
-
-                        if (Main.rand.NextBool())
-                        {
-                            Player.statLife += stealAmount;
-                            Player.HealEffect(stealAmount);
-                        }
-                        else
-                        {
-                            Player.statMana += stealAmount;
-                            Player.ManaEffect(stealAmount);
-                        }
-                    }
                 }
             }
             if (currentMarauderSequence <= 5)
@@ -985,8 +1342,50 @@ namespace zhashi.Content
         }
         public override void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers) { if (currentHunterSequence <= 5) modifiers.CritDamage += 0.5f; }
         private void CheckExecution(NPC target) { if (currentHunterSequence <= 5 && !target.boss && target.life < target.lifeMax * 0.2f) target.SimpleStrikeNPC(9999, 0); }
-        private void CheckRitualKill(NPC target) { if (target.life <= 0) { if (currentSequence == 5 && demonHunterRitualProgress < DEMON_HUNTER_RITUAL_TARGET) { if (target.type == NPCID.RedDevil) { demonHunterRitualProgress++; } } } }
-        public override void PostHurt(Player.HurtInfo info) { if (currentSequence <= 6 && dawnArmorActive && !dawnArmorBroken) { dawnArmorCurrentHP -= info.Damage; if (dawnArmorCurrentHP <= 0) { dawnArmorCurrentHP = 0; dawnArmorActive = false; dawnArmorBroken = true; dawnArmorCooldownTimer = DAWN_ARMOR_COOLDOWN_MAX; Main.NewText("铠甲已重铸", 100, 255, 100); } } }
+        private void CheckRitualKill(NPC target) { if (target.life <= 0) { if (currentSequence == 5 && demonHunterRitualProgress < DEMON_HUNTER_RITUAL_TARGET) { if (target.type == NPCID.RedDevil) { demonHunterRitualProgress++; } } }
+            if (currentMarauderSequence == 4 && mentorRitualProgress < MENTOR_RITUAL_TARGET)
+            {
+                if (target.HasBuff(BuffID.Confused))
+                {
+                    mentorRitualProgress++;
+                    if (mentorRitualProgress >= MENTOR_RITUAL_TARGET)
+                    {
+                        Main.NewText("仪式完成：秩序已瓦解，九个被误导的冤魂正在哀嚎... (9/9)", 0, 255, 127); // 碧绿色提示
+                        SoundEngine.PlaySound(SoundID.ZombieMoan, Player.position);
+                    }
+                    else
+                    {
+                        // 只有当是你造成的混乱致死时才提示 (稍微减少刷屏)
+                        Main.NewText($"冤魂 +1 ({mentorRitualProgress}/{MENTOR_RITUAL_TARGET})", 200, 200, 200);
+                    }
+                }
+            }
+        }
+        public override void PostHurt(Player.HurtInfo info) { if (currentSequence <= 6 && dawnArmorActive && !dawnArmorBroken) { dawnArmorCurrentHP -= info.Damage; if (dawnArmorCurrentHP <= 0) { dawnArmorCurrentHP = 0; dawnArmorActive = false; dawnArmorBroken = true; dawnArmorCooldownTimer = DAWN_ARMOR_COOLDOWN_MAX; Main.NewText("铠甲已重铸", 100, 255, 100); } }
+            if (currentSequence == 6 && guardianRitualProgress < GUARDIAN_RITUAL_TARGET)
+            {
+                bool npcNearby = false;
+                foreach (NPC npc in Main.ActiveNPCs)
+                {
+                    if ((npc.townNPC || npc.type == NPCID.TravellingMerchant || npc.type == NPCID.SkeletonMerchant) && npc.Distance(Player.Center) < 800f)
+                    {
+                        npcNearby = true;
+                        break;
+                    }
+                }
+
+                if (npcNearby)
+                {
+                    guardianRitualProgress += info.Damage;
+                    if (guardianRitualProgress >= GUARDIAN_RITUAL_TARGET)
+                    {
+                        guardianRitualProgress = GUARDIAN_RITUAL_TARGET;
+                        Main.NewText("仪式完成：你已证明了守护的决心！(1000/1000)", 255, 215, 0); // 金色提示
+                        SoundEngine.PlaySound(SoundID.Item37, Player.position); // 播放一个提示音效
+                    }
+                }
+            }
+        }
         public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource)
         {
             // =================================================
@@ -1111,6 +1510,65 @@ namespace zhashi.Content
                     for (int i = 0; i < 40; i++) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Worm, Main.rand.NextFloat(-5, 5), Main.rand.NextFloat(-5, 5), 0, default, 1.5f);
 
                     return false; // 取消死亡
+                }
+            }
+            // =================================================
+            // 错误途径序列4：半虫化 (不死之身)
+            // =================================================
+            if (currentMarauderSequence <= 4 && wormificationCooldown <= 0)
+            {
+                // 消耗大量灵性重组身体
+                if (TryConsumeSpirituality(200, true)) // 紧急消耗，允许透支一点
+                {
+                    SoundEngine.PlaySound(SoundID.NPCDeath13, Player.position); // 虫子恶心的声音
+
+                    // 恢复部分生命
+                    int heal = Player.statLifeMax2 / 2; // 恢复一半血
+                    Player.statLife = heal;
+                    Player.HealEffect(heal);
+
+                    // 给予无敌时间
+                    Player.immune = true;
+                    Player.immuneTime = 180; // 3秒无敌
+
+                    // 视觉特效：身体分散成虫子又聚合
+                    for (int i = 0; i < 30; i++)
+                    {
+                        Dust.NewDust(Player.position, Player.width, Player.height, DustID.Worm, Main.rand.NextFloat(-5, 5), Main.rand.NextFloat(-5, 5), 0, default, 1.2f);
+                    }
+
+                    Main.NewText("身体瞬间分散成无数虫豸，躲过了致命一击！", 175, 238, 238);
+
+                    wormificationCooldown = WORMIFICATION_COOLDOWN_MAX; // 进入长冷却
+                    return false; // 拒绝死亡
+                }
+            }
+            // =================================================
+            // 错误途径序列2：命运木马 (分身替死)
+            // =================================================
+            if (currentMarauderSequence <= 2 && !isTrojanResurrection)
+            {
+                // 消耗大量灵性
+                if (TryConsumeSpirituality(300, true))
+                {
+                    isTrojanResurrection = true; // 标记已触发，防止无限触发（需在重置效果或冷却中重置）
+                    twilightResurrectionCooldown = 3600; // 复用通用的复活冷却变量，或者新建一个
+
+                    Player.statLife = Player.statLifeMax2; // 满血复活
+                    Player.HealEffect(Player.statLifeMax2);
+                    Player.immune = true;
+                    Player.immuneTime = 120;
+
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29, Player.position); // 时空扭曲声
+                    Main.NewText("命运的浪花已被预见，死亡的是你的‘过去’...", 200, 200, 255);
+
+                    // 特效：生成一个假身破碎
+                    for (int i = 0; i < 30; i++)
+                    {
+                        Dust.NewDust(Player.position, Player.width, Player.height, DustID.SilverCoin, Main.rand.NextFloat(-5, 5), Main.rand.NextFloat(-5, 5), 0, default, 1.5f);
+                    }
+
+                    return false; // 拒绝死亡
                 }
             }
 
@@ -1557,25 +2015,217 @@ namespace zhashi.Content
                     Main.NewText($"占卜结果: {res[Main.rand.Next(res.Length)]}", 200, 200, 255);
                 }
             }
+            // ==================================================================
+            //   错误途径 (Marauder) 完整按键逻辑整合
+            //   包含：序列9-1 所有主动技能 (处理了 Shift 组合键优先级)
+            // ==================================================================
+
+            // 获取按键状态
+            bool isShiftDown = Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift);
+
+            // ------------------------------------------------------------------
+            // 1. P 键逻辑 (寄生 / 领域)
+            // ------------------------------------------------------------------
+            if (LotMKeybinds.Marauder_Parasite.JustPressed)
+            {
+                // --- [Shift + P] : 领域类技能 (高序列优先) ---
+                if (isShiftDown)
+                {
+                    // 【序列1】 时之虫领域 (Time Clock Domain)
+                    if (currentMarauderSequence <= 1)
+                    {
+                        isTimeClockActive = !isTimeClockActive;
+                        isDeceitDomainActive = false; // 开启高级领域时，自动关闭低级领域
+
+                        if (isTimeClockActive)
+                        {
+                            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item113, Player.position); // 钟声
+                            Main.NewText("时间权柄：古老壁钟已降临 (周围敌人极度减速并衰老)。", 0, 255, 255);
+                        }
+                        else
+                        {
+                            Main.NewText("壁钟虚影消散。", 150, 150, 150);
+                        }
+                    }
+                    // 【序列3】 欺瞒领域 (Deceit Domain)
+                    else if (currentMarauderSequence <= 3)
+                    {
+                        isDeceitDomainActive = !isDeceitDomainActive;
+                        if (isDeceitDomainActive)
+                        {
+                            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, Player.position);
+                            Main.NewText("欺瞒领域：现实的规则已被扭曲 (敌人混乱/弹幕偏转)。", 0, 255, 127);
+                        }
+                        else
+                        {
+                            Main.NewText("欺瞒领域：关闭。", 150, 150, 150);
+                        }
+                    }
+                }
+                // --- [单按 P] : 寄生技能 (序列4) ---
+                else if (currentMarauderSequence <= 4)
+                {
+                    if (isParasitizing)
+                    {
+                        // 主动解除寄生
+                        isParasitizing = false;
+                        Player.velocity = new Vector2(0, -10); // 弹射出来
+                        Player.immune = true;
+                        Player.immuneTime = 60;
+                        Terraria.Audio.SoundEngine.PlaySound(SoundID.NPCDeath13, Player.position);
+                        Main.NewText("解除寄生状态。", 200, 200, 200);
+                    }
+                    else
+                    {
+                        // 尝试寄生鼠标指向的 NPC
+                        int targetIndex = -1;
+                        float maxDist = 300f;
+                        for (int i = 0; i < Main.maxNPCs; i++)
+                        {
+                            NPC n = Main.npc[i];
+                            if (n.active && n.getRect().Contains(Main.MouseWorld.ToPoint()) && Player.Distance(n.Center) < maxDist)
+                            {
+                                targetIndex = i;
+                                break;
+                            }
+                        }
+
+                        if (targetIndex != -1)
+                        {
+                            if (TryConsumeSpirituality(50))
+                            {
+                                isParasitizing = true;
+                                parasiteTargetIndex = targetIndex;
+                                parasiteIsTownNPC = Main.npc[targetIndex].townNPC;
+                                Terraria.Audio.SoundEngine.PlaySound(SoundID.NPCDeath13, Player.position);
+
+                                if (parasiteIsTownNPC)
+                                    Main.NewText($"已寄生于 {Main.npc[targetIndex].FullName} 体内 (浅层寄生/恢复伤势)", 100, 255, 100);
+                                else
+                                    Main.NewText($"已深度寄生目标！(控制/生命窃取)", 255, 100, 100);
+                            }
+                            else Main.NewText("灵性不足，无法寄生！", 255, 50, 50);
+                        }
+                        else Main.NewText("未找到可寄生的目标 (需将鼠标指向附近的生物)", 150, 150, 150);
+                    }
+                }
+            }
+
+            // ------------------------------------------------------------------
+            // 2. O 键逻辑 (窃取 / 偷盗)
+            // ------------------------------------------------------------------
             if (LotMKeybinds.MarauderSteal.JustPressed)
             {
-                // 必须是序列9 偷盗者 及以上
-                if (currentMarauderSequence <= 9)
+                // --- [Shift + O] : 强力窃取技能 (高序列优先) ---
+                if (isShiftDown)
                 {
-                    // 只有在商店打开时，或者为了准备开店时才能切换
-                    stealMode = !stealMode;
-                    SoundEngine.PlaySound(SoundID.MenuTick);
+                    // 【序列1】 窃取时间 (Time Theft)
+                    if (currentMarauderSequence <= 1)
+                    {
+                        if (timeTheftCooldown <= 0 && TryConsumeSpirituality(500))
+                        {
+                            int targetIdx = -1;
+                            for (int i = 0; i < Main.maxNPCs; i++)
+                            {
+                                if (Main.npc[i].active && !Main.npc[i].friendly && Main.npc[i].getRect().Contains(Main.MouseWorld.ToPoint()))
+                                {
+                                    targetIdx = i;
+                                    break;
+                                }
+                            }
 
-                    if (stealMode)
-                        Main.NewText("窃取模式：开启 (商店价格归零，小心被发现...)", 255, 100, 100);
-                    else
-                        Main.NewText("窃取模式：关闭", 100, 255, 100);
+                            if (targetIdx != -1)
+                            {
+                                NPC target = Main.npc[targetIdx];
+                                // 效果：剥夺时间 (巨额伤害) + 自身加速
+                                int agingDmg = target.life / 10; // 10% 当前生命
+                                if (target.boss && agingDmg > 5000) agingDmg = 5000;
+                                if (agingDmg < 1) agingDmg = 1;
+
+                                Player.ApplyDamageToNPC(target, agingDmg, 0, 0, false);
+
+                                // 自身获得 Buff
+                                Player.AddBuff(BuffID.Panic, 600);
+                                Player.AddBuff(BuffID.Swiftness, 600); // 移速
+
+                                CombatText.NewText(target.getRect(), Color.Cyan, "时间窃取!", true);
+                                for (int k = 0; k < 20; k++) Dust.NewDust(target.position, target.width, target.height, DustID.Vortex, 0, 0, 0, default, 2f);
+                                timeTheftCooldown = 600; // 10秒冷却
+                            }
+                        }
+                        else if (timeTheftCooldown > 0) Main.NewText($"窃取时间冷却中: {timeTheftCooldown / 60}s", 150, 150, 150);
+                    }
+                    // 【序列2】 命运窃取 (Fate Theft)
+                    else if (currentMarauderSequence <= 2)
+                    {
+                        if (fateTheftCooldown <= 0 && TryConsumeSpirituality(200))
+                        {
+                            int targetIdx = -1;
+                            for (int i = 0; i < Main.maxNPCs; i++) { if (Main.npc[i].active && !Main.npc[i].friendly && Main.npc[i].getRect().Contains(Main.MouseWorld.ToPoint())) { targetIdx = i; break; } }
+
+                            if (targetIdx != -1)
+                            {
+                                NPC target = Main.npc[targetIdx];
+                                if (!target.boss)
+                                {
+                                    float myRatio = (float)Player.statLife / Player.statLifeMax2;
+                                    float targetRatio = (float)target.life / target.lifeMax;
+                                    if (myRatio < targetRatio)
+                                    {
+                                        int newLife = (int)(targetRatio * Player.statLifeMax2);
+                                        int targetNewLife = (int)(myRatio * target.lifeMax);
+                                        Player.statLife = newLife; Player.HealEffect(newLife - (int)(myRatio * Player.statLifeMax2));
+                                        target.life = targetNewLife;
+                                        CombatText.NewText(target.getRect(), Color.Purple, "命运互换!", true);
+                                    }
+                                    else Main.NewText("你的命运优于目标。", 150, 150, 150);
+                                }
+                                else
+                                {
+                                    Player.ApplyDamageToNPC(target, 5000, 0, 0, false);
+                                    Player.statLife += 500; Player.HealEffect(500);
+                                    CombatText.NewText(target.getRect(), Color.Purple, "窃取未来!", true);
+                                }
+                                fateTheftCooldown = 1200;
+                            }
+                        }
+                        else if (fateTheftCooldown > 0) Main.NewText($"命运窃取冷却中: {fateTheftCooldown / 60}s", 150, 150, 150);
+                    }
+                    // 【序列4】 概念窃取 (Concept Steal)
+                    else if (currentMarauderSequence <= 4)
+                    {
+                        if (conceptStealCooldown <= 0 && TryConsumeSpirituality(80))
+                        {
+                            int targetIdx = -1;
+                            for (int i = 0; i < Main.maxNPCs; i++) { if (Main.npc[i].active && !Main.npc[i].friendly && Main.npc[i].getRect().Contains(Main.MouseWorld.ToPoint())) { targetIdx = i; break; } }
+
+                            if (targetIdx != -1)
+                            {
+                                NPC n = Main.npc[targetIdx];
+                                if (!n.boss)
+                                {
+                                    Vector2 pPos = Player.Center; Player.Teleport(n.Center, 1); n.Center = pPos;
+                                    CombatText.NewText(Player.getRect(), Color.Orange, "位置窃取!", true);
+                                    conceptStealCooldown = 180;
+                                }
+                                else Main.NewText("位格过高无法窃取位置！", 255, 50, 50);
+                            }
+                            else
+                            {
+                                Player.Teleport(Main.MouseWorld, 1);
+                                Main.NewText("窃取距离。", 200, 200, 255);
+                                conceptStealCooldown = 120;
+                            }
+                        }
+                    }
                 }
-                else
+                // --- [单按 O] : 基础窃取模式 (序列9) ---
+                else if (currentMarauderSequence <= 9)
                 {
-                    // 如果不是偷盗者
-                    Main.NewText("你没有偷盗者的非凡能力。", 150, 150, 150);
-                    stealMode = false;
+                    stealMode = !stealMode;
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.MenuTick);
+                    if (stealMode) Main.NewText("窃取模式：开启 (商店免费，小心被发现...)", 255, 100, 100);
+                    else Main.NewText("窃取模式：关闭", 100, 255, 100);
                 }
             }
         }

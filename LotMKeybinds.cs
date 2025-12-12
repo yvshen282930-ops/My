@@ -53,7 +53,8 @@ namespace zhashi
         public static ModKeybind Fool_SpiritForm { get; private set; }   // 灵肉转化 (V - 序列1)
 
         // --- 错误途径 (Fool) [新增] ---
-        public static ModKeybind MarauderSteal;
+        public static ModKeybind Marauder_Parasite { get; private set; }
+        public static ModKeybind MarauderSteal { get; private set; }
 
         // ===================================================
         // 2. 注册按键 (Load)
@@ -106,6 +107,7 @@ namespace zhashi
 
             // Marauder [新增]
             MarauderSteal = KeybindLoader.RegisterKeybind(Mod, "错误: 偷窃", "O");
+            Marauder_Parasite = KeybindLoader.RegisterKeybind(Mod, "错误: 寄生", "P");
 
         }
 
@@ -160,6 +162,7 @@ namespace zhashi
 
             // Marauder
             MarauderSteal = null;
+            Marauder_Parasite = null;
         }
     }
 }

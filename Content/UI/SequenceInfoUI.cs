@@ -154,6 +154,10 @@ namespace zhashi.Content.UI
                     case 7: return ModContent.ItemType<CryptologistPotion>();
                     case 6: return ModContent.ItemType<PrometheusPotion>(); // [新增]
                     case 5: return ModContent.ItemType<DreamStealerPotion>();
+                    case 4: return ModContent.ItemType<ParasitePotion>();
+                    case 3: return ModContent.ItemType<MentorPotion>();
+                    case 2: return ModContent.ItemType<TrojanHorsePotion>();
+                    case 1: return ModContent.ItemType<WormOfTimePotion>();
                     default: return ModContent.ItemType<MarauderPotion>();
                 }
             }
@@ -307,6 +311,75 @@ namespace zhashi.Content.UI
                     text += "- [特效] 记忆窃取: 攻击削弱敌人并回血\n";
                     text += "- [被动] 盗天机: 战斗中随机窃取强力Buff\n";
                     text += "- [能力] 梦境主宰: 拾取范围极大提升\n";
+                    if (p.currentMarauderSequence == 5)
+                    {
+                        // 这里的 9 与 LotMPlayer.PARASITE_RITUAL_TARGET 对应
+                        string status = p.parasiteRitualProgress >= 9 ? "[已完成]" : $"[{p.parasiteRitualProgress}/9]";
+                        // 进度未满显示橙色，满了显示绿色
+                        string colorHex = p.parasiteRitualProgress >= 9 ? "00FF00" : "FFA500";
+                        text += $"[c/{colorHex}:[晋升仪式] 窃取供养: {status}]\n";
+                    }
+                }
+                if (p.currentMarauderSequence <= 4) // 寄生者 (Parasite)
+                {
+                    text += "- [被动] 半虫化: 除非命中要害，否则免疫一次致死伤害(长冷却)\n";
+                    text += "- [主动] 寄生 (按P键): \n";
+                    text += "    > 对城镇NPC: 浅层寄生，随身隐形并快速回血\n";
+                    text += "    > 对敌人: 深层寄生，持续造成伤害并吸血/控制\n";
+                    text += "- [主动] 概念窃取 (Shift+O键): \n";
+                    text += "    > 窃取“距离”: 瞬间移动到鼠标位置\n";
+                    text += "    > 窃取“位置”: 与目标互换位置\n";
+                }
+                if (p.currentMarauderSequence == 4)
+                {
+                    // 显示序列4晋升序列3的仪式进度
+                    string status = p.mentorRitualProgress >= 9 ? "[已完成]" : $"[{p.mentorRitualProgress}/9]";
+                    string colorHex = p.mentorRitualProgress >= 9 ? "00FF00" : "FFA500";
+                    text += $"[c/{colorHex}:[晋升仪式] 误导冤魂: {status}]\n";
+                    text += "  (提示: 让敌人在[混乱]状态下死亡)\n";
+                }
+                if (p.currentMarauderSequence <= 3) // 欺瞒导师
+                {
+                    text += "- [被动] 欺诈权柄: 窃取技能判定次数 x3\n";
+                    text += "- [主动] 欺瞒领域 (Shift+P): \n";
+                    text += "    > 扭曲周围规则，使敌人强制混乱并减防\n";
+                    text += "    > 误导飞行道具，使其偏离甚至倒戈\n";
+                }
+                if (p.currentMarauderSequence == 3)
+                {
+                    // 显示序列3 -> 序列2 仪式进度
+                    float percent = (float)p.trojanRitualTimer / LotMPlayer.TROJAN_RITUAL_TARGET * 100;
+                    string status = percent >= 100 ? "[已完成]" : $"[{percent:F1}%]";
+                    string colorHex = percent >= 100 ? "00FF00" : "FFA500";
+                    text += $"[c/{colorHex}:[晋升仪式] 顶替身份: {status}]\n";
+                    text += "  (提示: 寄生城镇NPC并保持一段时间)\n";
+                }
+                if (p.currentMarauderSequence <= 2) // 命运木马
+                {
+                    text += "- [被动] 命运权柄: 窃取判定次数 x6\n";
+                    text += "- [被动] 命运预见: 受到致命伤时由分身替死 (冷却)\n";
+                    text += "- [主动] 命运窃取 (Shift+O): \n";
+                    text += "    > 嫁接命运：若敌人血量比你高，互换生命比例\n";
+                    text += "    > 对Boss造成巨额真实伤害并剥夺其攻击能力\n";
+                }
+                if (p.currentMarauderSequence == 2)
+                {
+                    // 显示序列2 -> 序列1 仪式进度
+                    float percent = (float)p.wormRitualTimer / LotMPlayer.WORM_RITUAL_TARGET * 100;
+                    string status = percent >= 100 ? "[已完成]" : $"[{percent:F1}%]";
+                    string colorHex = percent >= 100 ? "00FF00" : "FFA500";
+                    text += $"[c/{colorHex}:[晋升仪式] 时光混乱: {status}]\n";
+                    text += "  (提示: 在城镇中开启欺瞒领域并维持)\n";
+                }
+
+                if (p.currentMarauderSequence <= 1) // 时之虫
+                {
+                    text += "- [被动] 时间权柄: 免疫大部分时间控制/减速效果\n";
+                    text += "- [主动] 时之虫领域 (Shift+P): \n";
+                    text += "    > 召唤壁钟虚影，范围内敌人极度减速并持续衰老(掉血)\n";
+                    text += "- [主动] 窃取时间 (Shift+O): \n";
+                    text += "    > 瞬间剥夺目标生命(老化)，并赋予自身极速\n";
+                    text += "- [能力] 错误化身: 死亡时由序列2分身通过窃取命运来复活(强化版)\n";
                 }
             }
 

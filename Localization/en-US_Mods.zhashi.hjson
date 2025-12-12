@@ -36,6 +36,7 @@ Keybinds: {
 	"愚者: 嫁接.DisplayName": 愚者: 嫁接 (G)
 	"愚者: 灵肉转化.DisplayName": 愚者: 灵肉转化 (V)
 	"错误: 偷窃.DisplayName": 错误: 偷窃
+	"错误: 寄生.DisplayName": 错误: 寄生
 }
 
 Buffs: {
@@ -345,6 +346,26 @@ Items: {
 		DisplayName: Dream Stealer Potion
 		Tooltip: ""
 	}
+
+	ParasitePotion: {
+		Tooltip: ""
+		DisplayName: Parasite Potion
+	}
+
+	MentorPotion: {
+		Tooltip: ""
+		DisplayName: Mentor Potion
+	}
+
+	TrojanHorsePotion: {
+		DisplayName: Trojan Horse Potion
+		Tooltip: ""
+	}
+
+	WormOfTimePotion: {
+		Tooltip: ""
+		DisplayName: Worm Of Time Potion
+	}
 }
 
 NPCs.Aurmir.DisplayName: Aurmir
@@ -376,6 +397,7 @@ Projectiles: {
 	TwilightSwordBeam.DisplayName: Twilight Sword Beam
 	AirBulletProjectile.DisplayName: Air Bullet Projectile
 	WeatherStrikeLightning.DisplayName: Weather Strike Lightning
+	TimeClockVisual.DisplayName: Time Clock Visual
 }
 
 Conditions: {
