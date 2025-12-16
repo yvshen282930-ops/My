@@ -26,8 +26,14 @@ namespace zhashi.Content.Projectiles
 
         public override void AI()
         {
-            // 重力效果
-            Projectile.velocity.Y += 0.2f;
+            // 【核心修改】重力控制
+            // ai[1] == 0: 玩家使用，受重力影响 (抛物线)
+            // ai[1] == 1: 狗使用，不受重力影响 (直线)
+            if (Projectile.ai[1] == 0)
+            {
+                Projectile.velocity.Y += 0.2f;
+            }
+
             // 旋转效果
             Projectile.rotation += 0.1f * (float)Projectile.direction;
 
@@ -57,7 +63,7 @@ namespace zhashi.Content.Projectiles
                 NPC target = Main.npc[i];
                 if (target.active && !target.friendly && target.Distance(Projectile.Center) < 150f) // 150像素半径爆炸
                 {
-                    // 造成伤害 (手动调用，因为OnKill本身不造成伤害)
+                    // 造成伤害
                     target.SimpleStrikeNPC(Projectile.damage, 0, false, 0f, DamageClass.Magic);
 
                     // --- 随机施加炼金 Debuff ---

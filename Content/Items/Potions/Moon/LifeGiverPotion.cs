@@ -73,6 +73,7 @@ namespace zhashi.Content.Items.Potions.Moon
                 .AddIngredient(ItemID.FragmentStardust, 10)
                 .AddIngredient(ItemID.LunarBar, 5) // 夜明锭
                 .AddTile(TileID.LunarCraftingStation)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

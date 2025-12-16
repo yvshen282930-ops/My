@@ -21,6 +21,9 @@ namespace zhashi.Content.Projectiles
             Projectile.timeLeft = 300;
             Projectile.light = 0.8f;
             Projectile.tileCollide = true;
+
+            // 确保不使用原版受重力的 AI Style
+            Projectile.aiStyle = -1;
         }
 
         public override void AI()
@@ -38,9 +41,12 @@ namespace zhashi.Content.Projectiles
                 Main.dust[d].noGravity = true;
             }
 
-            // 重力
-            Projectile.ai[0]++;
-            if (Projectile.ai[0] > 20) Projectile.velocity.Y += 0.2f;
+            // 【已删除】重力逻辑
+            // 原来的代码在这里加了 velocity.Y += 0.2f，导致它不是直线的
+            // 现在删掉了，它就会一直按发射时的方向直线飞行
+
+            // 稍微旋转一下贴图，增加动感 (可选)
+            Projectile.rotation += 0.3f;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

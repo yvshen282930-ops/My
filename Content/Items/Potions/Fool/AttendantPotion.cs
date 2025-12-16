@@ -92,6 +92,7 @@ namespace zhashi.Content.Items.Potions.Fool
                 .AddIngredient(ItemID.CursedFlame, 5)     // 咒火
                 .AddIngredient(ItemID.Ichor, 5)           // 灵液
                 .AddTile(TileID.LunarCraftingStation)     // 远古操纵机
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

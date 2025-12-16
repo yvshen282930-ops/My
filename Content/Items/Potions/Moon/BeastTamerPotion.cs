@@ -61,6 +61,7 @@ namespace zhashi.Content.Items.Potions.Moon
                 .AddIngredient(ItemID.LesserHealingPotion, 1) // 汁液
                 .AddRecipeGroup("IronBar", 1)            // 简单替代尸油或其他
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

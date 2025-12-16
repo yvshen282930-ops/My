@@ -34,21 +34,22 @@ namespace zhashi.Content.Items.Potions.Fool
             Item.buffTime = 300;
         }
 
-        public override bool CanUseItem(Player player)
-        {
-            LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-            // 只有普通人(不是非凡者)才能喝，或者您可以根据需求修改限制
-            return !modPlayer.IsBeyonder;
-        }
-
         public override bool? UseItem(Player player)
         {
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentFoolSequence = 9; // 晋升为序列9
 
-                // 播放音效和文字提示
+                // 【核心逻辑】检查是否已是非凡者
+                if (modPlayer.IsBeyonder)
+                {
+                    Main.NewText("你的灵性已定型，无法开启第二条途径，强行服用只会导致失控！", 255, 50, 50);
+                    return true; // 消耗掉作为惩罚
+                }
+
+                // 晋升逻辑
+                modPlayer.currentFoolSequence = 9;
+
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
                 Main.NewText("你感觉到灵感在脑海中迸发，眼前的世界多了许多虚幻的丝线...", 100, 100, 255);
                 Main.NewText("晋升成功！序列9：占卜家！", 50, 255, 50);
@@ -66,6 +67,7 @@ namespace zhashi.Content.Items.Potions.Fool
                 .AddIngredient(ItemID.Blinkroot, 1)    // 金薄荷 (替代品：闪耀根)
                 .AddIngredient(ItemID.Deathweed, 1)    // 龙血草 (替代品：死亡草)
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

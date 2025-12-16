@@ -57,6 +57,7 @@ namespace zhashi.Content.Items.Potions.Hunter
                 .AddIngredient(ItemID.Amber, 3)           // 琥珀
                 .AddIngredient(ItemID.Acorn, 5)           // 橡果
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

@@ -57,6 +57,7 @@ namespace zhashi.Content.Items.Potions.Hunter
                 .AddIngredient(ItemID.SoulofNight, 10)   // 暗影之魂
                 .AddIngredient(ItemID.SharkFin, 5)       // 鲨鱼鳍 (猎杀象征)
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

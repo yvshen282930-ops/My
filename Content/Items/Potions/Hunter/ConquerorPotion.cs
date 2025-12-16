@@ -50,6 +50,15 @@ namespace zhashi.Content.Items.Potions.Hunter
                 tooltips.Add(new TooltipLine(Mod, "RitualHint", "仪式说明: 使用[征服者特性]让世界静默，并确认全图无敌手。"));
             }
         }
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient(ItemID.BottledWater, 1)
+                .AddIngredient(ModContent.ItemType<Materials.ConquerorCharacteristic>(), 1)
+                .AddTile(TileID.LunarCraftingStation) // 远古操纵机
+                .AddIngredient(ModContent.ItemType<BlasphemySlate>(), 1) 
+                .Register();
+        }
 
         public override bool CanUseItem(Player player)
         {

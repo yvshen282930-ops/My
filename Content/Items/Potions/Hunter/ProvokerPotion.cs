@@ -58,6 +58,7 @@ namespace zhashi.Content.Items.Potions.Hunter
                 .AddIngredient(ItemID.Obsidian, 5)    // 深黑石头 -> 黑曜石
                 .AddIngredient(ItemID.Waterleaf, 2)   // 水蕨草 -> 水叶草
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

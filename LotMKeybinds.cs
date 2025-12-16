@@ -19,6 +19,7 @@ namespace zhashi
         public static ModKeybind Moon_Moonlight { get; private set; }
         public static ModKeybind Moon_FullMoon { get; private set; }
         public static ModKeybind Moon_SummonGate { get; private set; }
+        public static ModKeybind Moon_Tame { get; private set; }
 
         // --- 猎人途径 (Hunter/Red Priest) ---
         public static ModKeybind RP_Transformation { get; private set; }
@@ -55,6 +56,7 @@ namespace zhashi
         // --- 错误途径 (Fool) [新增] ---
         public static ModKeybind Marauder_Parasite { get; private set; }
         public static ModKeybind MarauderSteal { get; private set; }
+        public static ModKeybind Marauder_ConceptSteal { get; private set; }
 
         // ===================================================
         // 2. 注册按键 (Load)
@@ -72,6 +74,7 @@ namespace zhashi
             Moon_Moonlight = KeybindLoader.RegisterKeybind(Mod, "月亮: 月光化", "Z");
             Moon_FullMoon = KeybindLoader.RegisterKeybind(Mod, "月亮: 满月/创生", "C");
             Moon_SummonGate = KeybindLoader.RegisterKeybind(Mod, "月亮: 召唤之门", "K");
+            Moon_Tame = KeybindLoader.RegisterKeybind(Mod, "月亮: 驯兽", "T");
 
             // Hunter
             RP_Transformation = KeybindLoader.RegisterKeybind(Mod, "猎人: 形态切换", "Z");
@@ -106,6 +109,7 @@ namespace zhashi
             Fool_SpiritForm = KeybindLoader.RegisterKeybind(Mod, "愚者: 灵肉转化", "V"); // 默认设为 V
 
             // Marauder [新增]
+            Marauder_ConceptSteal = KeybindLoader.RegisterKeybind(Mod, "错误: 概念窃取 (位置/距离)", "K");
             MarauderSteal = KeybindLoader.RegisterKeybind(Mod, "错误: 偷窃", "O");
             Marauder_Parasite = KeybindLoader.RegisterKeybind(Mod, "错误: 寄生", "P");
 
@@ -127,6 +131,7 @@ namespace zhashi
             Moon_Moonlight = null;
             Moon_FullMoon = null;
             Moon_SummonGate = null;
+            Moon_Tame = null;
 
             // Hunter
             RP_Transformation = null;
@@ -163,6 +168,7 @@ namespace zhashi
             // Marauder
             MarauderSteal = null;
             Marauder_Parasite = null;
+            Marauder_ConceptSteal = null;
         }
     }
 }

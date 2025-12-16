@@ -68,6 +68,7 @@ namespace zhashi.Content.Items.Potions.Moon
                 .AddIngredient(ItemID.FragmentVortex, 10)
                 .AddIngredient(ItemID.LifeCrystal, 5)    // 生命象征
                 .AddTile(TileID.LunarCraftingStation)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

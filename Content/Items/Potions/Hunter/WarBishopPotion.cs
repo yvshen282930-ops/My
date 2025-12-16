@@ -63,6 +63,7 @@ namespace zhashi.Content.Items.Potions.Hunter
                 .AddIngredient(ItemID.ShroomiteBar, 10) // 蘑菇矿
                 .AddIngredient(ItemID.LihzahrdPowerCell, 1) // 电池 (代表战争兵器)
                 .AddTile(TileID.LunarCraftingStation)   // 远古操纵机
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

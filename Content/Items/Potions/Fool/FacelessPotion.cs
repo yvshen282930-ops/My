@@ -49,6 +49,7 @@ namespace zhashi.Content.Items.Potions.Fool
                 .AddIngredient(ItemID.JungleSpores, 3)// 龙牙草
                 .AddIngredient(ItemID.SharkFin, 1)    // 深海娜迦头发
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
 
             // 猩红版本配方
@@ -60,6 +61,7 @@ namespace zhashi.Content.Items.Potions.Fool
                 .AddIngredient(ItemID.JungleSpores, 3)
                 .AddIngredient(ItemID.SharkFin, 1)
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

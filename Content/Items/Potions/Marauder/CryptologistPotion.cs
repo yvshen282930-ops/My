@@ -66,6 +66,7 @@ namespace zhashi.Content.Items.Potions.Marauder
                 .AddIngredient(ItemID.Diamond, 1)         // 月长石
                 .AddIngredient(ItemID.Book, 1)            // 密码
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

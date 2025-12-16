@@ -62,6 +62,7 @@ namespace zhashi.Content.Items.Potions
                 .AddIngredient(ItemID.FragmentSolar, 10)
                 .AddIngredient(ItemID.FragmentNebula, 5)
                 .AddTile(TileID.LunarCraftingStation)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

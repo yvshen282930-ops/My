@@ -89,6 +89,7 @@ namespace zhashi.Content.Items.Potions.Fool
                 .AddIngredient(ItemID.Vine, 1)          // 葡萄藤
                 .AddIngredient(ItemID.Silk, 5)          // 橡皮面具 (丝绸)
                 .AddTile(TileID.MythrilAnvil)           // 秘银砧
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

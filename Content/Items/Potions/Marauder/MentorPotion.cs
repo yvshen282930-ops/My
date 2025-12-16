@@ -69,6 +69,7 @@ namespace zhashi.Content.Items.Potions.Marauder
                 .AddIngredient(ItemID.JungleSpores, 20)    // 菌毯/丛林
                 .AddIngredient(ItemID.GoldBar, 5)          // 黄金
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

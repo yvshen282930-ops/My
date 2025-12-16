@@ -68,6 +68,7 @@ namespace zhashi.Content.Items.Potions.Fool
                 .AddIngredient(ItemID.Ectoplasm, 10)      // 历史记录
                 .AddIngredient(ItemID.Book, 5)            // 历史书
                 .AddTile(TileID.LunarCraftingStation)     // 远古操纵机
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

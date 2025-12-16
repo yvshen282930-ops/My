@@ -63,12 +63,13 @@ namespace zhashi.Content.Items.Potions.Fool
         {
             CreateRecipe()
                 .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.Ectoplasm, 5)    // 古老怨灵粉尘
+                .AddIngredient(ItemID.SoulofFlight, 5)  // 古老怨灵粉尘
                 .AddIngredient(ItemID.HallowedBar, 5)  // 石像鬼核心
                 .AddIngredient(ItemID.RichMahogany, 5) // 龙纹树皮
                 .AddIngredient(ItemID.Bone, 10)        // 怨灵残余
                 .AddIngredient(ItemID.Lens, 2)         // 石像鬼眼睛
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

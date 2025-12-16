@@ -67,6 +67,7 @@ namespace zhashi.Content.Items.Potions
                 .AddIngredient(ItemID.Gel, 50)
                 .AddIngredient(ItemID.JungleSpores, 3)
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

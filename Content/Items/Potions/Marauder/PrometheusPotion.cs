@@ -61,11 +61,11 @@ namespace zhashi.Content.Items.Potions.Marauder
             CreateRecipe()
                 .AddIngredient(ItemID.BottledWater, 1)
                 .AddIngredient(ItemID.CrystalShard, 1)    // 水晶线虫
-                .AddIngredient(ItemID.Ectoplasm, 1)       // 披袍幽魂附着物
                 .AddIngredient(ItemID.Ale, 1)             // 美酒
-                .AddIngredient(ItemID.Topaz, 1)           // 黄水晶
+                .AddIngredient(ItemID.Topaz, 10)           // 黄水晶
                 .AddIngredient(ItemID.LivingFireBlock, 1) // 火种 (如果想简单点可以换成 ItemID.Torch)
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

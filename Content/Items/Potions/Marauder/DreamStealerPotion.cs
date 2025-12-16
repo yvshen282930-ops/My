@@ -64,6 +64,7 @@ namespace zhashi.Content.Items.Potions.Marauder
                 .AddIngredient(ItemID.Sapphire, 1)     // 天青石
                 .AddIngredient(ItemID.Moonglow, 3)     // 薰衣草
                 .AddTile(TileID.DemonAltar)            // 恶魔祭坛合成，象征仪式
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

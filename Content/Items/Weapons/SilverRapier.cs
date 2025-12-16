@@ -29,51 +29,64 @@ namespace zhashi.Content.Items.Weapons
             Item.UseSound = SoundID.Item1;
             Item.autoReuse = true;
             Item.shoot = ProjectileID.None;
+
+            // 【删除】这行代码会导致报错，必须删除！
+            // Item.altFunctionUse = true; 
         }
 
-        // 物品栏内自动销毁逻辑
+        // 物品栏内自动销毁逻辑 (10秒后消失)
         public override void UpdateInventory(Player player)
         {
             lifeTime++;
-            if (lifeTime >= 600) // 10秒
+            if (lifeTime >= 600) // 600帧 = 10秒
             {
-                Item.TurnToAir();
+                Item.TurnToAir(); // 销毁物品
                 Main.NewText("银白细剑消散了...", 192, 192, 192);
                 SoundEngine.PlaySound(SoundID.Shatter, player.position);
             }
         }
 
-        // 【关键修复】合成扣除灵性逻辑
         public override void OnCreated(ItemCreationContext context)
         {
-            // 安全检查：如果在主菜单加载，或者玩家无效，直接退出，防止蓝屏崩溃！
             if (Main.gameMenu || Main.LocalPlayer == null || !Main.LocalPlayer.active)
                 return;
 
             var player = Main.LocalPlayer;
 
-            // 安全尝试获取 ModPlayer，如果获取失败也不要报错
             if (player.TryGetModPlayer<LotMPlayer>(out var modPlayer))
             {
                 int cost = (int)(modPlayer.spiritualityCurrent / 2);
-                modPlayer.spiritualityCurrent -= cost;
+                if (cost < 50) cost = 50;
 
-                Main.NewText($"具现银白细剑消耗了 {cost} 点灵性！", 0, 255, 255);
+                if (modPlayer.spiritualityCurrent >= cost)
+                {
+                    modPlayer.spiritualityCurrent -= cost;
+                    Main.NewText($"具现银白细剑消耗了 {cost} 点灵性！", 0, 255, 255);
+                }
+                else
+                {
+                    Main.NewText("灵性不足以维持具现！", 255, 50, 50);
+                    Item.TurnToAir();
+                }
             }
         }
 
         public override bool CanUseItem(Player player)
         {
-            // 使用安全获取
             if (player.TryGetModPlayer<LotMPlayer>(out var modPlayer))
             {
-                if (modPlayer.currentSequence > 3) return false;
+                // 1. 严格限制只有巨人途径序列3及以上可以使用
+                if (modPlayer.currentSequence > 3)
+                {
+                    return false;
+                }
 
+                // 2. 计算技能消耗
                 int cost = 0;
-                if (player.altFunctionUse == 2) cost = 1000;
-                else cost = 100;
+                if (player.altFunctionUse == 2) cost = 1000; // 右键消耗
+                else cost = 100; // 左键消耗
 
-                // 灵性不足自毁
+                // 3. 检查灵性
                 if (modPlayer.spiritualityCurrent < cost)
                 {
                     SoundEngine.PlaySound(SoundID.Shatter, player.position);
@@ -85,7 +98,7 @@ namespace zhashi.Content.Items.Weapons
 
                 modPlayer.TryConsumeSpirituality(cost);
 
-                // 右键瞬移
+                // --- 右键功能：瞬移 ---
                 if (player.altFunctionUse == 2)
                 {
                     Vector2 targetPos = Main.MouseWorld;
@@ -112,13 +125,15 @@ namespace zhashi.Content.Items.Weapons
             return false;
         }
 
+        // 这个方法才是控制能否右键的关键，不需要在 SetDefaults 里写属性
         public override bool AltFunctionUse(Player player) { return true; }
 
         public override void AddRecipes()
         {
-            // 使用土块作为免费材料
             CreateRecipe()
                 .AddIngredient(ItemID.DirtBlock, 1)
+                // 【配方可见性限制】只有序列3及以上的巨人途径玩家可见
+                .AddCondition(new Condition("需序列3 银骑士 或更强", () => Main.LocalPlayer.GetModPlayer<LotMPlayer>().currentSequence <= 3))
                 .Register();
         }
     }

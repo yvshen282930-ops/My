@@ -76,11 +76,13 @@ namespace zhashi.Content.Items.Potions.Moon
             // 配方：半神级材料
             CreateRecipe()
                 .AddIngredient(ItemID.BottledWater, 1)
+                .AddIngredient(ItemID.BrokenBatWing, 1)  // 蝙蝠翅膀
                 .AddIngredient(ItemID.Ectoplasm, 10)     // 灵气 (花后材料)
                 .AddIngredient(ItemID.DarkShard, 3)      // 暗黑碎片 (黑暗生物)
                 .AddIngredient(ItemID.SoulofNight, 15)   // 浓郁黑暗
                 .AddIngredient(ItemID.MoonStone, 1)      // 月亮石 (核心)
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

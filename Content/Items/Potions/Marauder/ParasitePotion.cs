@@ -74,6 +74,7 @@ namespace zhashi.Content.Items.Potions.Marauder
                 .AddIngredient(ItemID.SoulofNight, 5) // 被囚禁的灵魂
                 .AddIngredient(ItemID.Grapes, 1)      // 樱桃李 (用葡萄代替)
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

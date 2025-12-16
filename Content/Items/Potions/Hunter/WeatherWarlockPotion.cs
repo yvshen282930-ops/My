@@ -62,6 +62,7 @@ namespace zhashi.Content.Items.Potions.Hunter
                 .AddIngredient(ItemID.FragmentNebula, 10) // 星云
                 .AddIngredient(ItemID.FragmentStardust, 10) // 星尘
                 .AddTile(TileID.LunarCraftingStation)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

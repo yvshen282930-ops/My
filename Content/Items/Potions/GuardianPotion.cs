@@ -104,6 +104,7 @@ namespace zhashi.Content.Items.Potions
                 .AddIngredient(ItemID.LifeFruit, 3)
                 .AddIngredient(ItemID.IronskinPotion, 5)
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

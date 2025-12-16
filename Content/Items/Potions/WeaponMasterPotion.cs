@@ -65,6 +65,7 @@ namespace zhashi.Content.Items.Potions
                 .AddIngredient(ItemID.Obsidian, 5)
                 .AddIngredient(ItemID.Stinger, 3)
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

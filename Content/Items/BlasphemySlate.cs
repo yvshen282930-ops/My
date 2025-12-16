@@ -1,68 +1,84 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using zhashi.Content; // [修复1] 必须引用 LotMPlayer 所在的命名空间
+using zhashi.Content;
 
 namespace zhashi.Content.Items
 {
     public class BlasphemySlate : ModItem
     {
-        // 存储当前石板的配方索引
-        // -1 代表混沌状态（未观测/未锁定）
         public int recipeIndex = -1;
 
-        // 配方数据库
-        private static readonly List<(int level, string name, string content, Color color)> RecipeDatabase = new()
+        // 【修改】增加了 string ritual 参数 (第5个参数)
+        // 格式: (等级, 途径名, 序列名, 配方材料, 晋升仪式说明, 颜色)
+        private static readonly List<(int level, string pathway, string name, string content, string ritual, Color color)> RecipeDatabase = new()
         {
-            // --- 愚者途径 (紫色) ---
-            (9, "序列9 占卜家", "水瓶 + 太阳花 + 铜/锡锭(3)", Color.MediumPurple),
-            (8, "序列8 小丑", "水瓶 + 玫瑰 + 金/铂金锭(3) + 凝胶(10)", Color.MediumPurple),
-            (7, "序列7 魔术师", "水瓶 + 烟雾弹(5) + 丝绸(10) + 陨石锭(5)", Color.MediumPurple),
-            (6, "序列6 无面人", "水瓶 + 骨头(20) + 组织样本/暗影鳞片(10) + 变性药水", Color.MediumPurple),
-            (5, "序列5 秘偶大师", "水瓶 + 蜘蛛牙(10) + 灵气(5) + 黑暗之魂(10)", Color.MediumPurple),
-            (4, "序列4 诡法师", "水瓶 + 力量之魂(10) + 灵气(10) + 红毛桦(5) + 丝绸(5)", Color.MediumPurple),
-            (3, "序列3 古代学者", "水瓶 + 日耀碎片(10) + 星云碎片(10) + 白霜结晶(3) + 灵气(10)", Color.MediumPurple),
-            (2, "序列2 奇迹师", "水瓶 + 夜明锭(20) + 灵气(20) + 金表 + 坠落之星(10)", Color.MediumPurple),
-            (1, "序列1 诡秘侍者", "水瓶 + 夜明锭(20) + 灵界特产(九种稀有材料聚合)", Color.MediumPurple),
+            // ==========================================
+            //               愚者途径 (紫色)
+            // ==========================================
+            (9, "愚者途径", "序列9 占卜家", "水瓶 + 黑墨水 + 坠落之星 + 太阳花 + 闪耀根 + 死亡草", "直接服用魔药。", Color.MediumPurple),
+            (8, "愚者途径", "序列8 小丑", "水瓶 + 毒刺 + 丛林玫瑰 + 闪耀根 + 向日葵 + 月光草 + 死亡草", "直接服用魔药。", Color.MediumPurple),
+            (7, "愚者途径", "序列7 魔术师", "水瓶 + 木材(100) + 黑墨水(10) + 蓝宝石(20) + 死亡草(10)", "直接服用魔药。", Color.MediumPurple),
+            (6, "愚者途径", "序列6 无面人", "水瓶 + 腐肉/脊椎(5) + 骨头(10) + 死亡草 + 丛林孢子(3) + 鲨鱼鳍", "直接服用魔药。", Color.MediumPurple),
+            (5, "愚者途径", "序列5 秘偶大师", "水瓶 + 飞翔之魂(5) + 神圣锭(5) + 红木(5) + 骨头(10) + 晶状体(2)", "【仪式】：必须在海洋。", Color.MediumPurple),
+            (4, "愚者途径", "序列4 诡法师", "水瓶 + 力量之魂(10) + 灵气(10) + 红木(5) + 藤蔓 + 丝绸(5)", "【仪式】：1. 谋杀半神：必须已经击败世纪之花。2. 观众：周围必须有至少 10 个 NPC (城镇NPC或敌人均可)。", Color.MediumPurple),
+            (3, "愚者途径", "序列3 古代学者", "水瓶 + 日耀碎片(10) + 星云碎片(10) + 寒霜核(3) + 灵气(10) + 书(5)", "【仪式】：脱离现实 (处于太空层 )。", Color.MediumPurple),
+            (2, "愚者途径", "序列2 奇迹师", "水瓶 + 夜明矿(20) + 灵气(20) + 金表 + 坠落之星(10)", "【仪式】：在具有历史气息的地方 (地牢)。", Color.MediumPurple),
+            (1, "愚者途径", "序列1 诡秘侍者", "水瓶 + 夜明锭(20) + 灵气(5) + 飞翔/光明/暗影之魂(5) + 独角兽角 + 精灵尘(10) + 水晶碎块(5) + 咒火(5) + 灵液(5)", "【诡秘仪式】：在序列2的状态下，使用灵体之线将10位城镇居民转化为秘偶。", Color.MediumPurple),
 
-            // --- 巨人途径 (金色) ---
-            (9, "序列9 战士", "水瓶 + 太阳花 + 铁/铅锭(3)", Color.Gold),
-            (8, "序列8 格斗家", "水瓶 + 魔矿/猩红锭(5) + 凝胶(50) + 丛林孢子(3)", Color.Gold),
-            (7, "序列7 武器大师", "水瓶 + 暗影鳞片/组织样本(10) + 黑曜石(5) + 毒刺(3)", Color.Gold),
-            (6, "序列6 黎明骑士", "水瓶 + 神圣锭(5) + 光明之魂(10) + 太阳花(5)", Color.Gold),
-            (5, "序列5 守护者", "水瓶 + 叶绿锭(5) + 生命果(3) + 铁皮药水(5)", Color.Gold),
-            (4, "序列4 猎魔者", "水瓶 + 甲虫壳(5) + 灵气(10) + 暗影之魂(15)", Color.Gold),
-            (3, "序列3 银骑士", "水瓶 + 幽灵锭(10) + 蘑菇矿锭(10) + 灵气(5)", Color.Gold),
-            (2, "序列2 荣耀者", "水瓶 + 月亮锭(10) + 日耀碎片(10) + 星云碎片(5)", Color.Gold),
+            // ==========================================
+            //               巨人途径 (金色)
+            // ==========================================
+            (9, "巨人途径", "序列9 战士", "水瓶 + 太阳花 + 铁/铅锭(3)", "直接服用魔药。", Color.Gold),
+            (8, "巨人途径", "序列8 格斗家", "水瓶 + 魔矿/猩红锭(5) + 凝胶(50) + 丛林孢子(3)", "直接服用魔药。", Color.Gold),
+            (7, "巨人途径", "序列7 武器大师", "水瓶 + 暗影鳞片/组织样本(10) + 黑曜石(5) + 毒刺(3)", "直接服用魔药。", Color.Gold),
+            (6, "巨人途径", "序列6 黎明骑士", "水瓶 + 神圣锭(5) + 光明之魂(10) + 太阳花(5)", "直接服用魔药。", Color.Gold),
+            (5, "巨人途径", "序列5 守护者", "水瓶 + 叶绿锭(5) + 生命果(3) + 铁皮药水(5)", "【仪式】：在序列6的状态下，在城镇居民附近累计承受1000点伤害，证明守护之心。", Color.Gold),
+            (4, "巨人途径", "序列4 猎魔者", "水瓶 + 甲虫壳(5) + 灵气(10) + 暗影之魂(15)", "【仪式】：在序列5的状态下，亲手击杀10只红魔鬼。", Color.Gold),
+            (3, "巨人途径", "序列3 银骑士", "水瓶 + 霜月纪念章(3) + 南瓜月纪念章(2) + 阴森木(50)", "【仪式】: 通关霜月与南瓜月事件，证明你的杀戮能力。", Color.Gold),
+            (2, "巨人途径", "序列2 荣耀者", "水瓶 + 夜明锭(10) + 日耀碎片(10) + 星云碎片(5)", "【仪式】: 猎杀一位天使或同等强大的生物 (月亮领主)。", Color.Gold),
 
-            // --- 猎人途径 (红色) ---
-            (9, "序列9 猎人", "水瓶 + 闪耀根 + 弓/枪", Color.IndianRed),
-            (8, "序列8 挑衅者", "水瓶 + 腐肉/椎骨(5) + 铜/锡锭(5)", Color.IndianRed),
-            (7, "序列7 纵火家", "水瓶 + 狱石锭(5) + 火焰花(3) + 炸弹(10)", Color.IndianRed),
-            (6, "序列6 阴谋家", "水瓶 + 骨头(30) + 晶状体(5) + 书(1)", Color.IndianRed),
-            (5, "序列5 收割者", "水瓶 + 恐惧之魂(10) + 鲨鱼鳍(5) + 非法枪械部件", Color.IndianRed),
-            (4, "序列4 铁血骑士", "水瓶 + 视域之魂(10) + 狱石锭(20) + 活火块(20)", Color.IndianRed),
-            (3, "序列3 战争主教", "水瓶 + 叶绿锭(15) + 战争药水 + 丛林蜥蜴砖(10)", Color.IndianRed),
-            (2, "序列2 天气术士", "水瓶 + 天气符文(特殊掉落) + 灵气(10)", Color.IndianRed),
-            (1, "序列1 征服者", "水瓶 + 征服者特性(特殊掉落) + 夜明锭(10)", Color.IndianRed),
+            // ==========================================
+            //               红祭司途径 (红色)
+            // ==========================================
+            (9, "红祭司途径", "序列9 猎人", "水瓶 + 麦芽酒 + 太阳花 + 凝胶(5)", "直接服用魔药。", Color.IndianRed),
+            (8, "红祭司途径", "序列8 挑衅者", "水瓶 + 麦芽酒 + 藤蔓(2) + 黑曜石(5) + 水叶草(2)", "直接服用魔药。", Color.IndianRed),
+            (7, "红祭司途径", "序列7 纵火家", "水瓶 + 狱石锭(5) + 火焰花(3) + 爆炸粉(10)", "直接服用魔药。", Color.IndianRed),
+            (6, "红祭司途径", "序列6 阴谋家", "水瓶 + 蜘蛛牙(5) + 蚁狮上颚(5) + 琥珀(3) + 橡果(5)", "直接服用魔药。", Color.IndianRed),
+            (5, "红祭司途径", "序列5 收割者", "水瓶 + 神圣锭(10) + 恐惧之魂(5) + 暗影之魂(10) + 鲨鱼鳍(5)", "直接服用魔药。", Color.IndianRed),
+            (4, "红祭司途径", "序列4 铁血骑士", "水瓶 + 甲虫壳(10) + 狱石锭(10) + 力量之魂(5) + 视域之魂(5)", "【仪式】: 在至少有5名随从的情况下，无死亡累计击杀100个敌人。", Color.IndianRed),
+            (3, "红祭司途径", "序列3 战争主教", "水瓶 + 幽灵锭(10) + 蘑菇矿锭(10) + 电池", "【仪式】: 击败拜月教邪教徒，开启最终的战争。", Color.IndianRed),
+            (2, "红祭司途径", "序列2 天气术士", "水瓶 + 四柱碎片各(10)", "【仪式】: 连续使用十次天气符文。", Color.IndianRed),
+            (1, "红祭司途径", "序列1 征服者", "需[征服者特性] (巫毒娃娃x2+铂金币(5)+各类NPC掉落物)", "【征服仪式】：在序列2的状态下，使用征服者特性开启'世界静默'，并清剿所有敌对生物。", Color.IndianRed),
 
-            // --- 月亮途径 (深红) ---
-            (9, "序列9 药师", "水瓶 + 太阳花 + 蘑菇(5)", Color.Crimson),
-            (8, "序列8 驯兽师", "水瓶 + 丛林孢子(5) + 毒刺(2) + 鲨鱼牙项链", Color.Crimson),
-            (7, "序列7 吸血鬼", "水瓶 + 蝙蝠翼(2) + 弱效治疗药水(5) + 红玉(3)", Color.Crimson),
-            (6, "序列6 魔药教授", "水瓶 + 炼金台 + 咒火/灵液(10) + 玻璃瓶(10)", Color.Crimson),
-            (5, "序列5 深红学者", "水瓶 + 暗影之魂(15) + 夜之钥匙 + 月光草(5)", Color.Crimson),
-            (4, "序列4 巫王", "水瓶 + 破损蝙蝠翼 + 灵气(10) + 恐惧之魂(5)", Color.Crimson),
-            (3, "序列3 召唤大师", "水瓶 + 真名拓本(特殊掉落) + 幽灵锭(10)", Color.Crimson),
-            (2, "序列2 创生者", "水瓶 + 星旋碎片(10) + 星尘碎片(10) + 生命果(5)", Color.Crimson),
-            (1, "序列1 美神", "水瓶 + 棱镜(光之女皇掉落) + 夜明锭(20) + 爱情药水", Color.Crimson),
+            // ==========================================
+            //               月亮途径 (深红)
+            // ==========================================
+            (9, "月亮途径", "序列9 药师", "水瓶 + 毒刺(3) + 荧光棒(7) + 死亡草", "直接服用魔药。", Color.Crimson),
+            (8, "月亮途径", "序列8 驯兽师", "水瓶 + 蓝宝石 + 丛林孢子(3) + 太阳花 + 弱效治疗药水 + 铁/铅锭", "直接服用魔药。", Color.Crimson),
+            (7, "月亮途径", "序列7 吸血鬼", "水瓶 + 铁/铅锭 + 骨头(10) + 水蜡烛 + 月光草(3) + 死亡草(3)", "直接服用魔药。", Color.Crimson),
+            (6, "月亮途径", "序列6 魔药教授", "水瓶 + 生命水晶 + 灵液(5) + 鲨鱼鳍(3)", "直接服用魔药。", Color.Crimson),
+            (5, "月亮途径", "序列5 深红学者", "水瓶 + 神圣锭(5) + 暗影之魂(10) + 光明之魂(5) + 独角兽角", "直接服用魔药。", Color.Crimson),
+            (4, "月亮途径", "序列4 巫王", "水瓶 + 灵气(10) + 破蝙蝠之翼 + 暗黑碎片(3) + 暗影之魂(15) + 月亮石", "【仪式】：处在满月的照耀下。", Color.Crimson),
+            (3, "月亮途径", "序列3 召唤大师", "水瓶 + [真名拓本] + 灵气(10) + 幽灵锭(5)", "【仪式】：需先使用'灵界低语'成功解析出'真名拓本'作为核心材料。", Color.Crimson),
+            (2, "月亮途径", "序列2 创生者", "水瓶 + 四柱碎片各(10) + 夜明锭(5)", "【仪式】：在彻底死亡之前服用。", Color.Crimson),
+            (1, "月亮途径", "序列1 美神", "水瓶 + 夜明锭(20) + 四柱碎片各(10) + 生命水晶(5)", "【美神仪式】：在地下的棺材里睡一觉吧 (注意：服用后会强制转变为女性)。", Color.Crimson),
 
-            // --- 错误途径 (深蓝) ---
-            (9, "序列9 偷盗者", "水瓶 + 毒刺 + 粉凝胶 + 蓝宝石", Color.DarkBlue),
+            // ==========================================
+            //               错误途径 (深蓝)
+            // ==========================================
+            (9, "错误途径", "序列9 偷盗者", "水瓶 + 毒刺 + 粉凝胶 + 蓝宝石", "直接服用魔药。", Color.DarkBlue),
+            (8, "错误途径", "序列8 诈骗师", "水瓶 + 蠕虫 + 丛林孢子 + 晶状体 + 蓝宝石", "直接服用魔药。", Color.DarkBlue),
+            (7, "错误途径", "序列7 解密学者", "水瓶 + 蚁狮上颚(5) + 附魔夜行者 + 丛林玫瑰 + 钻石 + 书", "直接服用魔药。", Color.DarkBlue),
+            (6, "错误途径", "序列6 盗火人", "水瓶 + 水晶碎块 + 麦芽酒 + 黄玉 + 活火块", "直接服用魔药。", Color.DarkBlue),
+            (5, "错误途径", "序列5 窃梦家", "水瓶 + 黑晶状体 + 暗影之魂(5) + 蓝宝石 + 月光草(3)", "直接服用魔药。", Color.DarkBlue),
+            (4, "错误途径", "序列4 寄生者", "水瓶 + 灵气(5) + 松露虫 + 紫水晶 + 暗影之魂(5) + 葡萄", "【仪式】：在序列5的状态下，通过攻击或窃取累积9次'命运的馈赠'。", Color.DarkBlue),
+            (3, "错误途径", "序列3 欺瞒导师", "水瓶 + 灵气(10) + 腐香囊 + 毒药瓶(5) + 丛林孢子(20) + 金锭(5)", "【仪式】：在序列4的状态下，通过混乱/误导致死9个敌人。", Color.DarkBlue),
+            (2, "错误途径", "序列2 命运木马", "水瓶 + 灵气(10) + 光明之魂(10) + 暗影之魂(10) + 松露虫 + 附魔夜行者 + 圣水(5)", "【仪式】：在序列3的状态下，完全寄生控制一名城镇居民长达5分钟。", Color.DarkBlue),
+            (1, "错误途径", "序列1 时之虫", "水瓶 + 夜明锭(5) + 星尘碎片(10) + 1秒计时器 + 书 + 灵气(5)", "【时光仪式】：在序列2的状态下，于拥有3名以上居民的城镇中维持'欺瞒领域'达7分钟。", Color.DarkBlue),
         };
 
         public override void SetDefaults()
@@ -75,6 +91,7 @@ namespace zhashi.Content.Items
             Item.useStyle = ItemUseStyleID.HoldUp;
             Item.useTime = 20;
             Item.useAnimation = 20;
+            Item.consumable = true;
         }
 
         public override void SaveData(TagCompound tag) => tag["SlateRecipeIndex"] = recipeIndex;
@@ -84,60 +101,39 @@ namespace zhashi.Content.Items
         {
             if (recipeIndex == -1)
             {
-                RollRecipeForPlayer(player);
+                recipeIndex = Main.rand.Next(RecipeDatabase.Count);
             }
-        }
-
-        private void RollRecipeForPlayer(Player player)
-        {
-            // 确保 LotMPlayer 是 public class 且位于引用空间内
-            LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-
-            // 获取玩家当前最强的序列等级 (数值越小越强)
-            // 注意：请确保这些字段在 LotMPlayer 中已定义且初始值为高数值(如10或99)，否则默认0会导致直接判定为序列1
-            int currentSeq = modPlayer.currentSequence;
-            if (modPlayer.currentFoolSequence < currentSeq) currentSeq = modPlayer.currentFoolSequence;
-            if (modPlayer.currentHunterSequence < currentSeq) currentSeq = modPlayer.currentHunterSequence;
-            if (modPlayer.currentMoonSequence < currentSeq) currentSeq = modPlayer.currentMoonSequence;
-
-            int targetLevel = currentSeq - 1;
-            if (targetLevel < 1) targetLevel = 1;
-
-            List<int> weightedPool = new List<int>();
-
-            for (int i = 0; i < RecipeDatabase.Count; i++)
-            {
-                int itemLevel = RecipeDatabase[i].level;
-
-                if (itemLevel == targetLevel)
-                {
-                    for (int k = 0; k < 50; k++) weightedPool.Add(i);
-                }
-                else if (itemLevel == targetLevel + 1)
-                {
-                    for (int k = 0; k < 10; k++) weightedPool.Add(i);
-                }
-                else if (itemLevel == targetLevel - 1)
-                {
-                    for (int k = 0; k < 5; k++) weightedPool.Add(i);
-                }
-                else
-                {
-                    weightedPool.Add(i);
-                }
-            }
-
-            recipeIndex = weightedPool[Main.rand.Next(weightedPool.Count)];
         }
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            TooltipLine lore = new TooltipLine(Mod, "Lore", "这块古老的石板上刻满了亵渎的文字...");
-            lore.OverrideColor = new Color(150, 150, 150);
-            tooltips.Add(lore);
+            // =========================================================
+            // 1. 处理固定描述 (解决重复显示问题，同时保留颜色)
+            // =========================================================
 
+            // 遍历所有提示行 (包含系统自动从hjson加载的)
+            foreach (TooltipLine line in tooltips)
+            {
+                // 如果检测到是那句“背景描述”，将其染成灰色
+                if (line.Text.Contains("这块古老的石板"))
+                {
+                    line.OverrideColor = new Color(150, 150, 150);
+                }
+
+                // 如果检测到是那句“用法说明”，将其染成橙色
+                // (注意：hjson中可能已经有颜色代码，但这行代码确保它一定是橙色)
+                if (line.Text.Contains("【消耗品】"))
+                {
+                    line.OverrideColor = Color.Orange;
+                }
+            }
+
+            // =========================================================
+            // 2. 处理动态逻辑 (混沌状态 / 配方 / 仪式)
+            // =========================================================
             if (recipeIndex == -1)
             {
+                // 混沌状态 (还在箱子里或刚拿出来)
                 int tempIndex = Main.rand.Next(RecipeDatabase.Count);
                 var tempData = RecipeDatabase[tempIndex];
 
@@ -148,26 +144,70 @@ namespace zhashi.Content.Items
             }
             else if (recipeIndex >= 0 && recipeIndex < RecipeDatabase.Count)
             {
+                // 正常显示配方状态
                 var data = RecipeDatabase[recipeIndex];
 
-                TooltipLine titleLine = new TooltipLine(Mod, "RecipeTitle", $"\n>>> {data.name} <<<");
+                // 标题
+                TooltipLine titleLine = new TooltipLine(Mod, "RecipeTitle", $"\n>>> {data.pathway}: {data.name} <<<");
                 titleLine.OverrideColor = data.color;
                 tooltips.Add(titleLine);
 
-                TooltipLine contentLine = new TooltipLine(Mod, "RecipeContent", $"所需材料: {data.content}");
+                // 配方内容
+                string wrappedContent = GetWrappedText(data.content, 40);
+                TooltipLine contentLine = new TooltipLine(Mod, "RecipeContent", $"[合成配方]:\n{wrappedContent}");
                 contentLine.OverrideColor = Color.White;
                 tooltips.Add(contentLine);
+
+                // 仪式说明
+                string wrappedRitual = GetWrappedText(data.ritual, 40);
+                TooltipLine ritualLine = new TooltipLine(Mod, "RitualContent", $"[晋升仪式]:\n{wrappedRitual}");
+                ritualLine.OverrideColor = new Color(255, 255, 200); // 淡黄色
+                tooltips.Add(ritualLine);
             }
         }
 
-        // [修复2] 加回合成配方，否则无法制作
-        public override void AddRecipes()
+        // 自动换行辅助函数
+        private string GetWrappedText(string text, int lineLength)
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.StoneBlock, 10)
-                .AddIngredient(ItemID.Book, 1)
-                .AddTile(TileID.WorkBenches)
-                .Register();
+            if (string.IsNullOrEmpty(text)) return "";
+            if (text.Length <= lineLength) return text;
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            int currentLineLen = 0;
+
+            // 尝试按 '+' 分割 (针对配方)
+            string[] parts = text.Contains("+") ? text.Split('+') : new string[] { text };
+
+            // 如果没有 '+' (比如仪式说明是纯文本)，则按长度强制换行
+            if (parts.Length == 1)
+            {
+                for (int i = 0; i < text.Length; i++)
+                {
+                    sb.Append(text[i]);
+                    if ((i + 1) % lineLength == 0) sb.Append("\n");
+                }
+                return sb.ToString();
+            }
+
+            // 按配方逻辑换行
+            for (int i = 0; i < parts.Length; i++)
+            {
+                string part = parts[i].Trim();
+                string toAdd = (i == 0 ? "" : " + ") + part;
+
+                if (currentLineLen + toAdd.Length > lineLength)
+                {
+                    sb.Append("\n");
+                    sb.Append(toAdd.TrimStart('+').Trim());
+                    currentLineLen = toAdd.Length;
+                }
+                else
+                {
+                    sb.Append(toAdd);
+                    currentLineLen += toAdd.Length;
+                }
+            }
+            return sb.ToString();
         }
     }
 }

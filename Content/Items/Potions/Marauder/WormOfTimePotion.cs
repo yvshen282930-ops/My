@@ -68,6 +68,7 @@ namespace zhashi.Content.Items.Potions.Marauder
                 .AddIngredient(ItemID.Book, 1)              // 书
                 .AddIngredient(ItemID.Ectoplasm, 5)         // 灵气
                 .AddTile(TileID.LunarCraftingStation)       // 远古操纵机
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

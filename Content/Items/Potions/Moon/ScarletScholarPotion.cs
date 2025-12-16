@@ -54,6 +54,7 @@ namespace zhashi.Content.Items.Potions.Moon
                 .AddIngredient(ItemID.SoulofLight, 5)
                 .AddIngredient(ItemID.UnicornHorn, 1)
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

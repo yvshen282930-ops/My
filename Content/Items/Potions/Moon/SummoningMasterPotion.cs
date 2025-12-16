@@ -53,6 +53,7 @@ namespace zhashi.Content.Items.Potions.Moon
                 .AddIngredient(ItemID.Ectoplasm, 10)    // 灵气
                 .AddIngredient(ItemID.SpectreBar, 5)    // 幽灵锭 (灵界物质)
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

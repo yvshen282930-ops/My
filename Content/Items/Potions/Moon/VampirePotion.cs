@@ -51,13 +51,14 @@ namespace zhashi.Content.Items.Potions.Moon
         {
             CreateRecipe()
                 .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.LifeCrystal, 1)    // 心脏
-                .AddIngredient(ItemID.BrokenBatWing, 1)  // 蝙蝠翅膀
-                .AddIngredient(ItemID.Ichor, 5)          // 血液
-                                                         // 【核心修复】改为 SharkFin (鲨鱼鳍)
-                                                         // 原版没有 SharkTooth。或者你可以改用 ItemID.Vertebrae (椎骨)
-                .AddIngredient(ItemID.SharkFin, 3)
+                // 两种邪恶生物材料二选一 (暗影鳞片 或 组织样本)
+                .AddRecipeGroup("IronBar", 1) // 暂时用铁锭代替，你可以换成 RecipeGroup.AnyEvilBar
+                .AddIngredient(ItemID.Bone, 10)          // 骨头
+                .AddIngredient(ItemID.WaterCandle, 1)    // 水蜡烛
+                .AddIngredient(ItemID.Moonglow, 3)       // 月光草
+                .AddIngredient(ItemID.Deathweed, 3)      // 死亡草
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

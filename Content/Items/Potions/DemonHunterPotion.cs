@@ -89,6 +89,7 @@ namespace zhashi.Content.Items.Potions
                 .AddIngredient(ItemID.Ectoplasm, 10) // 灵气 (地牢幽灵掉落，代表灵性)
                 .AddIngredient(ItemID.SoulofNight, 15) // 暗影之魂
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

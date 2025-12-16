@@ -70,6 +70,7 @@ namespace zhashi.Content.Items.Potions.Marauder
                 .AddIngredient(ItemID.Lens, 1)          // 他人眼泪
                 .AddIngredient(ItemID.Sapphire, 1)      // 青金石
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

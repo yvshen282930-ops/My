@@ -55,6 +55,7 @@ namespace zhashi.Content.Items.Potions
                 .AddIngredient(ItemID.SoulofLight, 10) // 【修复】这里改成了单数的 SoulofLight
                 .AddIngredient(ItemID.Daybloom, 5)      // 太阳花
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

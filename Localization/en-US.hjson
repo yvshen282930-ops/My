@@ -1,0 +1,803 @@
+Mods: {
+	zhashi: {
+		Items: {
+			# ==========================================
+			#              Special Items
+			# ==========================================
+			# Blasphemy Slate
+			BlasphemySlate: {
+				DisplayName: Blasphemy Slate
+				Tooltip:
+					'''
+					This ancient slate is carved with blasphemous texts...
+					It records lost potion recipes.
+					[c/FFA500:[Consumable] Can be used as a crafting material for any potion sequence]
+					(The slate will shatter and disappear upon crafting)
+					'''
+			}
+
+			# Paper Card (Fool Weapon)
+			PaperCard: {
+				DisplayName: Tarot Card
+				Tooltip:
+					'''
+					Sequence 8: Clown's common weapon.
+					Seemingly ordinary paper cards, sharp as knives when infused with spirituality.
+					'''
+			}
+
+			# Extraordinary Blood (Material)
+			ExtraordinaryBlood: {
+				DisplayName: Extraordinary Blood
+				Tooltip: Blood containing extraordinary power.
+			}
+
+			# Test Summon Item
+			TestSummon: {
+				DisplayName: Test Summon Staff
+				Tooltip: Used for testing summoning mechanics.
+			}
+
+			# ==========================================
+			#              Special Weapons
+			# ==========================================
+			# Giant Pathway
+			TwilightGiantSword: {
+				DisplayName: Twilight Giant Sword
+				Tooltip:
+					'''
+					Sequence 2: Symbol weapon of the Glory.
+					Every strike ends with this, containing the authority of decay and twilight.
+					Releases a twilight storm when attacking, disintegrating enemy defenses.
+					'''
+			}
+
+			SwordOfDawn: {
+				DisplayName: Sword of Dawn
+				Tooltip:
+					'''
+					Sequence 6: Dawn Knight's companion weapon.
+					Slashes release the brilliance of dawn, dealing devastating blows to undead creatures.
+					"Dawn arrives, darkness dissipates."
+					'''
+			}
+
+			SilverRapier: {
+				DisplayName: Silver Rapier
+				Tooltip:
+					'''
+					Sequence 3: Silver Knight's rapier.
+					The blade flows like mercury, attacking with extreme speed.
+					'''
+			}
+
+			# Hunter Pathway
+			ConquerorSword: {
+				DisplayName: Iron-Blooded Sword
+				Tooltip:
+					'''
+					Sequence 4: Iron-Blooded Knight's sword.
+					Forged in blood and fire, thirsting for battle.
+					Hitting enemies may set them ablaze.
+					'''
+			}
+
+			ReaperScythe: {
+				DisplayName: Reaper Scythe
+				Tooltip:
+					'''
+					Sequence 5: Reaper's weapon.
+					Specially designed to harvest the weaknesses of life, guaranteed critical hits.
+					'''
+			}
+
+			ConquerorLance: {
+				DisplayName: Conqueror Lance
+				Tooltip:
+					'''
+					Sequence 1: Conqueror's weapon.
+					Indomitable, conquering all who disobey.
+					'''
+			}
+
+			# Fool Pathway
+			AirBullet: {
+				DisplayName: Air Bullet
+				Tooltip:
+					'''
+					Invisible bullets compressed from air
+					Power increases with sequence advancement
+					Sequence 7: Pistol
+					Sequence 5: Rifle
+					Sequence 4: Cannonball
+					Sequence 3: Coastal Defense Cannon
+					'''
+			}
+
+			# ==========================================
+			#              Core Materials
+			# ==========================================
+			WeatherRune: {
+				DisplayName: Weather Rune
+				Tooltip:
+					'''
+					A rune containing ancient weather power, its surface flickering with lightning and frost.
+					A key medium for advancing to Sequence 2: Weather Warlock.
+					'''
+			}
+
+			ConquerorCharacteristic: {
+				DisplayName: Conqueror Beyonder Characteristic
+				Tooltip:
+					'''
+					A crystal precipitated from the Red Priest Pathway Sequence 1 characteristic.
+					Holding it, one can feel the majesty of commanding thousands of armies.
+					Used for advancing to Sequence 1: Conqueror.
+					'''
+			}
+
+			WhisperOfSpiritWorld: {
+				DisplayName: Whisper of the Spirit World
+				Tooltip:
+					'''
+					Vague information from the depths of the Spirit World.
+					Use it to attempt to decipher a 'True Name'.
+					[Warning]: If deciphering fails, you will suffer backlash from the Moon (Severe Injury/Debuff).
+					'''
+			}
+
+			TrueNameInscription: {
+				DisplayName: True Name Inscription
+				Tooltip:
+					'''
+					A piece of special information defined and entangled with your fate.
+					Core material for Sequence 3: Summoning Master potion.
+					'''
+			}
+
+			# ==========================================
+			#              Moon Pathway Potions
+			# ==========================================
+			ApothecaryPotion: {
+				DisplayName: Sequence 9: Apothecary Potion
+				Tooltip:
+					'''
+					Advance to Apothecary upon consumption.
+					Gain poison resistance and increased health regeneration.
+					Skilled in concocting potions and healing.
+					'''
+			}
+
+			BeastTamerPotion: {
+				DisplayName: Sequence 8: Beast Tamer Potion
+				Tooltip:
+					'''
+					Advance to Beast Tamer upon consumption.
+					Allows you to tame beasts, increasing minion slots.
+					Gain danger sense ability.
+					'''
+			}
+
+			VampirePotion: {
+				DisplayName: Sequence 7: Vampire Potion
+				Tooltip:
+					'''
+					Advance to Vampire upon consumption.
+					Gain Wings of Darkness and super self-healing capabilities.
+					An elegant hunter even in the dark, but loathes sunlight.
+					'''
+			}
+
+			PotionsProfessorPotion: {
+				DisplayName: Sequence 6: Potions Professor Potion
+				Tooltip:
+					'''
+					Advance to Potions Professor upon consumption.
+					Master the mysteries of alchemy.
+					Can use Alchemical Grenades and Elixir of Life.
+					'''
+			}
+
+			ScarletScholarPotion: {
+				DisplayName: Sequence 5: Scarlet Scholar Potion
+				Tooltip:
+					'''
+					Advance to Scarlet Scholar upon consumption.
+					Control moonlight and shadows.
+					Unlock Full Moon Domain and gain Moonlightization ability.
+					'''
+			}
+
+			WitchKingPotion: {
+				DisplayName: Sequence 4: Shaman King Potion
+				Tooltip:
+					'''
+					Advance to Shaman King upon consumption.
+					The beginning of Demigodhood, with extremely long lifespan.
+					Gain Bat Avatar, Paper Figurine Substitute, and Darkness Gaze.
+					'''
+			}
+
+			SummoningMasterPotion: {
+				DisplayName: Sequence 3: Summoning Master Potion
+				Tooltip:
+					'''
+					Advance to Summoning Master upon consumption.
+					Can open the Summoning Gate to call Spirit World creatures to aid in battle.
+					Greatly enhances summoning capabilities.
+					'''
+			}
+
+			LifeGiverPotion: {
+				DisplayName: Sequence 2: Life Giver Potion
+				Tooltip:
+					'''
+					Advance to Life Giver upon consumption.
+					Master of life, possessing incredible healing and creative powers.
+					Open Creation Domain, purify the earth, create miracles of life.
+					'''
+			}
+
+			BeautyGoddessPotion: {
+				DisplayName: Sequence 1: Beauty Goddess Potion
+				Tooltip:
+					'''
+					Advance to Beauty Goddess upon consumption.
+					The embodiment of beauty, all things bow down.
+					[Warning]: Gender will transform into female upon consumption.
+					Gain Charm Aura and god-level power.
+					'''
+			}
+
+			# ==========================================
+			#              Hunter Pathway Potions
+			# ==========================================
+			HunterPotion: {
+				DisplayName: Sequence 9: Hunter Potion
+				Tooltip:
+					'''
+					Advance to Hunter upon consumption.
+					Excellent physical fitness and senses.
+					Gain creature detection ability.
+					'''
+			}
+
+			ProvokerPotion: {
+				DisplayName: Sequence 8: Provoker Potion
+				Tooltip:
+					'''
+					Advance to Provoker upon consumption.
+					Skilled in attracting aggro and making traps.
+					'''
+			}
+
+			PyromaniacPotion: {
+				DisplayName: Sequence 7: Pyromaniac Potion
+				Tooltip:
+					'''
+					Advance to Pyromaniac upon consumption.
+					Control the power of fire.
+					Gain fire manipulation, fireball spells, and fire resistance.
+					'''
+			}
+
+			ConspiratorPotion: {
+				DisplayName: Sequence 6: Conspirator Potion
+				Tooltip:
+					'''
+					Advance to Conspirator upon consumption.
+					Agile thinking, skilled in guiding battles.
+					Gain Flash and weapon enchantment abilities.
+					'''
+			}
+
+			ReaperPotion: {
+				DisplayName: Sequence 5: Reaper Potion
+				Tooltip:
+					'''
+					Advance to Reaper upon consumption.
+					Deadly weakness attacks.
+					Gain Lethal Slash ability, significantly increasing critical strike chance.
+					'''
+			}
+
+			IronBloodedKnightPotion: {
+				DisplayName: Sequence 4: Iron-Blooded Knight Potion
+				Tooltip:
+					'''
+					Advance to Iron-Blooded Knight upon consumption.
+					Will and body of steel.
+					Gain Flame Form and Army of One abilities.
+					'''
+			}
+
+			WarBishopPotion: {
+				DisplayName: Sequence 3: War Bishop Potion
+				Tooltip:
+					'''
+					Advance to War Bishop upon consumption.
+					Battlefield commander, mental connection.
+					'''
+			}
+
+			WeatherWarlockPotion: {
+				DisplayName: Sequence 2: Weather Warlock Potion
+				Tooltip:
+					'''
+					Advance to Weather Warlock upon consumption.
+					Call wind and rain, control celestial phenomena.
+					Gain Lightning Strike and Ice Age abilities.
+					'''
+			}
+
+			ConquerorPotion: {
+				DisplayName: Sequence 1: Conqueror Potion
+				Tooltip:
+					'''
+					Advance to Conqueror upon consumption.
+					Conquer all disobedience.
+					Surrounding enemies stop spawning, stat domination.
+					'''
+			}
+
+			# ==========================================
+			#              Giant Pathway Potions
+			# ==========================================
+			WarriorPotion: {
+				DisplayName: Sequence 9: Warrior Potion
+				Tooltip: Increases melee capabilities.
+			}
+
+			PugilistPotion: {
+				DisplayName: Sequence 8: Pugilist Potion
+				Tooltip: Increases fighting techniques and knockback resistance.
+			}
+
+			WeaponMasterPotion: {
+				DisplayName: Sequence 7: Weapon Master Potion
+				Tooltip: Proficient in all kinds of weapons.
+			}
+
+			DawnKnightPotion: {
+				DisplayName: Sequence 6: Dawn Knight Potion
+				Tooltip: Gain Dawn Armor, shining brightly in all directions.
+			}
+
+			GuardianPotion: {
+				DisplayName: Sequence 5: Guardian Potion
+				Tooltip: Guardian Stance, indestructible.
+			}
+
+			DemonHunterPotion: {
+				DisplayName: Sequence 4: Demon Hunter Potion
+				Tooltip: Immune to curses, counters evil.
+			}
+
+			SilverKnightPotion: {
+				DisplayName: Sequence 3: Silver Knight Potion
+				Tooltip: Incarnate as mercury, elusive and hard to catch.
+			}
+
+			GloryPotion: {
+				DisplayName: Sequence 2: Glory Potion
+				Tooltip: Twilight resurrection, immortal glory.
+			}
+
+			# ==========================================
+			#              Fool Pathway Potions
+			# ==========================================
+			SeerPotion: {
+				DisplayName: Sequence 9: Seer Potion
+				Tooltip:
+					'''
+					Advance to Seer upon consumption.
+					Gain Spirit Vision and Divination abilities, seek fortune and avoid calamity.
+					'''
+			}
+
+			ClownPotion: {
+				DisplayName: Sequence 8: Clown Potion
+				Tooltip: Advance to Clown upon consumption.
+			}
+
+			MagicianPotion: {
+				DisplayName: Sequence 7: Magician Potion
+				Tooltip:
+					'''
+					Advance to Magician upon consumption.
+					Gain Damage Transfer, Bone Softening, and Air Bullet. Gain Flame Jump and Paper Figurine Substitute.
+					'''
+			}
+
+			FacelessPotion: {
+				DisplayName: Sequence 6: Faceless Potion
+				Tooltip:
+					'''
+					Advance to Faceless upon consumption.
+					Ever-changing, gain Faceless Disguise ability.
+					'''
+			}
+
+			MarionettistPotion: {
+				DisplayName: Sequence 5: Marionettist Potion
+				Tooltip:
+					'''
+					Advance to Marionettist upon consumption.
+					Control Spirit Body Threads, transforming all things into puppets.
+					'''
+			}
+
+			BizarroSorcererPotion: {
+				DisplayName: Sequence 4: Bizarro Sorcerer Potion
+				Tooltip:
+					'''
+					Advance to Bizarro Sorcerer (Demigod) upon consumption.
+					Possess Worm of Spirit, Puppet Swap, and Spirit Control abilities.
+					'''
+			}
+
+			ScholarOfYorePotion: {
+				DisplayName: Sequence 3: Scholar of Yore Potion
+				Tooltip:
+					'''
+					Advance to Scholar of Yore (Saint) upon consumption.
+					Borrow power from history, summon phantoms of old days.
+					'''
+			}
+
+			MiracleInvokerPotion: {
+				DisplayName: Sequence 2: Miracle Invoker Potion
+				Tooltip:
+					'''
+					Advance to Miracle Invoker (Angel) upon consumption.
+					A miracle walking in reality, interfering with fate, granting wishes.
+					'''
+			}
+
+			AttendantPotion: {
+				DisplayName: Sequence 1: Attendant of Mysteries Potion
+				Tooltip:
+					'''
+					Advance to Attendant of Mysteries (King of Angels) upon consumption.
+					Dominate the Spirit World, Concept Grafting, establish a Divine Kingdom.
+					'''
+			}
+
+			# ==========================================
+			#              Marauder Pathway Potions
+			# ==========================================
+			MarauderPotion: {
+				DisplayName: Sequence 9: Marauder Potion
+				Tooltip:
+					'''
+					Advance to Marauder upon consumption.
+					Agile body, slender fingers.
+					Gain [Theft] ability, obtain extra gains from enemies.
+					'''
+			}
+
+			SwindlerPotion: {
+				DisplayName: Sequence 8: Swindler Potion
+				Tooltip:
+					'''
+					Advance to Swindler upon consumption.
+					Skilled in fraud and misleading.
+					May receive discounts when purchasing items.
+					'''
+			}
+
+			CryptologistPotion: {
+				DisplayName: Sequence 7: Cryptologist Potion
+				Tooltip:
+					'''
+					Advance to Cryptologist upon consumption.
+					Keen intuition, skilled in discovering weaknesses.
+					Increases critical strike and armor penetration capabilities.
+					'''
+			}
+
+			PrometheusPotion: {
+				DisplayName: Sequence 6: Prometheus Potion
+				Tooltip:
+					'''
+					Advance to Prometheus upon consumption.
+					A thief stealing power.
+					Increased theft success rate, can steal enemy Buffs.
+					'''
+			}
+
+			DreamStealerPotion: {
+				DisplayName: Sequence 5: Dream Stealer Potion
+				Tooltip:
+					'''
+					Advance to Dream Stealer upon consumption.
+					Infiltrate dreams, manipulate consciousness.
+					Attacks may cause enemies to become confused or fall asleep.
+					'''
+			}
+
+			ParasitePotion: {
+				DisplayName: Sequence 4: Parasite Potion
+				Tooltip:
+					'''
+					Advance to Parasite (Demigod) upon consumption.
+					Parasitize all things, gain immortality.
+					Press [P] to parasitize target, semi-wormification body reconstruction.
+					'''
+			}
+
+			MentorPotion: {
+				DisplayName: Sequence 3: Mentor of Deceit Potion
+				Tooltip:
+					'''
+					Advance to Mentor of Deceit (Saint) upon consumption.
+					Deceive rules, mislead sentient beings.
+					Open Deceit Domain, distort enemy perception.
+					'''
+			}
+
+			TrojanHorsePotion: {
+				DisplayName: Sequence 2: Trojan Horse of Destiny Potion
+				Tooltip:
+					'''
+					Advance to Trojan Horse of Destiny (Angel) upon consumption.
+					Steal fate, tamper with the future.
+					Gain Fate Theft ability, die and be reborn.
+					'''
+			}
+
+			WormOfTimePotion: {
+				DisplayName: Sequence 1: Worm of Time Potion
+				Tooltip:
+					'''
+					Advance to Worm of Time (King of Angels) upon consumption.
+					Toy with time, steal years.
+					Gain Time Domain, steal enemy time and life.
+					'''
+			}
+
+			ResurrectionReset: {
+				DisplayName: Resurrection Reset
+				Tooltip: ""
+			}
+
+			RitualInstaComplete: {
+				DisplayName: Ritual Insta Complete
+				Tooltip: ""
+			}
+
+			SpiritualityRefill: {
+				DisplayName: Spirituality Refill
+				Tooltip: ""
+			}
+
+			DogItem: {
+				Tooltip: ""
+				DisplayName: Dog Item
+			}
+
+			PaperFigurine: {
+				DisplayName: Paper Figurine
+				Tooltip: ""
+			}
+		}
+
+		# ==========================================
+		#              Projectiles
+		# ==========================================
+		Projectiles: {
+			AlchemicalGrenade.DisplayName: Alchemical Grenade
+			BatSwarmProjectile.DisplayName: Vampire Bat
+			SummoningDoorProjectile.DisplayName: Summoning Gate
+			CreationDomainProjectile.DisplayName: Creation Domain
+			FullMoonCircle.DisplayName: Full Moon Circle
+			AbyssShackleProjectile.DisplayName: Abyss Shackle
+			PyromaniacBomb.DisplayName: Flame Bomb
+			PyromaniacFireball.DisplayName: Fireball
+			ReaperSlashProjectile.DisplayName: Reaper Slash
+			WeatherStrikeLightning.DisplayName: Weather Lightning
+			GuardianShieldProjectile.DisplayName: Shield of Guardian
+			# Fool Projectiles
+			AirBulletProjectile.DisplayName: Air Bullet
+			MarionetteMinion.DisplayName: Marionette
+			HistoricalBossProjectile.DisplayName: Historical Projection
+			HistoricalSceneProjectile.DisplayName: Historical Scene
+			PaperCardProjectile.DisplayName: Paper Card
+			# Giant/Boss Projectiles
+			DawnBladeProjectile.DisplayName: Blade of Dawn
+			TwilightStormProjectile.DisplayName: Twilight Storm
+			TwilightSwordBeam.DisplayName: Twilight Sword Beam
+			AurmirBossStorm.DisplayName: Storm of Destruction
+			AurmirSkyLance.DisplayName: Sky Lance
+			AurmirTwilightOrb.DisplayName: Twilight Orb
+			# Marauder Projectiles
+			TimeClockVisual.DisplayName: Clock of Time
+			ConquerorSwordProjectile.DisplayName: Conqueror Sword Projectile
+			LightStormController.DisplayName: Light Storm Controller
+			PyromaniacExplosionVisual.DisplayName: Pyromaniac Explosion Visual
+			PyromaniacFireballWhite.DisplayName: Pyromaniac Fireball White
+			DogHealingOrb.DisplayName: Dog Healing Orb
+			DogTimeClock.DisplayName: Dog Time Clock
+		}
+
+		# ==========================================
+		#              NPCs (Monsters/Bosses)
+		# ==========================================
+		NPCs: {
+			Aurmir.DisplayName: Twilight Giant Aurmir
+			TestBoss.DisplayName: Test Boss
+
+			DogNPC: {
+				TownNPCMood: {
+					Princess_LovesNPC: 我喜欢 {NPCName}。
+					LikeNPC_Princess: 我喜欢 {NPCName}。
+					HateCrowded: 我讨厌这么拥挤。
+					DislikeCrowded: 我不喜欢这么拥挤。
+					LoveSpace: 我非常喜欢有这么大的空间。
+					FarFromHome: 我离家太远了。
+					NoHome: 我讨厌没有家。
+					Content: 我很满足。
+				}
+
+				DisplayName: Dog N P C
+			}
+		}
+
+		# ==========================================
+		#              Buffs
+		# ==========================================
+		Buffs: {
+			TamedBuff: {
+				DisplayName: Blood Servant Contract
+				Description: This creature has been tamed by you and will fight for you!
+			}
+
+			ConquerorWill: {
+				DisplayName: Conqueror's Will
+				Description: Awed by the Conqueror's pressure, unable to move.
+			}
+
+			YesterdayBuff: {
+				DisplayName: Yesterday Once More
+				Description: You have borrowed power from your past self, greatly increasing all stats!
+			}
+
+			MarionetteTownNPCBuff: {
+				DisplayName: Marionette Transformation
+				Description: This person has become your marionette...
+			}
+
+			SpiritControlDebuff: {
+				DisplayName: Spirit Control
+				Description: Sluggish thinking, stiff body.
+			}
+
+			AbyssShacklesDebuff: {
+				DisplayName: Abyss Shackles
+				Description: Bound by the cold chains of the abyss, unable to move.
+			}
+		}
+
+		# ==========================================
+		#              Conditions
+		# ==========================================
+		Conditions: {
+			NeedAnySlate: Requires any [Blasphemy Slate]
+			IsSequence9: 需序列9及以上
+			ConquerorOnly: Mods.zhashi.Conditions.ConquerorOnly
+			IsSequence6: 需 序列6: 黎明骑士
+			DogNotOwned: 未拥有/未召唤
+		}
+
+		# ==========================================
+		#              Keybinds
+		# ==========================================
+		Keybinds: {
+			"红祭司: 形态切换 (火焰/巨人).DisplayName": Red Priest: Form Switch (K)
+			"红祭司: 闪现.DisplayName": Red Priest: Flash (V)
+			"红祭司: 火焰炸弹.DisplayName": Red Priest: Flame Bomb (X)
+			"红祭司: 火焰披风.DisplayName": Red Priest: Flame Cloak (Z)
+			"红祭司: 收割/斩击.DisplayName": Red Priest: Slash (G)
+			"红祭司: 武器附魔.DisplayName": Red Priest: Enchant (T)
+			"红祭司: 操纵火焰/挑衅.DisplayName": Red Priest: Manipulate Fire (F)
+			"红祭司: 集众.DisplayName": Red Priest: Army of One (J)
+			"红祭司: 雷击.DisplayName": Red Priest: Lightning Strike (Mouse2)
+			"红祭司: 冰河.DisplayName": Red Priest: Ice Age (R)
+			"巨人: 水银化.DisplayName": Giant: Mercury Form (C)
+			"巨人: 守护姿态.DisplayName": Giant: Guardian Stance (X)
+			"巨人: 黎明铠甲.DisplayName": Giant: Dawn Armor (Z)
+			"月亮: 黑暗之翼.DisplayName": Moon: Wings of Darkness (K)
+			"月亮: 深渊枷锁/闪现.DisplayName": Moon: Abyss Shackle (V)
+			"月亮: 深渊枷锁.DisplayName": 月亮: 深渊枷锁
+			"月亮: 炼金手雷.DisplayName": Moon: Alchemical Grenade (X)
+			"月亮: 生命灵液.DisplayName": Moon: Elixir of Life (Z)
+			"月亮: 月光化.DisplayName": Moon: Moonlightization (C)
+			"月亮: 满月领域.DisplayName": Moon: Full Moon/Creation Domain (G)
+			"月亮: 蝙蝠化身.DisplayName": Moon: Bat Avatar (T)
+			"月亮: 月亮纸人.DisplayName": Moon: Paper Figurine/Transform (J)
+			"月亮: 黑暗凝视.DisplayName": Moon: Gaze (F)
+			"月亮: 召唤之门.DisplayName": Moon: Summoning Gate (R)
+			"愚者: 灵视开关.DisplayName": Fool: Spirit Vision (C)
+			"愚者: 占卜术.DisplayName": Fool: Divination (J)
+			"愚者: 火焰跳跃.DisplayName": Fool: Flame Jump (F)
+			"愚者: 无面伪装.DisplayName": Fool: Faceless Disguise/Spirit-Flesh Conversion (V)
+			"愚者: 干扰直觉.DisplayName": Fool: Distort/Grafting (G)
+			"愚者: 灵体之线.DisplayName": Fool: Spirit Body Threads (Z)
+			"愚者: 秘偶互换.DisplayName": Fool: Puppet Swap (T)
+			"愚者: 控灵/麻痹.DisplayName": Fool: Spirit Control (R)
+			"愚者: 历史投影.DisplayName": Fool: Historical Projection (Y)
+			"愚者: 昨日重现.DisplayName": Fool: Yesterday Once More (U)
+			"愚者: 奇迹愿望.DisplayName": Fool: Miracle Wish (Shift+V)
+			"愚者: 嫁接.DisplayName": Fool: Grafting (G)
+			"愚者: 灵肉转化.DisplayName": Fool: Spirit-Flesh Conversion (V)
+			"错误: 寄生/领域.DisplayName": Error: Parasite/Domain (P)
+			"错误: 寄生.DisplayName": 错误: 寄生
+			"错误: 窃取/时间.DisplayName": Error: Theft/Time (O)
+			"月亮: 纸人替身.DisplayName": 月亮: 纸人替身
+			"月亮: 满月/创生.DisplayName": 月亮: 满月/创生
+			"猎人: 形态切换.DisplayName": 猎人: 形态切换
+			"猎人: 火焰闪现.DisplayName": 猎人: 火焰闪现
+			"猎人: 炸弹.DisplayName": 猎人: 炸弹
+			"猎人: 火焰披风.DisplayName": 猎人: 火焰披风
+			"猎人: 收割斩击.DisplayName": 猎人: 收割斩击
+			"猎人: 武器附魔.DisplayName": 猎人: 武器附魔
+			"猎人: 蓄力火球.DisplayName": 猎人: 蓄力火球
+			"猎人: 集众.DisplayName": 猎人: 集众
+			"猎人: 天气操控.DisplayName": 猎人: 天气操控
+			"猎人: 冰河世纪.DisplayName": 猎人: 冰河世纪
+			"巨人: 晨曦之铠.DisplayName": 巨人: 晨曦之铠
+			"错误: 偷窃.DisplayName": 错误: 偷窃
+			"错误: 概念窃取 (位置/距离).DisplayName": 错误: 概念窃取 (位置/距离)
+			"月亮: 驯兽.DisplayName": 月亮: 驯兽
+		}
+
+		Configs: {
+			LotMConfig: {
+				DisplayName: Lot M Config
+				Headers.平衡性设置: 平衡性设置 Header
+
+				DynamicProgression: {
+					Label: 启用动态世界等级
+					Tooltip:
+						'''
+						根据当前世界击败的Boss（包括灾厄/瑟银等）动态调整属性。
+						建议开启以获得最佳体验。
+						'''
+				}
+
+				NerfDivineAbilities: {
+					Label: 机制软化
+					Tooltip:
+						'''
+						将“绝对无敌/秒杀”替换为“高额减伤/百分比伤害”。
+						关闭此项将回归变态强度。
+						'''
+				}
+
+				GlobalPowerMultiplier: {
+					Label: 属性强度倍率
+					Tooltip:
+						'''
+						全局调整模组增加的生命值、伤害和防御。
+						1.0 为标准，0.5 为减半。
+						'''
+				}
+			}
+
+			ZhashiConfig: {
+				DisplayName: Zhashi Config
+				Headers.灵性条设置: 灵性条设置 Header
+
+				BarScale: {
+					Label: 缩放比例
+					Tooltip: 调整灵性条的大小
+				}
+
+				BarPosition: {
+					Label: 位置坐标
+					Tooltip: ""
+				}
+			}
+		}
+	}
+}

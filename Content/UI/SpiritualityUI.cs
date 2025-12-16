@@ -1,90 +1,210 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent;
-using Terraria.ModLoader;
 using Terraria.UI;
-using zhashi.Content; // 引用 LotMPlayer
+using Terraria.ModLoader;
+using Terraria.GameInput;
+using zhashi.Content;
+using zhashi.Content.Configs;
 
 namespace zhashi.Content.UI
 {
-    // 1. UI 状态类：负责画图
     public class SpiritualityBarState : UIState
     {
-        // 每一帧都会调用这个方法来绘制
-        protected override void DrawSelf(SpriteBatch spriteBatch)
+        // === 运行时变量 ===
+        private Vector2 currentPos;
+        private float currentScale;
+        private bool initialized = false;
+
+        // === 拖拽变量 ===
+        private bool dragging = false;
+        private Vector2 dragOffset; // 记录抓取点
+
+        // === 缓存 ===
+        private int textureWidth = 0;
+        private int textureHeight = 0;
+        private bool isHovering = false;
+
+        // 记录上一帧的鼠标左键状态，用于手写“刚按下”判定
+        private bool oldMouseLeft = false;
+
+        public override void Update(GameTime gameTime)
         {
-            base.DrawSelf(spriteBatch);
+            base.Update(gameTime);
 
             var player = Main.LocalPlayer;
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            // 如果不是非凡者，或者是主菜单，就不显示
+            // 1. 状态检查
             if (!modPlayer.IsBeyonder || player.dead || player.ghost)
+            {
+                dragging = false;
                 return;
+            }
 
-            // === 1. 加载贴图 ===
-            // 确保你已经把图片放在 zhashi/Content/UI/ 文件夹下，且名字完全一致
-            // Request<Texture2D> 会自动加载图片
+            // 2. 初始化配置
+            if (!initialized)
+            {
+                currentPos = ZhashiConfig.Instance.BarPosition;
+                currentScale = ZhashiConfig.Instance.BarScale;
+                initialized = true;
+            }
+
+            if (textureWidth == 0) return;
+
+            // === 3. 【核心】坐标系统一 ===
+            // 泰拉瑞亚的 UI 坐标 = 屏幕像素 / UIScale
+            // 我们统一把鼠标转换到 UI 坐标系下，这样就没有缩放误差了
+            Vector2 mouseUISpace = Main.MouseScreen / Main.UIScale;
+
+            // === 4. 判定区域计算 ===
+            // 在 UI 坐标系下，HitBox 就是简单的矩形
+            Rectangle hitBox = new Rectangle(
+                (int)currentPos.X,
+                (int)currentPos.Y,
+                (int)(textureWidth * currentScale),
+                (int)(textureHeight * currentScale)
+            );
+
+            // 检查鼠标是否在矩形内
+            isHovering = hitBox.Contains(mouseUISpace.ToPoint());
+
+            // 交互锁定：防止拖拽时挥剑
+            if (isHovering || dragging)
+            {
+                Main.LocalPlayer.mouseInterface = true;
+                if (!dragging) Main.instance.MouseText("");
+            }
+
+            // === 5. 【修复】拖拽逻辑 (偏移锁定法) ===
+            bool currentMouseLeft = Main.mouseLeft;
+            bool justPressed = currentMouseLeft && !oldMouseLeft; // 这一帧按了 + 上一帧没按 = 刚按下
+
+            if (dragging)
+            {
+                // A. 正在拖拽
+                if (currentMouseLeft)
+                {
+                    // 新位置 = 当前鼠标UI坐标 - 刚开始抓的偏移量
+                    currentPos = mouseUISpace - dragOffset;
+
+                    // 简单的边界限制 (防止拖出屏幕)
+                    float maxW = Main.screenWidth / Main.UIScale;
+                    float maxH = Main.screenHeight / Main.UIScale;
+                    currentPos.X = MathHelper.Clamp(currentPos.X, 0, maxW - hitBox.Width);
+                    currentPos.Y = MathHelper.Clamp(currentPos.Y, 0, maxH - hitBox.Height);
+                }
+                else
+                {
+                    // B. 松开鼠标
+                    dragging = false;
+                    SaveConfig();
+                }
+            }
+            else
+            {
+                // C. 开始拖拽检测
+                if (isHovering && justPressed)
+                {
+                    dragging = true;
+                    // 记录“抓哪里了”：偏移量 = 鼠标位置 - UI左上角
+                    dragOffset = mouseUISpace - currentPos;
+                }
+            }
+
+            // === 6. 滚轮缩放 ===
+            if (isHovering)
+            {
+                int scrollDelta = PlayerInput.ScrollWheelDelta;
+                if (scrollDelta != 0)
+                {
+                    if (scrollDelta > 0) currentScale += 0.05f;
+                    else currentScale -= 0.05f;
+
+                    if (currentScale < 0.5f) currentScale = 0.5f;
+                    if (currentScale > 3.0f) currentScale = 3.0f;
+
+                    SaveConfig();
+                }
+            }
+
+            // 更新鼠标状态缓存
+            oldMouseLeft = currentMouseLeft;
+        }
+
+        private void SaveConfig()
+        {
+            ZhashiConfig.Instance.BarPosition = currentPos;
+            ZhashiConfig.Instance.BarScale = currentScale;
+        }
+
+        protected override void DrawSelf(SpriteBatch spriteBatch)
+        {
+            var player = Main.LocalPlayer;
+            var modPlayer = player.GetModPlayer<LotMPlayer>();
+
+            if (!modPlayer.IsBeyonder || player.dead || player.ghost) return;
+
+            // 加载资源
             Texture2D frameTexture = ModContent.Request<Texture2D>("zhashi/Content/UI/SpiritualityBar_Frame").Value;
             Texture2D fillTexture = ModContent.Request<Texture2D>("zhashi/Content/UI/SpiritualityBar_Fill").Value;
 
-            // === 2. 计算位置 (调整到你红圈的位置) ===
-            // 泰拉瑞亚原版血条大概在右边 300-400 像素的位置
-            // 我们设置在 屏幕宽度 - 500，这样就在血条左边了
-            int screenX = Main.screenWidth - 700;
-            int screenY = 20; // 距离顶部 20 像素
+            textureWidth = frameTexture.Width;
+            textureHeight = frameTexture.Height;
 
-            // 获取图片的大小
-            int width = frameTexture.Width;
-            int height = frameTexture.Height;
+            // 视觉反馈
+            Color drawColor = (isHovering || dragging) ? Color.White : new Color(200, 200, 200, 255);
 
-            // 定义整个条的矩形位置
-            Rectangle barRect = new Rectangle(screenX, screenY, width, height);
+            // === 绘制 ===
+            spriteBatch.End();
 
-            // === 3. 计算灵性比例 ===
+            // 构建绘制矩阵
+            Matrix transformMatrix =
+                Matrix.CreateScale(currentScale) * Matrix.CreateTranslation(currentPos.X, currentPos.Y, 0f) * Main.UIScaleMatrix;
+
+            spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.LinearClamp,
+                DepthStencilState.None,
+                RasterizerState.CullCounterClockwise,
+                null,
+                transformMatrix
+            );
+
+            // 绘制内容 (坐标0,0)
             float quotient = modPlayer.spiritualityCurrent / (float)modPlayer.spiritualityMax;
-            // 限制在 0 到 1 之间
-            if (quotient < 0) quotient = 0;
-            if (quotient > 1) quotient = 1;
+            quotient = MathHelper.Clamp(quotient, 0f, 1f);
 
-            // === 4. 绘制填充条 (Fill) ===
-            // 核心技巧：使用 sourceRectangle (源矩形) 来裁剪图片
-            // 我们只画图片左边的 "quotient" 比例部分
-            int fillWidth = (int)(width * quotient);
+            int fillWidth = (int)(frameTexture.Width * quotient);
+            Rectangle sourceRect = new Rectangle(0, 0, fillWidth, frameTexture.Height);
+            Rectangle destRect = new Rectangle(0, 0, fillWidth, frameTexture.Height);
 
-            // sourceRect: 从图片(0,0)开始，切多宽
-            Rectangle sourceRect = new Rectangle(0, 0, fillWidth, height);
-            // destRect: 画在屏幕上的什么位置，画多宽
-            Rectangle destRect = new Rectangle(screenX, screenY, fillWidth, height);
+            spriteBatch.Draw(fillTexture, destRect, sourceRect, drawColor);
+            spriteBatch.Draw(frameTexture, Vector2.Zero, drawColor);
 
-            // 绘制填充层 (颜色设为白色，表示使用图片原色)
-            spriteBatch.Draw(fillTexture, destRect, sourceRect, Color.White);
-
-            // === 5. 绘制边框 (Frame) ===
-            // 边框画在上面，盖住边缘
-            spriteBatch.Draw(frameTexture, barRect, Color.White);
-
-            // === 6. 绘制文字数值 (可选) ===
-            // 如果你想在条中间显示数字
+            // 绘制文字
             string text = $"{(int)modPlayer.spiritualityCurrent}/{modPlayer.spiritualityMax}";
             Vector2 textSize = FontAssets.MouseText.Value.MeasureString(text);
-            // 文字居中计算
-            Vector2 textPos = new Vector2(screenX + width / 2 - textSize.X / 2, screenY + height / 2 - textSize.Y / 2);
+            Vector2 textPos = new Vector2(frameTexture.Width / 2 - textSize.X / 2, frameTexture.Height / 2 - textSize.Y / 2);
+            Color textColor = (isHovering || dragging) ? Color.Gold : Color.White;
 
-            // 绘制文字 (白色，带黑边)
-            Utils.DrawBorderString(spriteBatch, text, textPos, Color.White);
+            Utils.DrawBorderString(spriteBatch, text, textPos, textColor);
 
-            // 鼠标悬停显示提示 (可选)
-            if (barRect.Contains(Main.MouseScreen.ToPoint()))
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);
+
+            // 悬停提示
+            if (isHovering)
             {
                 Main.instance.MouseText($"灵性: {(int)modPlayer.spiritualityCurrent}");
             }
         }
     }
 
-    // 2. ModSystem 类：负责管理 UI 何时加载、何时显示
     public class SpiritualityUISystem : ModSystem
     {
         private UserInterface _interface;
@@ -103,16 +223,12 @@ namespace zhashi.Content.UI
 
         public override void UpdateUI(GameTime gameTime)
         {
-            if (_interface != null)
-            {
-                _interface.Update(gameTime);
-            }
+            if (_interface != null) _interface.Update(gameTime);
         }
 
         public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
         {
             int resourceBarIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Resource Bars"));
-
             if (resourceBarIndex != -1)
             {
                 layers.Insert(resourceBarIndex, new LegacyGameInterfaceLayer(

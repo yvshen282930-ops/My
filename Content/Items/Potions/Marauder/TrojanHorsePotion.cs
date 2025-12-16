@@ -69,6 +69,7 @@ namespace zhashi.Content.Items.Potions.Marauder
                 .AddIngredient(ItemID.EnchantedNightcrawler, 1) // 星之虫
                 .AddIngredient(ItemID.HolyWater, 5)        // 古老河水
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

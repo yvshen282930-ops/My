@@ -51,6 +51,7 @@ namespace zhashi.Content.Items.Potions.Fool
                 .AddIngredient(ItemID.Sapphire, 20)    // 水形宝石
                 .AddIngredient(ItemID.Deathweed, 10)   // 迷幻草
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

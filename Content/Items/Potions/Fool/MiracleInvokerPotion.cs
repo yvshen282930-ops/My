@@ -66,6 +66,7 @@ namespace zhashi.Content.Items.Potions.Fool
                 .AddIngredient(ItemID.GoldWatch, 1)       // 时之虫
                 .AddIngredient(ItemID.FallenStar, 10)     // 星之虫
                 .AddTile(TileID.LunarCraftingStation)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

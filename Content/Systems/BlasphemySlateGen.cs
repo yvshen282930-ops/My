@@ -9,30 +9,42 @@ namespace zhashi.Content.Systems
     {
         public override void PostWorldGen()
         {
+            // 遍历所有宝箱
             for (int chestIndex = 0; chestIndex < Main.maxChests; chestIndex++)
             {
                 Chest chest = Main.chest[chestIndex];
-                if (chest != null && Main.tile[chest.x, chest.y].TileType == TileID.Containers)
+
+                // 必须检查 chest 是否为 null
+                if (chest != null)
                 {
-                    // 20% 概率生成
-                    if (Main.rand.NextBool(3))
+                    Tile tile = Main.tile[chest.x, chest.y];
+
+                    // 【核心修复】同时检查 Containers (ID 21) 和 Containers2 (ID 467)
+                    // Containers 包含：木箱、金箱、以及大多数肉前宝箱
+                    // Containers2 包含：常春藤箱、水箱、蛛丝箱、丛林蜥蜴箱等
+                    if (tile.TileType == TileID.Containers || tile.TileType == TileID.Containers2)
                     {
-                        for (int inventoryIndex = 0; inventoryIndex < 40; inventoryIndex++)
+                        // 【核心修复】20% 概率 (1/5)
+                        if (Main.rand.NextBool(5))
                         {
-                            if (chest.item[inventoryIndex].type == ItemID.None)
+                            // 寻找空位
+                            for (int inventoryIndex = 0; inventoryIndex < 40; inventoryIndex++)
                             {
-                                // 创建物品实例
-                                int type = ModContent.ItemType<BlasphemySlate>();
-                                chest.item[inventoryIndex].SetDefaults(type);
-
-                                // 【关键修复】获取 ModItem 实例并手动设为 -1
-                                // 这样在箱子里时，它就是"未观测状态"
-                                if (chest.item[inventoryIndex].ModItem is BlasphemySlate slate)
+                                if (chest.item[inventoryIndex].type == ItemID.None)
                                 {
-                                    slate.recipeIndex = -1;
-                                }
+                                    // 创建物品实例
+                                    int type = ModContent.ItemType<BlasphemySlate>();
+                                    chest.item[inventoryIndex].SetDefaults(type);
 
-                                break;
+                                    // 设置为未观测状态 (-1)
+                                    if (chest.item[inventoryIndex].ModItem is BlasphemySlate slate)
+                                    {
+                                        slate.recipeIndex = -1;
+                                    }
+
+                                    // 放入一个后就停止，防止一个箱子刷好几个
+                                    break;
+                                }
                             }
                         }
                     }

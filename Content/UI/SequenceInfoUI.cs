@@ -197,7 +197,7 @@ namespace zhashi.Content.UI
             {
                 text += $"[c/EE82EE:月亮途径 序列{p.currentMoonSequence}]\n";
                 if (p.currentMoonSequence <= 9) text += "- 免疫中毒 / 炼药双倍\n";
-                if (p.currentMoonSequence <= 8) text += "- 召唤栏+2 / 移速+30%\n";
+                if (p.currentMoonSequence <= 8) text += "- [技能] 驯兽/ 召唤栏+2 / 移速+30%\n";
                 if (p.currentMoonSequence <= 7) text += "- [技能] 黑暗之翼 / 深渊枷锁\n";
                 if (p.currentMoonSequence <= 6) text += "- [技能] 生命灵液 / 炼金手雷\n";
                 if (p.currentMoonSequence <= 5) text += "- [技能] 满月领域 / 月光化\n";
@@ -326,7 +326,7 @@ namespace zhashi.Content.UI
                     text += "- [主动] 寄生 (按P键): \n";
                     text += "    > 对城镇NPC: 浅层寄生，随身隐形并快速回血\n";
                     text += "    > 对敌人: 深层寄生，持续造成伤害并吸血/控制\n";
-                    text += "- [主动] 概念窃取 (Shift+O键): \n";
+                    text += "- [主动] 概念窃取 (K键): \n";
                     text += "    > 窃取“距离”: 瞬间移动到鼠标位置\n";
                     text += "    > 窃取“位置”: 与目标互换位置\n";
                 }

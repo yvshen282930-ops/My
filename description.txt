@@ -2,7 +2,7 @@
 [b]“每段旅程都有终点，而我们的终点是星辰大海。”[/b]
 
 本 Mod 将《诡秘之主》(Lord of the Mysteries) 的非凡体系带入泰拉瑞亚！
-抛弃原版的职业限制，服用魔药，完成仪式晋升序列，掌握神话般的力量。目前版本包含 巨人(战士)、红祭司、月亮、愚者，四条的非凡途径。
+抛弃原版的职业限制，服用魔药，完成仪式晋升序列，掌握神话般的力量。目前版本包含 错误，巨人(战士)、红祭司、月亮、愚者，五条的非凡途径。
 
 [hr]
 
@@ -15,8 +15,18 @@
 [*]灵性上限随序列晋升而指数级增长，从序列9的微弱灵性到序列1如汪洋般的灵性之海。
 [/list]
 
-[h2]2. 四大非凡途径 (Pathways)[/h2]
-目前已实装四条途径，从序列 9 到序列 1 的完整晋升体验（注：巨人途径为缺少序列2）：
+[h2]2. 五大非凡途径 (Pathways)[/h2]
+目前已实装五条途径，从序列 9 到序列 1 的完整晋升体验（注：巨人途径为缺少序列2）：
+
+[b]新增：错误途径 (Marauder)[/b]
+[i]“所有的规则都有漏洞，所有的命运都可以被窃取。”[/i]
+[list]
+[*]寄生与夺舍：你可以寄生在敌人或NPC体内，或是将身体瞬间化为无数灵之虫重组，以此躲避致命一击。
+[*]窃取权柄：不仅仅是窃取物品，你甚至能窃取敌人的生命、魔力、增益状态，乃至窃取他们的“攻击距离”和“时间”。 
+[*]欺瞒领域：扭曲现实的规则，让敌人的攻击发生偏转，或是让周围的生物陷入混乱与自我怀疑。 
+[*]时之虫：作为序列1的天使之王，你可以召唤古老的壁钟虚影，让周围的时间流速变慢，甚至剥夺敌人的寿命使其衰老。 
+[*]定位：窃贼/生存/控制、削弱敌人、玩弄时间与命运。 
+[/list]
 
 [b] 愚者途径 (Fool / Seer)[/b]
 [i]“愚弄时间，欺诈命运。”[/i]
@@ -60,8 +70,7 @@
 
 [h1]玩法说明 (How to Play)[/h1]
 
-1.  配方与制作：寻找特殊的非凡材料（如特性、血液等）制作魔药。
-（注：宝箱中会随机刷新出亵渎石板，记录着魔药配方）。
+1.  配方与制作：宝箱中会随机刷新出[亵渎石板]，记录着魔药配方,寻找特殊的非凡材料（如特性、血液等）制作魔药。
 2.  晋升机制：部分高序列（如序列 2 -> 序列 1）不仅需要魔药，还需要完成扮演仪式（例如猎人需要让地图无敌手）。
 3.  按键绑定：
     请在设置中绑定 Mod 快捷键以使用主动技能！
@@ -74,9 +83,101 @@
 [hr]
 
 [h1]⚠️ 注意事项[/h1]
-本Mod极其超模，请自行选择较高难度，可通过配置菜单开启动态平衡模式，与其他mod搭配使用（支持灾厄，瑟银，法狗，惊惧）！！！
+本Mod比较超模，请自行选择较高难度，可通过配置菜单开启动态平衡模式，与其他mod搭配使用（支持灾厄，瑟银，法狗，惊惧）！！！
 本 Mod 目前处于开发阶段（Beta），会有平衡性调整。
 如果您遇到 Bug 或有建议，欢迎在评论区留言！
 也可关注作者的B站账号留言：433573566
 
 [i]赞美愚者！[/i]
+
+[h1]Welcome to Terraria, Shrouded in Mist...[/h1]
+[b]"Every journey has an end, and our destination is a sea of stars."[/b]
+
+This mod brings the Beyonder system from "Lord of the Mysteries" to Terraria!
+Abandon vanilla class restrictions, consume potions, complete rituals to advance sequences, and master mythical powers. The current version includes five Beyonder pathways: Marauder, Giant (Warrior), Red Priest, Moon, and Fool.
+
+[hr]
+
+[h1]🔮 Core Features[/h1]
+
+[h2]1. Unique Spirituality System[/h2]
+[list]
+[*]Introduces an independent [Spirituality] system.
+[*]Unlike vanilla Mana, Spirituality is the foundation for casting Beyonder abilities.
+[*]Spirituality cap increases exponentially with sequence advancement, from the faint spirituality of Sequence 9 to the ocean-like spirituality of Sequence 1.
+[/list]
+
+[h2]2. Five Beyonder Pathways[/h2]
+Currently, five pathways are implemented, offering a complete progression experience from Sequence 9 to Sequence 1 (Note: Giant pathway is missing Sequence 2):
+
+[b]New: Marauder Pathway[/b]
+[i]"All rules have loopholes, and all fate can be stolen."[/i]
+[list]
+[*]Parasitizing & Body Seizing: You can parasitize enemies or NPCs, or instantly transform your body into countless Worms of Spirit to reform, thereby dodging fatal strikes.
+[*]Authority of Theft: Not just stealing items—you can even steal enemies' health, mana, buffs, and even their "attack range" and "time."
+[*]Deceit Domain: Distort the rules of reality, deflecting enemy attacks or plunging surrounding creatures into chaos and self-doubt.
+[*]Worm of Time: As a Sequence 1 King of Angels, you can summon the phantom of an ancient clock, slowing down time around you and even stripping enemies of their lifespan to age them.
+[*]Role: Thief/Survival/Control, weakening enemies, toying with time and fate.
+[/list]
+
+[b]Fool Pathway (Seer)[/b]
+[i]"Fooling time, deceiving history."[/i]
+[list]
+[*]Spirit Body Threads: Forcibly control enemy actions and completely convert them into loyal Marionettes (minions).
+[*]Historical Projection: Summon phantoms of defeated bosses from the fog of history to aid in battle.
+[*]Miracle Wish: Grant wishes to yourself to achieve health reset, apocalyptic calamities, instant teleportation, or day/night cycle changes.
+[*]Role: Summoner, powerful crowd control, unpredictability, and conceptual immortality.
+[/list]
+
+[b]Giant Pathway (Warrior)[/b]
+[i]"Protection is the glory of a Giant."[/i]
+[list]
+[*]Dawn Armor: Summon armor of light, providing extremely high defense and damage reduction.
+[*]Twilight Resurrection: Sequence 2 ability. Upon death, reverse time to reset your state (long cooldown).
+[*]Mercury Form: Transform into mercury, significantly boosting mobility and evasion.
+[*]Role: Melee, ultra-high tankiness, extremely high fault tolerance.
+[/list]
+
+[b]Red Priest Pathway (Hunter)[/b]
+[i]"The best hunter often appears in the form of prey."[/i]
+[list]
+[*]Army of One: Significantly increases minion slots based on sequence level (Sequence 1 can add 40 slots!).
+[*]Weakness Break: Extremely high critical damage bonuses and execution capabilities.
+[*]Weather Warlock: Summon thunder and fog to alter the battlefield environment.
+[*]Conqueror: Advance through a special ritual to gain absolute suppression over enemies.
+[*]Role: Summoner/Ranger hybrid, high burst damage, group combat.
+[/list]
+
+[b]Moon Pathway[/b]
+[i]"The Moon represents life, but also terror."[/i]
+[list]
+[*]Summoning Gate: Open the gate to the Spirit World to summon random powerful creatures (with a very small chance to summon projections of Old Gods...).
+[*]Creation Domain: Unfold a domain that heals allies and continuously damages enemies.
+[*]Vampire Avatar: Transform into a swarm of bats or moonlight, gaining unparalleled survival capabilities.
+[*]Beauty Goddess: Charm all living beings, causing enemies to fight each other or lose the will to fight.
+[*]Role: Mage/Summoner, powerful healing, crowd control master.
+[/list]
+
+[hr]
+
+[h1]Gameplay Guide[/h1]
+
+1. Recipes & Crafting: [Blasphemy Slates] will randomly spawn in treasure chests, recording potion recipes. Find special Beyonder materials (such as characteristics, blood, etc.) to craft potions.
+2. Advancement Mechanism: Some high sequences (e.g., Sequence 2 -> Sequence 1) require not only potions but also the completion of acting rituals (e.g., Hunters need to clear the map of all rivals).
+3. Keybinds:
+   Please bind Mod hotkeys in settings to use active skills!
+   [list]
+   [*][b]J Key[/b] (Default): Triggers core skills (e.g., Paper Figurine Substitute, Form Switching).
+   [*][b]Skill Keys[/b]: Used to unleash ultimate abilities (e.g., Summoning Gate, Ice Age).
+   [*][b]Check "Controls" settings for more keybinds.[/b]
+   [/list]
+
+[hr]
+
+[h1]⚠️ Notes[/h1]
+This Mod is quite overpowered. Please choose a higher difficulty yourself. You can enable dynamic balance mode via the config menu to use it alongside other mods (Supports Calamity, Thorium, Fargo's, Terror)!!!
+This Mod is currently in development (Beta) and will undergo balance adjustments.
+If you encounter bugs or have suggestions, feel free to leave a comment!
+You can also follow the author's Bilibili account: 433573566
+
+[i]Praise the Fool![/i]

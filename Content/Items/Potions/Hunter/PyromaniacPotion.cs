@@ -56,6 +56,7 @@ namespace zhashi.Content.Items.Potions.Hunter
                 .AddIngredient(ItemID.Fireblossom, 3)  // 火焰花
                 .AddIngredient(ItemID.ExplosivePowder, 10) // 爆炸粉
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

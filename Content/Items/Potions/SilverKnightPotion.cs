@@ -98,6 +98,7 @@ namespace zhashi.Content.Items.Potions
                 .AddIngredient(ItemID.PumpkingTrophy, 1)
                 .AddIngredient(ItemID.SpookyWood, 50)
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

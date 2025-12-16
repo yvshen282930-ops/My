@@ -37,34 +37,30 @@ namespace zhashi.Content.Items.Potions.Marauder
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            // --- 核心修复逻辑 ---
-            // 判定：如果玩家是凡人 (10)，或者是其他更弱的状态（大于9），才允许晋升
-            if (modPlayer.currentMarauderSequence > 9)
+            // 【核心修复】
+            // 使用 IsBeyonder 检查玩家是否已经是任何途径的非凡者
+            // 如果 IsBeyonder 为 true，说明已经是某条途径的序列9或更高了，必须禁止服用
+            if (modPlayer.IsBeyonder)
             {
-                // 1. 晋升为序列9
-                modPlayer.currentMarauderSequence = 9;
+                Main.NewText("你的灵性已定型，无法开启第二条途径，强行服用只会导致失控！", 255, 50, 50);
+                return true; // 消耗物品但无效
+            }
 
-                // 2. 视觉/听觉反馈
-                Main.NewText("你的手指变得灵活，眼中闪烁着奇异的光芒... 你成为了[偷盗者]！", 50, 50, 200);
-                return true;
-            }
-            // 如果已经是序列9或更强 (<= 9)
-            else
-            {
-                Main.NewText("你体内的非凡特性排斥这份魔药，你已经不需要它了。", 150, 150, 150);
-                return true; // 仍然消耗，或者改为 return false 不消耗
-            }
+            // 只有当玩家完全是凡人时，才允许晋升
+            modPlayer.currentMarauderSequence = 9;
+            Main.NewText("你的手指变得灵活，眼中闪烁着奇异的光芒... 你成为了[偷盗者]！", 50, 50, 200);
+            return true;
         }
 
         public override void AddRecipes()
         {
-            // 遵循石板上的配方：水瓶 + 毒刺 + 粉凝胶 + 蓝宝石
             CreateRecipe()
                 .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.Stinger, 1)     // 毒刺
-                .AddIngredient(ItemID.PinkGel, 1)     // 粉凝胶
-                .AddIngredient(ItemID.Sapphire, 1)    // 蓝宝石
+                .AddIngredient(ItemID.Stinger, 1)      // 毒刺
+                .AddIngredient(ItemID.PinkGel, 1)      // 粉凝胶
+                .AddIngredient(ItemID.Sapphire, 1)     // 蓝宝石
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

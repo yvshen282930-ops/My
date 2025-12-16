@@ -64,6 +64,7 @@ namespace zhashi.Content.Items.Potions.Fool
                 .AddIngredient(ItemID.Moonglow, 1)       // 金斗篷草 (替代：月光草)
                 .AddIngredient(ItemID.Deathweed, 1)      // 毒堇汁 (替代：死亡草)
                 .AddTile(TileID.Bottles)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .Register();
         }
     }

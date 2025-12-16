@@ -2,6 +2,40 @@
     zhashi: {
         Items: {
             # ==========================================
+            #              特殊物品 (Special)
+            # ==========================================
+            # [新增] 亵渎石板
+            BlasphemySlate: {
+                DisplayName: 亵渎石板
+                Tooltip:
+                    '''
+                    这块古老的石板上刻满了亵渎的文字...
+                    记载着失落的魔药配方。
+                    [c/FFA500:【消耗品】可作为任意序列魔药的合成材料]
+                    (合成时石板将破碎消失)
+                    '''
+            }
+            # [新增] 纸牌 (愚者武器)
+            PaperCard: {
+                DisplayName: 塔罗牌
+                Tooltip:
+                    '''
+                    序列8：小丑的常用武器。
+                    看似普通的纸牌，在灌注灵性后锋利如刀。
+                    '''
+            }
+            # [新增] 非凡血液 (材料)
+            ExtraordinaryBlood: {
+                DisplayName: 非凡血液
+                Tooltip: 蕴含着非凡力量的血液。
+            }
+            # [新增] 测试召唤物
+            TestSummon: {
+                DisplayName: 测试召唤杖
+                Tooltip: 用于测试召唤机制。
+            }
+
+            # ==========================================
             #              特殊武器 (Weapons)
             # ==========================================
             # 巨人途径
@@ -59,7 +93,7 @@
                     '''
             }
             
-            # 愚者途径 (新增)
+            # 愚者途径
             AirBullet: {
                 DisplayName: 空气弹
                 Tooltip:
@@ -332,7 +366,6 @@
                 Tooltip:
                     '''
                     服用后晋升为小丑。
-                    获得火焰跳跃与纸人替身。
                     '''
             }
             MagicianPotion: {
@@ -340,7 +373,7 @@
                 Tooltip:
                     '''
                     服用后晋升为魔术师。
-                    获得伤害转移、骨骼软化与空气弹。
+                    获得伤害转移、骨骼软化与空气弹。获得火焰跳跃与纸人替身。
                     '''
             }
             FacelessPotion: {
@@ -391,6 +424,91 @@
                     支配灵界，概念嫁接，建立神国。
                     '''
             }
+
+            # ==========================================
+            #              [新增] 错误途径魔药 (Marauder)
+            # ==========================================
+            MarauderPotion: {
+                DisplayName: 序列9：偷盗者魔药
+                Tooltip:
+                    '''
+                    服用后晋升为偷盗者。
+                    身体灵巧，手指修长。
+                    获得[窃取]能力，从敌人身上获取额外收益。
+                    '''
+            }
+            SwindlerPotion: {
+                DisplayName: 序列8：诈骗师魔药
+                Tooltip:
+                    '''
+                    服用后晋升为诈骗师。
+                    擅长欺诈与误导。
+                    购买物品时可能获得折扣。
+                    '''
+            }
+            CryptologistPotion: {
+                DisplayName: 序列7：解密学者魔药
+                Tooltip:
+                    '''
+                    服用后晋升为解密学者。
+                    直觉敏锐，擅长发现弱点。
+                    提升暴击与破甲能力。
+                    '''
+            }
+            PrometheusPotion: {
+                DisplayName: 序列6：盗火人魔药
+                Tooltip:
+                    '''
+                    服用后晋升为盗火人。
+                    窃取力量的窃贼。
+                    窃取成功率提升，可窃取敌人Buff。
+                    '''
+            }
+            DreamStealerPotion: {
+                DisplayName: 序列5：窃梦家魔药
+                Tooltip:
+                    '''
+                    服用后晋升为窃梦家。
+                    潜入梦境，操纵意识。
+                    攻击可能使敌人混乱或沉睡。
+                    '''
+            }
+            ParasitePotion: {
+                DisplayName: 序列4：寄生者魔药
+                Tooltip:
+                    '''
+                    服用后晋升为寄生者 (半神)。
+                    寄生于万物，获得不死之身。
+                    按键[P]寄生目标，半虫化重组身体。
+                    '''
+            }
+            MentorPotion: {
+                DisplayName: 序列3：欺瞒导师魔药
+                Tooltip:
+                    '''
+                    服用后晋升为欺瞒导师 (圣者)。
+                    欺诈规则，误导众生。
+                    开启欺瞒领域，扭曲敌人的认知。
+                    '''
+            }
+            TrojanHorsePotion: {
+                DisplayName: 序列2：命运木马魔药
+                Tooltip:
+                    '''
+                    服用后晋升为命运木马 (天使)。
+                    窃取命运，篡改未来。
+                    获得命运窃取能力，替死重生。
+                    '''
+            }
+            WormOfTimePotion: {
+                DisplayName: 序列1：时之虫魔药
+                Tooltip:
+                    '''
+                    服用后晋升为时之虫 (天使之王)。
+                    玩弄时间，窃取岁月。
+                    获得时间领域，窃取敌人时间与生命。
+                    '''
+            }
         }
 
         # ==========================================
@@ -409,11 +527,35 @@
             WeatherStrikeLightning.DisplayName: 天气雷击
             GuardianShieldProjectile.DisplayName: 守护之盾
             
-            # 愚者途径新增
+            # 愚者弹幕
             AirBulletProjectile.DisplayName: 空气弹
             MarionetteMinion.DisplayName: 秘偶
             HistoricalBossProjectile.DisplayName: 历史投影
             HistoricalSceneProjectile.DisplayName: 历史场景
+            PaperCardProjectile.DisplayName: 纸牌
+            
+            # 巨人/Boss弹幕 (补充)
+            DawnBladeProjectile.DisplayName: 黎明之刃
+            TwilightStormProjectile.DisplayName: 黄昏风暴
+            TwilightSwordBeam.DisplayName: 黄昏剑气
+            AurmirBossStorm.DisplayName: 毁灭风暴
+            AurmirSkyLance.DisplayName: 天空长矛
+            AurmirTwilightOrb.DisplayName: 黄昏法球
+            
+            # 错误途径弹幕 (补充)
+            TimeClockVisual.DisplayName: 时之钟
+        }
+
+        # ==========================================
+        #              NPCs (怪物/Boss)
+        # ==========================================
+        NPCs: {
+            Aurmir: {
+                DisplayName: 黄昏巨人·奥尔米尔
+            }
+            TestBoss: {
+                DisplayName: 测试Boss
+            }
         }
 
         # ==========================================
@@ -428,8 +570,6 @@
                 DisplayName: 征服意志
                 Description: 被征服者的威压震慑，无法动弹。
             }
-            
-            # 愚者途径新增
             YesterdayBuff: {
                 DisplayName: 昨日重现
                 Description: 你向过去的自己借取了力量，全属性大幅提升！
@@ -442,6 +582,17 @@
                 DisplayName: 灵体受控
                 Description: 思维迟缓，身体僵硬。
             }
+            AbyssShacklesDebuff: {
+                DisplayName: 深渊枷锁
+                Description: 被深渊的寒冷锁链束缚，无法移动。
+            }
+        }
+
+        # ==========================================
+        #              条件 (Conditions)
+        # ==========================================
+        Conditions: {
+            NeedAnySlate: "需持有任意[亵渎石板]"
         }
 
         # ==========================================
@@ -523,7 +674,7 @@
                 DisplayName: 月亮: 召唤之门 (R)
             }
             
-            # --- 愚者 (新增) ---
+            # --- 愚者 ---
             "愚者: 灵视开关": {
                 DisplayName: 愚者: 灵视 (C)
             }
@@ -562,6 +713,14 @@
             }
             "愚者: 灵肉转化": {
                 DisplayName: 愚者: 灵肉转化 (V)
+            }
+
+            # --- [新增] 错误途径 (Marauder) ---
+            "错误: 寄生/领域": {
+                DisplayName: 错误: 寄生/领域 (P)
+            }
+            "错误: 窃取/时间": {
+                DisplayName: 错误: 窃取/时间 (O)
             }
         }
     }
