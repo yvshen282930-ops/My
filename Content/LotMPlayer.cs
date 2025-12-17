@@ -15,11 +15,20 @@ using zhashi;
 using zhashi.Content.Projectiles;
 using zhashi.Content.Items.Weapons;
 using zhashi.Content.Buffs;
+using zhashi.Content.Items;
 
 namespace zhashi.Content
 {
     public class LotMPlayer : ModPlayer
     {
+        public override IEnumerable<Item> AddStartingItems(bool mediumCoreDeath)
+        {
+            return new[] {
+                // 确保 RoselleDiary 这个类名和 Content/Items/RoselleDiary.cs 里的类名一致
+                new Item(ModContent.ItemType<RoselleDiary>())
+            };
+        }
+
         // ===================================================
         // 1. 核心变量定义
         // ===================================================
@@ -104,6 +113,7 @@ namespace zhashi.Content
         public int graftingMode = 0;              // 嫁接模式: 0=无, 1=反弹(空间), 2=必杀(攻击)
         public int graftingCooldown = 0;          // 嫁接冷却
         public int realmRange = 1500;             // 诡秘之境范围
+        public bool waitingForTeleport = false; // 标记：是否正在等待点击传送
         // 灵之虫系统
         public int spiritWorms = 50;              // 当前灵之虫数量
         public const int MAX_SPIRIT_WORMS = 50;
@@ -144,6 +154,8 @@ namespace zhashi.Content
         public const int WORM_RITUAL_TARGET = 25200; // 7分钟 (60帧 * 420秒)
         public int timeTheftCooldown = 0;      // 窃取时间冷却
         public bool isTimeClockActive = false; // 时之虫领域是否开启
+        // 【新增】标记当前寄生目标是否为玩家
+        public bool parasiteIsPlayer = false;
 
         // ===================================================
         // 【新增】狗的数据存储 (绑定在玩家身上)
@@ -261,88 +273,49 @@ namespace zhashi.Content
         // ===================================================
         public override void PreUpdate()
         {
-            if (isParasitizing)
+            if (Player.dead) waitingForTeleport = false;
+            if (waitingForTeleport)
             {
-                // 1. 检查目标是否有效
-                NPC target = null;
-                if (parasiteTargetIndex >= 0 && parasiteTargetIndex < Main.maxNPCs)
+                // 视觉提示：玩家身边产生一些空间波纹，提示处于技能状态中
+                if (Main.rand.NextBool(5))
+                    Dust.NewDust(Player.position, Player.width, Player.height, DustID.Vortex, 0, 0, 0, default, 1f);
+
+                // 检测鼠标左键点击 (按下并释放的一瞬间触发)
+                if (Main.mouseLeft && Main.mouseLeftRelease)
                 {
-                    target = Main.npc[parasiteTargetIndex];
-                }
+                    Vector2 targetPos = Main.MouseWorld;
 
-                if (target == null || !target.active || target.life <= 0)
-                {
-                    // 目标不存在或死亡，强制解除
-                    isParasitizing = false;
-                    parasiteTargetIndex = -1;
-                    Player.invis = false; // 解除隐身
-                    Main.NewText("寄生对象已死亡，被迫显形！", 255, 100, 100);
-                }
-                else
-                {
-                    Player.Center = target.Center;
-                    Player.velocity = target.velocity;
-                    Player.gfxOffY = 0;
-
-                    // 玩家隐身且无敌 (只要在寄生中)
-                    Player.invis = true;
-                    Player.immune = true;
-                    Player.immuneTime = 2;
-
-                    float cost = parasiteIsTownNPC ? 0.5f : 5.0f;
-
-                    if (!TryConsumeSpirituality(cost / 60f, true)) // 每帧扣除
+                    // 核心逻辑：如果大地图(Map)是打开的，计算地图坐标
+                    if (Main.mapFullscreen)
                     {
-                        isParasitizing = false;
-                        Main.NewText("灵性耗尽，寄生中断！", 255, 50, 50);
+                        // 获取地图缩放比例
+                        float scale = Main.mapFullscreenScale;
+                        // 计算鼠标相对于屏幕中心的偏移量 (Pixel)
+                        float dx = (Main.mouseX - Main.screenWidth / 2f) / scale;
+                        float dy = (Main.mouseY - Main.screenHeight / 2f) / scale;
+
+                        // Main.mapFullscreenPos 是地图中心的 Tile 坐标 (1 Tile = 16 Pixels)
+                        // 目标世界坐标 = (地图中心Tile坐标 + 鼠标偏移Tile量) * 16
+                        targetPos = new Vector2(
+                            (Main.mapFullscreenPos.X + dx) * 16f,
+                            (Main.mapFullscreenPos.Y + dy) * 16f
+                        );
+
+                        // 传送后自动关闭地图，方便玩家立刻看到位置
+                        Main.mapFullscreen = false;
                     }
 
-                    // 4. 寄生效果
-                    if (parasiteIsTownNPC)
-                    {
-                        // --- 浅层寄生 (友军) ---
-                        // 玩家快速恢复生命
-                        Player.lifeRegen += 10;
-                        // 宿主不会受到伤害 (或者你可以选择不保护宿主)
-                    }
-                    else
-                    {
-                        // --- 深层寄生 (敌人) ---
-                        // 窃取生命：对敌人造成伤害，恢复自己
-                        if (Main.GameUpdateCount % 60 == 0) // 每秒
-                        {
-                            int damage = 50; // 寄生伤害
-                            Player.ApplyDamageToNPC(target, damage, 0, 0, false);
+                    // 执行传送
+                    Player.Teleport(targetPos, 1);
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, Player.position); // 播放传送音效
+                    Main.NewText("空间跨越成功！", 0, 255, 255);
 
-                            int heal = 5;
-                            Player.statLife += heal;
-                            Player.HealEffect(heal);
-
-                            // 控制效果：几率混乱或定身
-                            target.AddBuff(BuffID.Confused, 120);
-                            target.AddBuff(BuffID.Slow, 120);
-                        }
-                    }
-                }
-                if (currentMarauderSequence == 3 && parasiteIsTownNPC)
-                {
-                    trojanRitualTimer++;
-
-                    // 每30秒提示一次进度，避免刷屏
-                    if (trojanRitualTimer % 1800 == 0)
-                    {
-                        int seconds = trojanRitualTimer / 60;
-                        int targetSeconds = TROJAN_RITUAL_TARGET / 60;
-                        Main.NewText($"正在利用该身份编织命运... ({seconds}s / {targetSeconds}s)", 150, 150, 255);
-                    }
-
-                    if (trojanRitualTimer == TROJAN_RITUAL_TARGET)
-                    {
-                        Main.NewText("仪式完成：你已完全取代了‘他’的命运，无人察觉。(完成)", 0, 255, 255);
-                        Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, Player.position);
-                    }
+                    // 消耗完成，关闭状态
+                    waitingForTeleport = false;
                 }
             }
+            // ============================
+            
             if (isDeceitDomainActive)
             {
                 // 持续消耗灵性
@@ -705,7 +678,7 @@ namespace zhashi.Content
             // --- 猎人途径 ---
             if (currentHunterSequence <= 9) { Player.GetDamage(DamageClass.Ranged) += 0.15f; Player.GetDamage(DamageClass.Melee) += 0.05f; Player.detectCreature = true; Player.dangerSense = true; }
             if (currentHunterSequence <= 8) { Player.statDefense += 10; Player.aggro += 300; Player.lifeRegen += 2; }
-            if (currentHunterSequence <= 7) { Player.GetDamage(DamageClass.Generic) += 0.15f * hunterMult; Player.buffImmune[BuffID.OnFire] = true; Player.buffImmune[BuffID.OnFire3] = true; Player.buffImmune[BuffID.Frostburn] = true; Player.resistCold = true; }
+            if (currentHunterSequence <= 7){Player.GetDamage(DamageClass.Generic) += 0.15f * hunterMult;Player.buffImmune[BuffID.OnFire] = true; Player.buffImmune[BuffID.OnFire3] = true;Player.buffImmune[BuffID.Frostburn] = true;Player.resistCold = true;Player.lavaImmune = true;Player.fireWalk = true;}
             if (currentHunterSequence <= 6) { Player.GetCritChance(DamageClass.Generic) += 15; Player.manaCost -= 0.20f; }
             if (currentHunterSequence <= 5) { Player.GetArmorPenetration(DamageClass.Generic) += 30 * hunterMult; Player.GetCritChance(DamageClass.Generic) += 20; }
             if (currentHunterSequence <= 4) { Player.statDefense += (int)(50 * hunterMult * worldMult); Player.endurance += 0.10f; Player.maxMinions += 5; Player.noKnockback = true; }
@@ -759,23 +732,31 @@ namespace zhashi.Content
             // --- 愚者途径 (The Fool) ---
             if (currentFoolSequence <= 9) { Player.GetDamage(DamageClass.Magic) += 0.10f * foolMult; Player.GetCritChance(DamageClass.Magic) += 5; Player.statManaMax2 += (int)(40 * foolMult); Player.dangerSense = true; if (isSpiritVisionActive) { if (!TryConsumeSpirituality(0.1f, true)) { isSpiritVisionActive = false; Main.NewText("灵性枯竭，灵视被迫中断！", 255, 50, 50); } else { Lighting.AddLight(Player.Center, 0.4f, 0.4f, 1.0f); Player.findTreasure = true; } } Player.luck += 0.5f * foolMult; }
             if (currentFoolSequence <= 8) { Player.moveSpeed += 0.3f; Player.jumpSpeedBoost += 1.5f; Player.accRunSpeed += 2.0f; Player.GetDamage(DamageClass.Generic) += 0.15f * foolMult; Player.GetAttackSpeed(DamageClass.Melee) += 0.15f; Player.GetCritChance(DamageClass.Generic) += 10; Player.blackBelt = true; Player.statManaMax2 += (int)(60 * foolMult); }
-            if (currentFoolSequence <= 7) { Player.GetAttackSpeed(DamageClass.Generic) += 0.2f; Player.manaCost -= 0.15f; Player.buffImmune[BuffID.Webbed] = true; Player.buffImmune[BuffID.Stoned] = true; Player.gills = true; Player.ignoreWater = true; Player.statManaMax2 += (int)(100 * foolMult); }
+            if (currentFoolSequence <= 7)
+            {
+                Player.GetAttackSpeed(DamageClass.Generic) += 0.2f;
+                Player.manaCost -= 0.15f;
+                Player.buffImmune[BuffID.Webbed] = true;
+                Player.buffImmune[BuffID.Stoned] = true;
+                if (Player.wet) Player.gills = true;
+
+                Player.ignoreWater = true;
+                Player.statManaMax2 += (int)(100 * foolMult);
+            }
             if (currentFoolSequence <= 6) { Player.accCritterGuide = true; Player.accStopwatch = true; Player.accOreFinder = true; Player.GetDamage(DamageClass.Generic) += 0.15f * foolMult; Player.GetCritChance(DamageClass.Generic) += 10; Player.GetDamage(DamageClass.Magic) += 0.3f * foolMult; Player.gills = true; if (isFacelessActive) { Player.aggro -= 1000; Player.shroomiteStealth = true; Player.statDefense += 10; if (!TryConsumeSpirituality(1.0f, true)) { isFacelessActive = false; Main.NewText("灵性不足，伪装失效！", 255, 50, 50); } } Player.statManaMax2 += (int)(150 * foolMult); }
             if (currentFoolSequence <= 5) { Player.detectCreature = true; Player.dangerSense = true; Player.findTreasure = true; Player.maxMinions += 3; Player.GetDamage(DamageClass.Magic) += 0.2f * foolMult; Player.statManaMax2 += (int)(200 * foolMult); }
             if (currentFoolSequence <= 4)
             {
-                Player.statLifeMax2 += (int)(250 * worldMult); // 砍半
+                Player.statLifeMax2 += (int)(100 * worldMult); // 砍半
                 Player.statDefense += 20;
                 Player.GetDamage(DamageClass.Generic) += 0.2f * foolMult;
                 Player.maxMinions += 7;
                 Player.aggro -= 2000;
                 Player.statManaMax2 += (int)(400 * foolMult);
             }
-
-            // 【修改点 2】序列 3：古代学者 (血量 1000 -> 500)
             if (currentFoolSequence <= 3)
             {
-                Player.statLifeMax2 += (int)(500 * worldMult); // 砍半
+                Player.statLifeMax2 += (int)(100 * worldMult); // 砍半
                 Player.statDefense += (int)(40 * worldMult);
                 Player.GetDamage(DamageClass.Generic) += 0.4f * foolMult;
                 if (isBorrowingPower)
@@ -788,11 +769,9 @@ namespace zhashi.Content
                     if (Main.rand.NextBool(3)) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Smoke, 0, 0, 100, Color.Gray, 1.5f);
                 }
             }
-
-            // 【修改点 3】序列 2：奇迹师 (血量 1500 -> 750)
             if (currentFoolSequence <= 2)
             {
-                Player.statLifeMax2 += (int)(750 * worldMult); // 砍半
+                Player.statLifeMax2 += (int)(100 * worldMult); // 砍半
                 Player.statDefense += (int)(60 * worldMult);
                 Player.GetDamage(DamageClass.Generic) += 0.5f * foolMult;
 
@@ -808,11 +787,9 @@ namespace zhashi.Content
                 }
                 Player.statManaMax2 += 1000;
             }
-
-            // 【修改点 4】序列 1：诡秘侍者 (血量 2000 -> 1000)
             if (currentFoolSequence <= 1)
             {
-                Player.statLifeMax2 += (int)(1000 * worldMult); // 砍半
+                Player.statLifeMax2 += (int)(100 * worldMult); // 砍半
                 Player.statDefense += (int)(100 * worldMult);
                 Player.GetDamage(DamageClass.Generic) += 1.0f * foolMult;
                 Player.statManaMax2 += 1000;
@@ -823,8 +800,6 @@ namespace zhashi.Content
                     Player.GetArmorPenetration(DamageClass.Generic) += 9999;
                 }
             }
-            // ==========================================
-            //错误途径 (Marauder) 
             // ==========================================
             if (currentMarauderSequence <= 9) // 偷盗者
             {
@@ -1175,10 +1150,8 @@ namespace zhashi.Content
                     for (int i = 0; i < Main.maxPlayers; i++) { Player p = Main.player[i]; if (p.active && !p.dead && p.Distance(Player.Center) < 800f) { p.HealEffect(50); p.statLife += 50; if (p.statLife > p.statLifeMax2) p.statLife = p.statLifeMax2; } }
                 }
             }
-            // 愚者干扰命运：光环效果
             if (currentFoolSequence <= 2 && fateDisturbanceActive)
             {
-                // 特效圈
                 if (Main.GameUpdateCount % 20 == 0)
                 {
                     for (int i = 0; i < 30; i++)
@@ -1188,13 +1161,10 @@ namespace zhashi.Content
                         d.noGravity = true;
                     }
                 }
-
-                // 削弱敌人
                 foreach (NPC npc in Main.ActiveNPCs)
                 {
                     if (!npc.friendly && !npc.dontTakeDamage && npc.Distance(Player.Center) < 600f)
                     {
-                        // 命运错乱：伤害降低，且大概率攻击落空
                         npc.damage = (int)(npc.defDamage * 0.5f);
                         npc.AddBuff(BuffID.Confused, 2);
                         npc.AddBuff(BuffID.Midas, 2); // 掉落增加 (好运)
@@ -1206,7 +1176,6 @@ namespace zhashi.Content
             // =================================================
             if (isTimeClockActive)
             {
-                // 1. 消耗灵性 (大幅提升)
                 if (!TryConsumeSpirituality(20.0f, true))
                 {
                     isTimeClockActive = false;
@@ -1226,13 +1195,10 @@ namespace zhashi.Content
                         Player.whoAmI
                     );
                 }
-
-                // 3. 领域效果：极速衰老
                 foreach (NPC npc in Main.ActiveNPCs)
                 {
                     if (!npc.friendly && !npc.dontTakeDamage && npc.Distance(Player.Center) < 1000f) // 范围加大到 1000
                     {
-                        // A. 时间凝滞 (超强力减速)
                         npc.velocity *= 0.1f; // 速度变为原来的 10%，几乎走不动
 
                         // B. 衰老伤害 (每秒 60 次判定)
@@ -1242,25 +1208,15 @@ namespace zhashi.Content
 
                             if (npc.boss)
                             {
-                                // 对 Boss：0.5% 当前生命 + 2000 固定伤害 (原为 0.1% + 50)
-                                // 效果：打 Boss 即使不动手，血条也会肉眼可见地往下掉
                                 decay = (int)(npc.life * 0.005f) + 2000;
-
-                                // 限制单次最高伤害防止瞬间秒杀模组最终Boss
                                 if (decay > 10000) decay = 10000;
                             }
                             else
                             {
-                                // 对小怪：10% 当前生命 + 5000 固定伤害
-                                // 效果：小怪进圈 2-3 秒内直接老死
                                 decay = (int)(npc.life * 0.10f) + 5000;
                             }
-
-                            // 造成伤害 (无视无敌帧)
                             Player.ApplyDamageToNPC(npc, decay, 0, 0, false);
                         }
-
-                        // Debuff 增强
                         npc.AddBuff(BuffID.Slow, 10);
                         npc.AddBuff(BuffID.WitheredArmor, 10); // 护甲衰老
                         npc.AddBuff(BuffID.WitheredWeapon, 10); // 攻击衰老
@@ -1270,7 +1226,34 @@ namespace zhashi.Content
             }
 
             if (isFireEnchanted) { if (currentHunterSequence <= 6 && TryConsumeSpirituality(0.16f, true)) { } else isFireEnchanted = false; }
-            if (isFlameCloakActive) { if (currentHunterSequence <= 7 && TryConsumeSpirituality(1.0f, true)) { Player.buffImmune[BuffID.Chilled] = true; } else isFlameCloakActive = false; }
+            if (isFlameCloakActive)
+            {
+                if (currentHunterSequence <= 7 && TryConsumeSpirituality(1.0f, true))
+                {
+                    Player.buffImmune[BuffID.Chilled] = true;
+                    Player.buffImmune[BuffID.Frozen] = true; // 顺便免疫冰冻
+                    Player.statDefense += 8;
+                    if (Main.rand.NextBool(3))
+                    {
+                        Dust d = Dust.NewDustDirect(Player.position, Player.width, Player.height, DustID.Torch, 0, 0, 100, default, 1.5f);
+                        d.noGravity = true;
+                        d.velocity *= 0.5f;
+                    }
+                    if (Main.GameUpdateCount % 10 == 0)
+                    {
+                        float range = 150f; // 范围
+                        foreach (NPC npc in Main.ActiveNPCs)
+                        {
+                            if (!npc.friendly && !npc.dontTakeDamage && npc.Distance(Player.Center) < range)
+                            {
+                                npc.SimpleStrikeNPC(20, 0, true, 0, DamageClass.Generic); // 20点基础伤害
+                                npc.AddBuff(BuffID.OnFire3, 120); // 狱火 Debuff
+                            }
+                        }
+                    }
+                }
+                else isFlameCloakActive = false;
+            }
             if (fireTeleportCooldown > 0) fireTeleportCooldown--;
             if (isMercuryForm) { if (!TryConsumeSpirituality(20.0f, true)) isMercuryForm = false; else { Player.moveSpeed += 2.0f; Player.invis = true; Rectangle myRect = Player.getRect(); myRect.Inflate(10, 10); foreach (NPC npc in Main.npc) { if (npc.active && !npc.friendly && !npc.dontTakeDamage && npc.getRect().Intersects(myRect)) { if (npc.immune[Player.whoAmI] == 0) { int damage = (int)((Player.GetDamage(DamageClass.Melee).ApplyTo(50) * 5f) * giantMult); Player.ApplyDamageToNPC(npc, damage, 10f, Player.direction, false); npc.immune[Player.whoAmI] = 10; npc.AddBuff(BuffID.Slow, 300); npc.AddBuff(BuffID.Frostburn, 300); } } } } }
             if (currentSequence <= 3 && !isMercuryForm) { if (Player.velocity.Length() < 0.1f) { stealthTimer++; if (stealthTimer > 60) { Player.invis = true; Player.aggro -= 1000; } } else { stealthTimer = 0; } }
@@ -1783,73 +1766,66 @@ namespace zhashi.Content
             // ==========================================================
             if (currentFoolSequence <= 7)
             {
+                bool hasPaper = false;
                 // 定义纸人道具的类型 ID
                 int paperItemType = ModContent.ItemType<Content.Items.Consumables.PaperFigurine>();
 
                 // 检查背包里是否有纸人 (全背包搜索，包含虚空袋)
                 if (Player.CountItem(paperItemType) > 0)
                 {
-                    // 消耗 1 个纸人
                     Player.ConsumeItem(paperItemType);
+                    Player.SetImmuneTimeForAllTypes(120); // 2秒无敌
 
-                    // 1. 给予无敌时间 (2秒)
-                    Player.SetImmuneTimeForAllTypes(120);
+                    // 特效
+                    SoundEngine.PlaySound(SoundID.Item65, Player.position);
+                    for (int i = 0; i < 20; i++) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Confetti, 0, 0, 0, default, 1.5f);
 
-                    // 2. 视觉特效：碎纸屑
-                    SoundEngine.PlaySound(SoundID.Item65, Player.position); // 纸张撕裂声
-                    for (int i = 0; i < 20; i++)
-                    {
-                        // 生成纸屑粒子
-                        Dust.NewDust(Player.position, Player.width, Player.height, DustID.Confetti, 0, 0, 0, default, 1.5f);
-                    }
-
-                    // 3. 替身位移 (随机瞬移一小段距离)
-                    // 在玩家当前位置生成一个“假身”残影 (视觉上)
-                    for (int i = 0; i < 10; i++)
-                    {
-                        Dust.NewDust(Player.position, Player.width, Player.height, DustID.Smoke, 0, 0, 100, Color.Gray, 2f);
-                    }
-
-                    // 瞬移到随机安全位置 (范围 200 像素内)
+                    // 随机位移
+                    for (int i = 0; i < 10; i++) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Smoke, 0, 0, 100, Color.Gray, 2f);
                     Vector2 randomPos = Player.position + Main.rand.NextVector2Circular(200, 200);
-                    // 简单的防卡墙判断 (如果目标点是实心砖，就不移动那么远，或者原地不动只无敌)
-                    if (!Collision.SolidCollision(randomPos, Player.width, Player.height))
-                    {
-                        Player.position = randomPos;
-                    }
+                    if (!Collision.SolidCollision(randomPos, Player.width, Player.height)) Player.position = randomPos;
 
-                    // 4. 提示文本
                     CombatText.NewText(Player.getRect(), Color.White, "纸人替身!", true);
-
-                    // 【序列6特权：反占卜】额外清除 Debuff
-                    if (currentFoolSequence <= 6)
-                    {
-                        for (int i = 0; i < Player.MaxBuffs; i++)
-                        {
-                            if (Player.buffType[i] > 0 && Main.debuff[Player.buffType[i]])
-                            {
-                                Player.DelBuff(i);
-                                i--;
-                            }
-                        }
-                        CombatText.NewText(Player.getRect(), Color.Gray, "伤害规避!", true);
-                    }
-
-                    // 返回 true 表示闪避成功，不受伤害
-                    return true;
+                    return true; // 闪避成功
                 }
-                // 如果没有纸人，则不触发闪避，正常受到伤害
             }
 
-            // 3. 序列8 小丑 (愚者途径) - 10% 几率直觉闪避
-            // (只有当上面的纸人替身没触发时，才会走到这里判定)
+            // ==========================================================
+            // 2. 反占卜 (序列6 无面人) - 纯被动流
+            // 机制：没有纸人时，有概率自动触发（概率较低），触发时清除 Debuff
+            // ==========================================================
+            // 设定概率为 15% (0.15f)
+            if (currentFoolSequence <= 6 && Main.rand.NextFloat() < 0.15f)
+            {
+                Player.SetImmuneTimeForAllTypes(60); // 1秒无敌
+
+                // 反占卜核心：清除负面状态
+                for (int i = 0; i < Player.MaxBuffs; i++)
+                {
+                    if (Player.buffType[i] > 0 && Main.debuff[Player.buffType[i]])
+                    {
+                        Player.DelBuff(i);
+                        i--;
+                    }
+                }
+
+                // 视觉特效：神秘的灰色符文/烟雾
+                for (int i = 0; i < 15; i++)
+                {
+                    Dust d = Dust.NewDustPerfect(Player.Center, DustID.DungeonSpirit, Main.rand.NextVector2Circular(3f, 3f), 150, default, 1.2f);
+                    d.noGravity = true;
+                }
+
+                CombatText.NewText(Player.getRect(), Color.Gray, "反占卜!", true);
+                return true; // 闪避成功
+            }
+
+            // 3. 直觉闪避 (序列8 小丑) - 低保被动
+            // 如果上面两个都没触发，最后判定这个 10%
             else if (currentFoolSequence <= 8 && Main.rand.NextFloat() < 0.1f)
             {
                 Player.SetImmuneTimeForAllTypes(60);
-                for (int i = 0; i < 10; i++)
-                {
-                    Dust.NewDust(Player.position, Player.width, Player.height, DustID.Confetti, 0, 0, 0, default, 1.2f);
-                }
+                for (int i = 0; i < 10; i++) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Confetti, 0, 0, 0, default, 1.2f);
                 CombatText.NewText(Player.getRect(), Color.Orange, "直觉闪避!", true);
                 return true;
             }
@@ -2214,7 +2190,10 @@ namespace zhashi.Content
                             {
                                 // === 【还原】直接转化逻辑 ===
                                 int dmg = 999999;
-                                if (t.boss) dmg = 5000;
+                                if (t.boss || t.realLife != -1 || Terraria.ID.NPCID.Sets.ShouldBeCountedAsBoss[t.type])
+                                {
+                                    dmg = 2000; // 对 Boss 或其肢体只造成 2000 伤害
+                                }
 
                                 Player.ApplyDamageToNPC(t, dmg, 0, 0, false);
 
@@ -2257,11 +2236,15 @@ namespace zhashi.Content
             // F: 火焰跳跃 (序列7)
             if (LotMKeybinds.Fool_FlameJump.JustPressed && currentFoolSequence <= 7)
             {
-                if (flameJumpCooldown <= 0 && TryConsumeSpirituality(15))
+                if (flameJumpCooldown <= 0 && TryConsumeSpirituality(100))
                 {
                     Player.Teleport(Main.MouseWorld, 1);
                     SoundEngine.PlaySound(SoundID.Item45, Player.position);
                     flameJumpCooldown = 60;
+                }
+                else if (flameJumpCooldown <= 0)
+                {
+                    Main.NewText("灵性不足 (需100点)", 255, 50, 50);
                 }
             }
 
@@ -2397,36 +2380,72 @@ namespace zhashi.Content
                     }
                     else
                     {
-                        // 尝试寄生鼠标指向的 NPC
+                        // 尝试寄生鼠标指向的目标
                         int targetIndex = -1;
                         float maxDist = 300f;
+                        bool foundPlayer = false; // 标记是否找到了玩家
+
+                        // 1. 优先寻找 NPC
                         for (int i = 0; i < Main.maxNPCs; i++)
                         {
                             NPC n = Main.npc[i];
+                            // 必须活着 + 鼠标指向 + 距离内
                             if (n.active && n.getRect().Contains(Main.MouseWorld.ToPoint()) && Player.Distance(n.Center) < maxDist)
                             {
                                 targetIndex = i;
+                                parasiteIsPlayer = false; // 是NPC
                                 break;
                             }
                         }
 
+                        // 2. 如果没找到 NPC，寻找 玩家 (队友)
+                        if (targetIndex == -1)
+                        {
+                            for (int i = 0; i < Main.maxPlayers; i++)
+                            {
+                                Player p = Main.player[i];
+                                // 必须活着 + 不是自己 + 鼠标指向 + 距离内
+                                if (p.active && !p.dead && p.whoAmI != Player.whoAmI &&
+                                    p.getRect().Contains(Main.MouseWorld.ToPoint()) && Player.Distance(p.Center) < maxDist)
+                                {
+                                    targetIndex = i;
+                                    parasiteIsPlayer = true; // 是玩家
+                                    foundPlayer = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // 3. 执行寄生
                         if (targetIndex != -1)
                         {
                             if (TryConsumeSpirituality(50))
                             {
                                 isParasitizing = true;
                                 parasiteTargetIndex = targetIndex;
-                                parasiteIsTownNPC = Main.npc[targetIndex].townNPC;
                                 Terraria.Audio.SoundEngine.PlaySound(SoundID.NPCDeath13, Player.position);
 
-                                if (parasiteIsTownNPC)
-                                    Main.NewText($"已寄生于 {Main.npc[targetIndex].FullName} 体内 (浅层寄生/恢复伤势)", 100, 255, 100);
+                                if (foundPlayer)
+                                {
+                                    // 寄生玩家逻辑
+                                    parasiteIsPlayer = true;
+                                    parasiteIsTownNPC = false;
+                                    Main.NewText($"已寄生于队友 {Main.player[targetIndex].name} 体内 (生命/灵性共享)", 100, 255, 255);
+                                }
                                 else
-                                    Main.NewText($"已深度寄生目标！(控制/生命窃取)", 255, 100, 100);
+                                {
+                                    // 寄生 NPC 逻辑
+                                    parasiteIsPlayer = false;
+                                    parasiteIsTownNPC = Main.npc[targetIndex].townNPC;
+                                    if (parasiteIsTownNPC)
+                                        Main.NewText($"已寄生于 {Main.npc[targetIndex].FullName} 体内 (浅层寄生/恢复伤势)", 100, 255, 100);
+                                    else
+                                        Main.NewText($"已深度寄生目标！(控制/生命窃取)", 255, 100, 100);
+                                }
                             }
                             else Main.NewText("灵性不足，无法寄生！", 255, 50, 50);
                         }
-                        else Main.NewText("未找到可寄生的目标 (需将鼠标指向附近的生物)", 150, 150, 150);
+                        else Main.NewText("未找到可寄生的目标 (NPC或队友)", 150, 150, 150);
                     }
                 }
             }
@@ -2629,9 +2648,9 @@ namespace zhashi.Content
                             }
                         Main.NewText("奇迹：毁灭天灾！", 255, 0, 0);
                         break;
-                    case 2: // 传送
-                        Player.Teleport(Main.MouseWorld, 1);
-                        Main.NewText("奇迹：空间跨越！", 0, 255, 255);
+                    case 2: // 空间传送
+                        waitingForTeleport = true; // 开启等待状态
+                        Main.NewText("奇迹：空间折叠已展开，请打开地图(M)或在屏幕上点击任意位置进行传送。", 0, 255, 255);
                         break;
                     case 3: // 昼夜
                         Main.time = 0; Main.dayTime = !Main.dayTime;
@@ -2748,7 +2767,185 @@ namespace zhashi.Content
         private void SpawnVisualDust() { for (int i = 0; i < 40; i++) Dust.NewDustPerfect(Player.Center, DustID.GoldFlame, Main.rand.NextVector2Circular(5f, 5f), 100, default, 2.0f).noGravity = true; }
         private void CheckConquerorRitual() { if (currentHunterSequence == 2 && !conquerorRitualComplete && ConquerorSpawnSystem.StopSpawning) { bool enemyExists = false; for (int i = 0; i < Main.maxNPCs; i++) { NPC npc = Main.npc[i]; if (npc.active && !npc.friendly && !npc.townNPC && npc.lifeMax > 5 && !npc.dontTakeDamage) { enemyExists = true; break; } } if (!enemyExists) { conquerorRitualComplete = true; Main.NewText("这片大陆已无敌手... 征服的意志已达成！", 255, 0, 0); SoundEngine.PlaySound(SoundID.Roar, Player.position); } } }
 
+        public override void PostUpdate()
+        {
+            // 1. 调用寄生逻辑修复 (防脱战/防卡死)
+            UpdateParasiteLogic();
 
+            base.PostUpdate();
+        }
+
+        private void UpdateParasiteLogic()
+        {
+            // 如果没有处于寄生状态，直接返回
+            if (!isParasitizing || parasiteTargetIndex == -1)
+                return;
+
+            // =================================================
+            // 分支 A: 寄生玩家 (队友)
+            // =================================================
+            if (parasiteIsPlayer)
+            {
+                // 获取目标玩家
+                if (parasiteTargetIndex >= Main.maxPlayers) return; // 防止索引越界
+                Player targetPlayer = Main.player[parasiteTargetIndex];
+
+                // 1. 安全检查：队友下线或死亡
+                if (!targetPlayer.active || targetPlayer.dead)
+                {
+                    EndParasiteState();
+                    Main.NewText("宿主已死亡或断开连接。", 255, 50, 50);
+                    return;
+                }
+
+                // 2. 锁定位置
+                Player.Center = targetPlayer.Center;
+                Player.velocity = targetPlayer.velocity;
+                Player.gfxOffY = 0;
+                Player.direction = targetPlayer.direction; // 朝向跟随
+
+                // 3. 自身状态 (无敌/隐身/不可操作)
+                Player.immune = true;
+                Player.immuneTime = 2;
+                Player.invis = true;
+                Player.controlLeft = false; Player.controlRight = false;
+                Player.controlUp = false; Player.controlDown = false;
+                Player.controlJump = false; Player.controlUseItem = false;
+
+                // 4. 消耗与增益效果
+                if (!TryConsumeSpirituality(0.5f / 60f, true))
+                {
+                    isParasitizing = false;
+                    Main.NewText("灵性耗尽，寄生中断！", 255, 50, 50);
+                    return;
+                }
+
+                // 给自己回血
+                Player.lifeRegen += 5;
+                // 给宿主(队友)回血
+                targetPlayer.lifeRegen += 5;
+
+                // 视觉特效 (每秒冒一次绿光)
+                if (Main.GameUpdateCount % 60 == 0)
+                {
+                    CombatText.NewText(targetPlayer.getRect(), Color.LightGreen, "寄生治疗", false, true);
+                }
+
+                return; // 结束方法，不执行下面的 NPC 逻辑
+            }
+
+            // =================================================
+            // 分支 B: 寄生 NPC
+            // =================================================
+            if (parasiteTargetIndex >= Main.maxNPCs) return;
+            NPC target = Main.npc[parasiteTargetIndex];
+
+            // 1. 安全检查
+            if (!target.active || target.life <= 0)
+            {
+                EndParasiteState();
+                return;
+            }
+
+            // 2. 防脱战 (Boss)
+            if (target.boss || target.type == NPCID.EaterofWorldsHead)
+            {
+                target.target = Player.whoAmI;
+                target.timeLeft = 1000;
+            }
+
+            // 3. 锁定位置
+            Player.Center = target.Center;
+            Player.velocity = target.velocity;
+            Player.gfxOffY = 0;
+
+            // 4. 自身状态
+            Player.immune = true;
+            Player.immuneTime = 2;
+            Player.invis = true;
+            Player.controlLeft = false; Player.controlRight = false;
+            Player.controlUp = false; Player.controlDown = false;
+            Player.controlJump = false; Player.controlUseItem = false;
+
+            // 5. 消耗与效果
+            float cost = parasiteIsTownNPC ? 0.5f : 5.0f;
+            if (!TryConsumeSpirituality(cost / 60f, true))
+            {
+                isParasitizing = false;
+                Main.NewText("灵性耗尽，寄生中断！", 255, 50, 50);
+                return;
+            }
+
+            if (parasiteIsTownNPC)
+            {
+                // 浅层寄生逻辑
+                Player.lifeRegen += 10;
+
+                // 序列3 仪式
+                if (currentMarauderSequence == 3)
+                {
+                    trojanRitualTimer++;
+                    if (trojanRitualTimer % 1800 == 0) Main.NewText($"正在编织命运... ({trojanRitualTimer / 60}s / 300s)", 150, 150, 255);
+                    if (trojanRitualTimer == TROJAN_RITUAL_TARGET) { Main.NewText("仪式完成！", 0, 255, 255); Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, Player.position); }
+                }
+            }
+            else
+            {
+                // 深层寄生逻辑 (伤害)
+                int frequency = 60;
+                if (currentMarauderSequence <= 3) frequency = 45;
+                if (currentMarauderSequence <= 2) frequency = 30;
+                if (currentMarauderSequence <= 1) frequency = 15;
+
+                if (Main.GameUpdateCount % frequency == 0)
+                {
+                    int baseDmg = 150;
+                    float seqMult = 1f;
+                    if (currentMarauderSequence <= 3) seqMult = 3f;
+                    if (currentMarauderSequence <= 2) seqMult = 6f;
+                    if (currentMarauderSequence <= 1) seqMult = 12f;
+
+                    int finalDamage = (int)(Player.GetDamage(DamageClass.Generic).ApplyTo(baseDmg) * seqMult);
+
+                    if (target.boss)
+                    {
+                        float percent = 0.001f;
+                        if (currentMarauderSequence <= 2) percent = 0.002f;
+                        if (currentMarauderSequence <= 1) percent = 0.005f;
+                        int bonus = (int)(target.lifeMax * percent);
+                        int cap = 2000 * (5 - currentMarauderSequence);
+                        if (bonus > cap) bonus = cap;
+                        finalDamage += bonus;
+                    }
+
+                    bool crit = currentMarauderSequence <= 2;
+                    Player.ApplyDamageToNPC(target, finalDamage, 0, 0, crit);
+
+                    int heal = 5 + (4 - currentMarauderSequence) * 5;
+                    if (currentMarauderSequence <= 1) heal += finalDamage / 1000;
+                    Player.statLife += heal;
+                    Player.HealEffect(heal);
+
+                    target.AddBuff(BuffID.Confused, 120);
+                    target.AddBuff(BuffID.Slow, 120);
+                    if (currentMarauderSequence <= 3) { target.AddBuff(BuffID.ShadowFlame, 120); target.AddBuff(BuffID.Venom, 120); }
+
+                    CombatText.NewText(target.getRect(), Color.MediumPurple, $"-{finalDamage}", false, true);
+                }
+            }
+        }
+
+        // 解除寄生的辅助方法
+        public void EndParasiteState()
+        {
+            isParasitizing = false;
+            parasiteTargetIndex = -1;
+            Player.invis = false;
+            Player.immune = false;
+            // 稍微向下弹开一点，防止解除瞬间卡在 Boss 身体里
+            Player.velocity = new Vector2(0, -5f);
+            Main.NewText("你解除了寄生状态。", 200, 200, 255);
+        }
         public class ApothecaryCrafting : Terraria.ModLoader.GlobalItem { public override void OnCreated(Terraria.Item item, ItemCreationContext context) { if (context is RecipeItemCreationContext) { Player p = Main.LocalPlayer; if (p != null && p.active && p.GetModPlayer<LotMPlayer>().currentMoonSequence <= 9) { bool isP = item.consumable && (item.buffType > 0 || item.healLife > 0 || item.healMana > 0); if (isP) p.QuickSpawnItem(item.GetSource_FromThis(), item.type, item.stack); } } } }
     }
 }

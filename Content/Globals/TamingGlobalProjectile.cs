@@ -10,21 +10,20 @@ namespace zhashi.Content.Globals
     {
         public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            // 1. 检查是否是鞭子
-            // ProjectileID.Sets.IsAWhip 包含了原版和大部分模组的鞭子
             if (!ProjectileID.Sets.IsAWhip[projectile.type])
                 return;
 
-            // 2. 获取玩家并检查序列
             Player player = Main.player[projectile.owner];
             if (player == null || !player.active) return;
 
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            // 必须是 月亮途径 序列8：驯兽师 (及以上)
+            // 修改：增加一个判断条件，例如 modPlayer.isBatSwarm 或者你自定义的开关
+            // 假设你只想让它在特定条件下触发，可以在这里加 && 你的条件
             if (modPlayer.currentMoonSequence <= 8)
             {
-                TryTameNPC(target);
+                // 如果你希望彻底移除被动，直接把这行删掉即可：
+                // TryTameNPC(target); 
             }
         }
 

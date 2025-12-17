@@ -14,6 +14,7 @@ using zhashi.Content.UI;
 using zhashi.Content.Projectiles;
 using zhashi.Content.Projectiles.Weapons.Fool;
 using zhashi.Content.Items.Weapons.Fool;
+using zhashi.Content; // 这一行是为了能读取 LotMPlayer
 
 // 引入所有魔药命名空间
 using zhashi.Content.Items.Potions;
@@ -891,7 +892,75 @@ namespace zhashi.Content.NPCs
         }
 
         public override bool CanChat() => true;
-        public override string GetChat() => $"{MyName} 忠诚地守护着 {(string.IsNullOrEmpty(OwnerName) ? "你" : OwnerName)}。";
+        public override string GetChat()
+        {
+            Player player = Main.LocalPlayer;
+            // 获取玩家的 LotMPlayer 实例，用来判断玩家的途径
+            // 注意：如果你的 LotMPlayer 不在 zhashi.Content 命名空间下，请修改前面的引用
+            var modPlayer = player.GetModPlayer<LotMPlayer>();
+
+            List<string> chat = new List<string>();
+
+            // 1. 基础对话 (保留原来的忠诚设定)
+            string ownerNameDisplay = string.IsNullOrEmpty(OwnerName) ? "你" : OwnerName;
+            chat.Add($"{MyName} 忠诚地守护着 {ownerNameDisplay}。");
+            chat.Add("汪！(它摇了摇尾巴，但眼神异常深邃)");
+
+            // 2. 诡秘之主风格 - 通用台词 (苏西/怪物风格)
+            chat.Add("不要直视星空...即使是一只狗也知道这一点。");
+            chat.Add("这块骨头...有“观众”途径的暗示，我不能吃，这不符合礼仪。");
+            chat.Add("你也听到了吗？那些呓语...有时候我会对着空气狂吠，是因为那里真的有东西。");
+            chat.Add("作为一只非凡生物，我必须时刻警惕扮演法的反噬。汪！");
+            chat.Add("小心你的背后，灵界生物总是喜欢盯着强者的影子。");
+            chat.Add("如果我失控了...请在我变成怪物之前杀了我。");
+
+            // 3. 基于 NPC 自身途径的台词 (根据当前喂食的魔药)
+            switch (currentPathway)
+            {
+                case 0: // 凡人/未开启
+                    chat.Add("我渴望力量...汪！我是说，有魔药吗？");
+                    break;
+                case 1: // 巨人 (战士)
+                    chat.Add("我感觉我的皮毛像钢铁一样坚硬。");
+                    chat.Add("黎明的剑光在呼唤我...");
+                    break;
+                case 2: // 猎人
+                    chat.Add("好热...我的血液在燃烧！想打架吗？");
+                    chat.Add("这里需要一场陷阱...或者一场爆炸。");
+                    break;
+                case 3: // 月亮 (药师)
+                    chat.Add("生命是宝贵的，但有时候死亡也是一种药剂。");
+                    chat.Add("嗷呜——！(绯红之月...它在看着我)");
+                    break;
+                case 4: // 愚者 (占卜家)
+                    chat.Add("我的灵性直觉告诉我，今天不宜出门...除了散步。");
+                    chat.Add("命运...就像我手中的狗绳，看似松弛，实则被紧握。");
+                    break;
+                case 5: // 错误 (偷盗者)
+                    chat.Add("你的背包里刚才是不是少了一块肉？别看我，我不知道。");
+                    chat.Add("如果时间可以被偷走，我想偷走等待晚饭的那段时间。");
+                    break;
+            }
+
+            // 4. 基于玩家途径的彩蛋对话
+            if (modPlayer.currentFoolSequence <= 9) // 玩家是占卜家
+            {
+                chat.Add("你的身上有灵之虫的味道...闻起来像是高维度的美味，但我不敢咬。");
+                chat.Add("赞美愚者！虽然我不知道祂是谁，但顺从强者的灵性直觉准没错。");
+            }
+            if (modPlayer.currentHunterSequence <= 9) // 玩家是猎人
+            {
+                chat.Add("好烫！你的气场太暴躁了，这会烧焦我柔顺的毛发！");
+            }
+            if (modPlayer.currentMarauderSequence <= 9) // 玩家是偷盗者
+            {
+                chat.Add("我的项圈呢？刚才还在的！把你手里的东西放下！");
+                chat.Add("刚才有一瞬间，我感觉我的思维被偷走了一秒钟...是你干的吗？");
+            }
+
+            // 随机返回一句
+            return Main.rand.Next(chat);
+        }
         public override void SetChatButtons(ref string button, ref string button2) { button = isStaying ? "指令: 跟随" : "指令: 停留"; button2 = "查看属性 / 背包"; }
 
         public override void OnChatButtonClicked(bool firstButton, ref string shopName)
@@ -987,6 +1056,44 @@ namespace zhashi.Content.NPCs
                     if (item.type == ItemID.LifeCrystal) { item.stack--; BonusMaxHP += 20; NPC.lifeMax += 20; NPC.life += 20; SoundEngine.PlaySound(SoundID.Item2, NPC.position); Main.npcChatText = $"{MyName} 吞下了生命水晶，感觉身体更结实了！(血量上限 +20)"; handled = true; }
                     else if (item.type == ItemID.LifeFruit) { item.stack--; BonusMaxHP += 10; NPC.lifeMax += 10; NPC.life += 10; SoundEngine.PlaySound(SoundID.Item2, NPC.position); Main.npcChatText = $"{MyName} 吃掉了生命果，充满了自然之力！(血量上限 +10)"; handled = true; }
                     else if (item.buffType > 0 && item.consumable) { NPC.AddBuff(item.buffType, 3600); item.stack--; SoundEngine.PlaySound(SoundID.Item3, NPC.position); Main.npcChatText = $"{MyName} 喝下了药剂，感觉充满了力量！"; handled = true; }
+                    else if (item.type == ModContent.ItemType<UnshadowedCross>())
+                    {
+                        // 只有当狗是序列者 (序列 < 10) 时才生效
+                        if (currentSequence < 10)
+                        {
+                            currentSequence++; // 序列数值+1，代表等级降低 (如 1 -> 2)
+
+                            string msg = $"{MyName} 感到体内的非凡特性正在析出... (降为序列{currentSequence})";
+
+                            // 如果降到了 10，彻底重置
+                            if (currentSequence >= 10)
+                            {
+                                currentSequence = 10;
+                                currentPathway = 0; // 0 代表凡人/无途径 (假设你用0表示无)
+                                msg = $"{MyName} 彻底洗净了非凡特性，变回了一只普通的修勾。";
+                            }
+
+                            // 更新对话框文本
+                            Main.npcChatText = msg;
+
+                            // 播放音效 (神圣的声音)
+                            SoundEngine.PlaySound(SoundID.Item29, NPC.position);
+
+                            // 生成一些金色粒子特效
+                            for (int i = 0; i < 30; i++)
+                            {
+                                Vector2 speed = Main.rand.NextVector2Circular(3f, 3f);
+                                Dust.NewDustPerfect(NPC.Center, DustID.GoldFlame, speed, 100, default, 1.5f).noGravity = true;
+                            }
+                        }
+                        else
+                        {
+                            Main.npcChatText = $"{MyName} 歪着头看着你：汪？(它已经是凡狗了，没有特性可以析出)";
+                        }
+
+                        // 【重要】标记为已处理，但不消耗物品 (不写 item.stack--)
+                        handled = true;
+                    }
                 }
 
                 if (handled && string.IsNullOrEmpty(OwnerName)) OwnerName = player.name;

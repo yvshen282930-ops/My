@@ -34,8 +34,8 @@ Mods: {
 
 			# Test Summon Item
 			TestSummon: {
-				// DisplayName: Test Summon Staff
-				// Tooltip: Used for testing summoning mechanics.
+				DisplayName: 测试召唤杖
+				Tooltip: 用于测试召唤机制的开发者物品。
 			}
 
 			# ==========================================
@@ -83,21 +83,21 @@ Mods: {
 			}
 
 			ReaperScythe: {
-				// DisplayName: Reaper Scythe
-				/* Tooltip:
+				DisplayName: 收割者镰刀
+				Tooltip:
 					'''
-					Sequence 5: Reaper's weapon.
-					Specially designed to harvest the weaknesses of life, guaranteed critical hits.
-					''' */
+					序列5：收割者的武器。
+					专门为了收割生命的弱点而生，必定造成暴击。
+					'''
 			}
 
 			ConquerorLance: {
-				// DisplayName: Conqueror Lance
-				/* Tooltip:
+				DisplayName: 征服者长枪
+				Tooltip:
 					'''
-					Sequence 1: Conqueror's weapon.
-					Indomitable, conquering all who disobey.
-					''' */
+					序列1：征服者的武器。
+					一往无前，征服一切不服。
+					'''
 			}
 
 			# Fool Pathway
@@ -557,28 +557,51 @@ Mods: {
 			}
 
 			ResurrectionReset: {
-				// DisplayName: Resurrection Reset
-				// Tooltip: ""
+				DisplayName: 重置复活冷却 (测试)
+				Tooltip: 立即重置所有复活技能的冷却时间。
 			}
 
 			RitualInstaComplete: {
-				// DisplayName: Ritual Insta Complete
-				// Tooltip: ""
+				DisplayName: 仪式瞬间完成 (测试)
+				Tooltip: 立即完成当前正在进行的魔药仪式。
 			}
 
 			SpiritualityRefill: {
-				// DisplayName: Spirituality Refill
-				// Tooltip: ""
+				DisplayName: 灵性回满 (测试)
+				Tooltip: 瞬间补满灵性值。
 			}
 
 			DogItem: {
-				// Tooltip: ""
-				// DisplayName: Dog Item
+				Tooltip: 用于呼唤非凡猎犬。
+				DisplayName: 狗牌
 			}
 
 			PaperFigurine: {
-				// DisplayName: Paper Figurine
-				// Tooltip: ""
+				DisplayName: 纸人
+				Tooltip: 纸人技能所需的媒介。
+			}
+
+			UnshadowedCross: {
+				Tooltip:
+					'''
+					[c/FFD700:【唯一神物】]
+					"赞美太阳！"
+
+					[c/FFA07A:作用：]
+					将所有途径重置，变回凡人
+					此物品蕴含永恒的神性，不会损坏或消耗
+					'''
+				DisplayName: 无暗十字
+			}
+
+			RoselleDiary: {
+				DisplayName: 罗塞尔的随记
+				Tooltip:
+					'''
+					"魔女的滋味真不错啊..."
+					但这页似乎写的是别的东西。
+					<点击左键阅读新手指引>
+					'''
 			}
 		}
 
@@ -612,12 +635,12 @@ Mods: {
 			AurmirTwilightOrb.DisplayName: 黄昏法球
 			# Marauder Projectiles
 			TimeClockVisual.DisplayName: 时之钟
-			// ConquerorSwordProjectile.DisplayName: Conqueror Sword Projectile
-			// LightStormController.DisplayName: Light Storm Controller
-			// PyromaniacExplosionVisual.DisplayName: Pyromaniac Explosion Visual
-			// PyromaniacFireballWhite.DisplayName: Pyromaniac Fireball White
-			// DogHealingOrb.DisplayName: Dog Healing Orb
-			// DogTimeClock.DisplayName: Dog Time Clock
+			ConquerorSwordProjectile.DisplayName: 铁血斩击
+			LightStormController.DisplayName: 风暴核心
+			PyromaniacExplosionVisual.DisplayName: 火焰爆炸
+			PyromaniacFireballWhite.DisplayName: 炽白火球
+			DogHealingOrb.DisplayName: 治愈法球
+			DogTimeClock.DisplayName: 狗的时钟
 		}
 
 		# ==========================================
@@ -625,21 +648,21 @@ Mods: {
 		# ==========================================
 		NPCs: {
 			Aurmir.DisplayName: 黄昏巨人·奥尔米尔
-			// TestBoss.DisplayName: Test Boss
+			TestBoss.DisplayName: 测试Boss
 
 			DogNPC: {
 				TownNPCMood: {
-					// Princess_LovesNPC: 我喜欢 {NPCName}。
-					// LikeNPC_Princess: 我喜欢 {NPCName}。
-					// HateCrowded: 我讨厌这么拥挤。
-					// DislikeCrowded: 我不喜欢这么拥挤。
-					// LoveSpace: 我非常喜欢有这么大的空间。
-					// FarFromHome: 我离家太远了。
-					// NoHome: 我讨厌没有家。
-					// Content: 我很满足。
+					Princess_LovesNPC: 我喜欢 {NPCName}。
+					LikeNPC_Princess: 我喜欢 {NPCName}。
+					HateCrowded: 我讨厌这么拥挤。
+					DislikeCrowded: 我不喜欢这么拥挤。
+					LoveSpace: 我非常喜欢有这么大的空间。
+					FarFromHome: 我离家太远了。
+					NoHome: 我讨厌没有家。
+					Content: 我很满足。
 				}
 
-				// DisplayName: Dog N P C
+				DisplayName: 卷毛狒狒
 			}
 		}
 
@@ -682,39 +705,39 @@ Mods: {
 		#              Conditions
 		# ==========================================
 		Conditions: {
-			// NeedAnySlate: Requires any [Blasphemy Slate]
-			// IsSequence9: 需序列9及以上
-			// ConquerorOnly: Mods.zhashi.Conditions.ConquerorOnly
-			// IsSequence6: 需 序列6: 黎明骑士
-			// DogNotOwned: 未拥有/未召唤
+			NeedAnySlate: 需要任意 [亵渎石板]
+			IsSequence9: 需序列9及以上
+			ConquerorOnly: 仅限序列1: 征服者
+			IsSequence6: 需序列6: 黎明骑士
+			DogNotOwned: 未召唤
 		}
 
 		# ==========================================
 		#              Keybinds
 		# ==========================================
 		Keybinds: {
-			// "红祭司: 形态切换 (火焰/巨人).DisplayName": Red Priest: Form Switch (K)
-			// "红祭司: 闪现.DisplayName": Red Priest: Flash (V)
-			// "红祭司: 火焰炸弹.DisplayName": Red Priest: Flame Bomb (X)
-			// "红祭司: 火焰披风.DisplayName": Red Priest: Flame Cloak (Z)
-			// "红祭司: 收割/斩击.DisplayName": Red Priest: Slash (G)
-			// "红祭司: 武器附魔.DisplayName": Red Priest: Enchant (T)
-			// "红祭司: 操纵火焰/挑衅.DisplayName": Red Priest: Manipulate Fire (F)
-			// "红祭司: 集众.DisplayName": Red Priest: Army of One (J)
-			// "红祭司: 雷击.DisplayName": Red Priest: Lightning Strike (Mouse2)
-			// "红祭司: 冰河.DisplayName": Red Priest: Ice Age (R)
+			"红祭司: 形态切换 (火焰/巨人).DisplayName": 红祭司: 形态切换 (K)
+			"红祭司: 闪现.DisplayName": 红祭司: 闪现 (V)
+			"红祭司: 火焰炸弹.DisplayName": 红祭司: 火焰炸弹 (X)
+			"红祭司: 火焰披风.DisplayName": 红祭司: 火焰披风 (Z)
+			"红祭司: 收割/斩击.DisplayName": 红祭司: 斩击 (G)
+			"红祭司: 武器附魔.DisplayName": 红祭司: 附魔 (T)
+			"红祭司: 操纵火焰/挑衅.DisplayName": 红祭司: 操纵火焰 (F)
+			"红祭司: 集众.DisplayName": 红祭司: 集众 (J)
+			"红祭司: 雷击.DisplayName": 红祭司: 雷击 (Mouse2)
+			"红祭司: 冰河.DisplayName": 红祭司: 冰河 (R)
 			"巨人: 水银化.DisplayName": 巨人: 水银化 (C)
 			"巨人: 守护姿态.DisplayName": 巨人: 守护姿态 (X)
-			// "巨人: 黎明铠甲.DisplayName": Giant: Dawn Armor (Z)
+			"巨人: 黎明铠甲.DisplayName": 巨人: 黎明铠甲 (Z)
 			"月亮: 黑暗之翼.DisplayName": 月亮: 黑暗之翼 (K)
-			// "月亮: 深渊枷锁/闪现.DisplayName": Moon: Abyss Shackle (V)
-			// "月亮: 深渊枷锁.DisplayName": 月亮: 深渊枷锁
+			"月亮: 深渊枷锁/闪现.DisplayName": 月亮: 深渊枷锁/闪现 (V)
+			"月亮: 深渊枷锁.DisplayName": 月亮: 深渊枷锁
 			"月亮: 炼金手雷.DisplayName": 月亮: 炼金手雷 (X)
 			"月亮: 生命灵液.DisplayName": 月亮: 生命灵液 (Z)
 			"月亮: 月光化.DisplayName": 月亮: 月光化 (C)
-			// "月亮: 满月领域.DisplayName": Moon: Full Moon/Creation Domain (G)
+			"月亮: 满月领域.DisplayName": 月亮: 满月/创生领域 (G)
 			"月亮: 蝙蝠化身.DisplayName": 月亮: 蝙蝠化身 (T)
-			// "月亮: 月亮纸人.DisplayName": Moon: Paper Figurine/Transform (J)
+			"月亮: 月亮纸人.DisplayName": 月亮: 纸人/转化 (J)
 			"月亮: 黑暗凝视.DisplayName": 月亮: 凝视 (F)
 			"月亮: 召唤之门.DisplayName": 月亮: 召唤之门 (R)
 			"愚者: 灵视开关.DisplayName": 愚者: 灵视 (C)
@@ -730,72 +753,72 @@ Mods: {
 			"愚者: 奇迹愿望.DisplayName": 愚者: 奇迹愿望 (Shift+V)
 			"愚者: 嫁接.DisplayName": 愚者: 嫁接 (G)
 			"愚者: 灵肉转化.DisplayName": 愚者: 灵肉转化 (V)
-			// "错误: 寄生/领域.DisplayName": Error: Parasite/Domain (P)
-			// "错误: 寄生.DisplayName": 错误: 寄生
-			// "错误: 窃取/时间.DisplayName": Error: Theft/Time (O)
-			// "月亮: 纸人替身.DisplayName": 月亮: 纸人替身
-			// "月亮: 满月/创生.DisplayName": 月亮: 满月/创生
-			// "猎人: 形态切换.DisplayName": 猎人: 形态切换
-			// "猎人: 火焰闪现.DisplayName": 猎人: 火焰闪现
-			// "猎人: 炸弹.DisplayName": 猎人: 炸弹
-			// "猎人: 火焰披风.DisplayName": 猎人: 火焰披风
-			// "猎人: 收割斩击.DisplayName": 猎人: 收割斩击
-			// "猎人: 武器附魔.DisplayName": 猎人: 武器附魔
-			// "猎人: 蓄力火球.DisplayName": 猎人: 蓄力火球
-			// "猎人: 集众.DisplayName": 猎人: 集众
-			// "猎人: 天气操控.DisplayName": 猎人: 天气操控
-			// "猎人: 冰河世纪.DisplayName": 猎人: 冰河世纪
-			// "巨人: 晨曦之铠.DisplayName": 巨人: 晨曦之铠
-			// "错误: 偷窃.DisplayName": 错误: 偷窃
-			// "错误: 概念窃取 (位置/距离).DisplayName": 错误: 概念窃取 (位置/距离)
-			// "月亮: 驯兽.DisplayName": 月亮: 驯兽
+			"错误: 寄生/领域.DisplayName": 错误: 寄生/领域 (P)
+			"错误: 寄生.DisplayName": 错误: 寄生
+			"错误: 窃取/时间.DisplayName": 错误: 窃取/时间 (O)
+			"月亮: 纸人替身.DisplayName": 月亮: 纸人替身
+			"月亮: 满月/创生.DisplayName": 月亮: 满月/创生
+			"猎人: 形态切换.DisplayName": 猎人: 形态切换
+			"猎人: 火焰闪现.DisplayName": 猎人: 火焰闪现
+			"猎人: 炸弹.DisplayName": 猎人: 炸弹
+			"猎人: 火焰披风.DisplayName": 猎人: 火焰披风
+			"猎人: 收割斩击.DisplayName": 猎人: 收割斩击
+			"猎人: 武器附魔.DisplayName": 猎人: 武器附魔
+			"猎人: 蓄力火球.DisplayName": 猎人: 蓄力火球
+			"猎人: 集众.DisplayName": 猎人: 集众
+			"猎人: 天气操控.DisplayName": 猎人: 天气操控
+			"猎人: 冰河世纪.DisplayName": 猎人: 冰河世纪
+			"巨人: 晨曦之铠.DisplayName": 巨人: 晨曦之铠
+			"错误: 偷窃.DisplayName": 错误: 偷窃 (O)
+			"错误: 概念窃取 (位置/距离).DisplayName": 错误: 概念窃取 (K)
+			"月亮: 驯兽.DisplayName": 月亮: 驯兽
 		}
 
 		Configs: {
 			LotMConfig: {
-				// DisplayName: Lot M Config
-				// Headers.平衡性设置: 平衡性设置 Header
+				DisplayName: 诡秘之主模组配置
+				Headers.平衡性设置: 平衡性设置
 
 				DynamicProgression: {
-					// Label: 启用动态世界等级
-					/* Tooltip:
+					Label: 启用动态世界等级
+					Tooltip:
 						'''
 						根据当前世界击败的Boss（包括灾厄/瑟银等）动态调整属性。
 						建议开启以获得最佳体验。
-						''' */
+						'''
 				}
 
 				NerfDivineAbilities: {
-					// Label: 机制软化
-					/* Tooltip:
+					Label: 机制平衡化
+					Tooltip:
 						'''
 						将“绝对无敌/秒杀”替换为“高额减伤/百分比伤害”。
-						关闭此项将回归变态强度。
-						''' */
+						关闭此项将回归原著的变态强度。
+						'''
 				}
 
 				GlobalPowerMultiplier: {
-					// Label: 属性强度倍率
-					/* Tooltip:
+					Label: 属性强度倍率
+					Tooltip:
 						'''
 						全局调整模组增加的生命值、伤害和防御。
 						1.0 为标准，0.5 为减半。
-						''' */
+						'''
 				}
 			}
 
 			ZhashiConfig: {
-				// DisplayName: Zhashi Config
-				// Headers.灵性条设置: 灵性条设置 Header
+				DisplayName: 界面 UI 配置
+				Headers.灵性条设置: 灵性条设置
 
 				BarScale: {
-					// Label: 缩放比例
-					// Tooltip: 调整灵性条的大小
+					Label: 缩放比例
+					Tooltip: 调整灵性条的大小
 				}
 
 				BarPosition: {
-					// Label: 位置坐标
-					// Tooltip: ""
+					Label: 位置坐标
+					Tooltip: 调整灵性条在屏幕上的位置
 				}
 			}
 		}

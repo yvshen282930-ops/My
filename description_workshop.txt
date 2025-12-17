@@ -18,14 +18,14 @@
 [h2]2. 五大非凡途径 (Pathways)[/h2]
 目前已实装五条途径，从序列 9 到序列 1 的完整晋升体验（注：巨人途径为缺少序列2）：
 
-[b]新增：错误途径 (Marauder)[/b]
+[b]：错误途径 (Marauder)[/b]
 [i]“所有的规则都有漏洞，所有的命运都可以被窃取。”[/i]
 [list]
 [*]寄生与夺舍：你可以寄生在敌人或NPC体内，或是将身体瞬间化为无数灵之虫重组，以此躲避致命一击。
 [*]窃取权柄：不仅仅是窃取物品，你甚至能窃取敌人的生命、魔力、增益状态，乃至窃取他们的“攻击距离”和“时间”。 
 [*]欺瞒领域：扭曲现实的规则，让敌人的攻击发生偏转，或是让周围的生物陷入混乱与自我怀疑。 
 [*]时之虫：作为序列1的天使之王，你可以召唤古老的壁钟虚影，让周围的时间流速变慢，甚至剥夺敌人的寿命使其衰老。 
-[*]定位：窃贼/生存/控制、削弱敌人、玩弄时间与命运。 、
+[*]定位：窃贼/生存/控制、削弱敌人、玩弄时间与命运。 
 [/list]
 
 [b] 愚者途径 (Fool / Seer)[/b]
@@ -66,11 +66,22 @@
 [*]定位：法师/召唤、强力回复、控场大师。
 [/list]
 
+[b]新增：空想之狗 (Dog)[/b]
+[i]“也许我宠物的序列，比你还要高。”[/i]
+[list]
+[*]可服用目前五种途径的魔药。
+[*]分为跟随与炮台两种模式 。
+[*]可通过使用生命水晶，佩戴饰品提升属性。
+[*]使用狗牌召唤。
+[*]可自定义姓名。
+[/list]
+
+
 [hr]
 
 [h1]玩法说明 (How to Play)[/h1]
 
-1.  配方与制作：宝箱中会随机刷新出[亵渎石板]，记录着魔药配方,寻找特殊的非凡材料（如特性、血液等）制作魔药。
+1.  配方与制作：宝箱，钓鱼匣与BOSS中会随机刷新出[亵渎石板]，记录着魔药配方,寻找特殊的非凡材料（如特性、血液等）制作魔药。
 2.  晋升机制：部分高序列（如序列 2 -> 序列 1）不仅需要魔药，还需要完成扮演仪式（例如猎人需要让地图无敌手）。
 3.  按键绑定：
     请在设置中绑定 Mod 快捷键以使用主动技能！
@@ -90,94 +101,40 @@
 
 [i]赞美愚者！[/i]
 
-[h1]Welcome to Terraria, Shrouded in Mist...[/h1]
-[b]"Every journey has an end, and our destination is a sea of stars."[/b]
+[h1]Welcome to a Terraria Shrouded in Mist...[/h1] [b]"Every journey has its endpoint, and our endpoint is the sea of stars."[/b]
 
-This mod brings the Beyonder system from "Lord of the Mysteries" to Terraria!
-Abandon vanilla class restrictions, consume potions, complete rituals to advance sequences, and master mythical powers. The current version includes five Beyonder pathways: Marauder, Giant (Warrior), Red Priest, Moon, and Fool.
+This Mod brings the Beyonder system from [i]Lord of the Mysteries[/i] into Terraria! Abandon the vanilla class restrictions, consume potions, complete rituals to advance through Sequences, and master god-like powers. The current version includes five Beyonder pathways: Error, Giant (Warrior), Red Priest, Moon, and Fool.
 
 [hr]
 
 [h1]🔮 Core Features[/h1]
 
-[h2]1. Unique Spirituality System[/h2]
-[list]
-[*]Introduces an independent [Spirituality] system.
-[*]Unlike vanilla Mana, Spirituality is the foundation for casting Beyonder abilities.
-[*]Spirituality cap increases exponentially with sequence advancement, from the faint spirituality of Sequence 9 to the ocean-like spirituality of Sequence 1.
-[/list]
+[h2]1. Unique Spirituality System[/h2] [list] []Introduces an independent [b][Spirituality][/b] system. []Unlike vanilla Mana, Spirituality is the foundation for casting Beyonder abilities. [*]Max Spirituality grows exponentially with Sequence advancement, ranging from the faint spirituality of Sequence 9 to the ocean-like vastness of Sequence 1. [/list]
 
-[h2]2. Five Beyonder Pathways[/h2]
-Currently, five pathways are implemented, offering a complete progression experience from Sequence 9 to Sequence 1 (Note: Giant pathway is missing Sequence 2):
+[h2]2. Five Beyonder Pathways[/h2] Currently implements five pathways with a complete progression experience from Sequence 9 to Sequence 1 (Note: The Giant pathway currently lacks Sequence 2 content):
 
-[b]New: Marauder Pathway[/b]
-[i]"All rules have loopholes, and all fate can be stolen."[/i]
-[list]
-[*]Parasitizing & Body Seizing: You can parasitize enemies or NPCs, or instantly transform your body into countless Worms of Spirit to reform, thereby dodging fatal strikes.
-[*]Authority of Theft: Not just stealing items—you can even steal enemies' health, mana, buffs, and even their "attack range" and "time."
-[*]Deceit Domain: Distort the rules of reality, deflecting enemy attacks or plunging surrounding creatures into chaos and self-doubt.
-[*]Worm of Time: As a Sequence 1 King of Angels, you can summon the phantom of an ancient clock, slowing down time around you and even stripping enemies of their lifespan to age them.
-[*]Role: Thief/Survival/Control, weakening enemies, toying with time and fate.
-[/list]
+[b]Error Pathway (Marauder)[/b] [i]"All rules have loopholes, and all fate can be stolen."[/i] [list] []Parasitizing & Body Seizing: You can parasitize enemies or NPCs, or instantly disperse your body into countless Spirit Worms to reform and evade fatal strikes. []Authority of Theft: Steal not just items, but your enemy's health, mana, buffs, and even their "Attack Range" and "Time". []Deceit Domain: Distort the rules of reality, deflecting enemy attacks or plunging surrounding creatures into chaos and self-doubt. []Worm of Time: As a Sequence 1 King of Angels, summon an ancient clock phantom to slow down the flow of time and strip away enemies' lifespan, causing them to age. [*]Role: Thief, Survival, Crowd Control, Debuff, Time & Fate manipulation. [/list]
 
-[b]Fool Pathway (Seer)[/b]
-[i]"Fooling time, deceiving history."[/i]
-[list]
-[*]Spirit Body Threads: Forcibly control enemy actions and completely convert them into loyal Marionettes (minions).
-[*]Historical Projection: Summon phantoms of defeated bosses from the fog of history to aid in battle.
-[*]Miracle Wish: Grant wishes to yourself to achieve health reset, apocalyptic calamities, instant teleportation, or day/night cycle changes.
-[*]Role: Summoner, powerful crowd control, unpredictability, and conceptual immortality.
-[/list]
+[b]Fool Pathway (Seer)[/b] [i]"Fooling time, deceiving fate."[/i] [list] []Spirit Body Threads: Forcibly control enemy actions and convert them into loyal Marionettes (Summons). []Historical Projections: Summon phantoms of previously defeated Bosses from the void of history to aid you. []Miracles & Wishes: Grant wishes to yourself to reset health, unleash cataclysms, teleport instantly, or change day and night. []Role: Summoner, Strong Crowd Control, Versatility, Conceptual Immortality. [/list]
 
-[b]Giant Pathway (Warrior)[/b]
-[i]"Protection is the glory of a Giant."[/i]
-[list]
-[*]Dawn Armor: Summon armor of light, providing extremely high defense and damage reduction.
-[*]Twilight Resurrection: Sequence 2 ability. Upon death, reverse time to reset your state (long cooldown).
-[*]Mercury Form: Transform into mercury, significantly boosting mobility and evasion.
-[*]Role: Melee, ultra-high tankiness, extremely high fault tolerance.
-[/list]
+[b]Giant Pathway (Warrior)[/b] [i]"Protection is the glory of a Giant."[/i] [list] []Dawn Armor: Summon armor of light, providing immense defense and damage reduction. []Twilight Resurrection: Sequence 2 ability. Upon death, reverse time to reset your state (Long Cooldown). []Mercury Form: Transform into liquid mercury, drastically boosting mobility and evasion. []Role: Melee, Super Tank, High Fault Tolerance. [/list]
 
-[b]Red Priest Pathway (Hunter)[/b]
-[i]"The best hunter often appears in the form of prey."[/i]
-[list]
-[*]Army of One: Significantly increases minion slots based on sequence level (Sequence 1 can add 40 slots!).
-[*]Weakness Break: Extremely high critical damage bonuses and execution capabilities.
-[*]Weather Warlock: Summon thunder and fog to alter the battlefield environment.
-[*]Conqueror: Advance through a special ritual to gain absolute suppression over enemies.
-[*]Role: Summoner/Ranger hybrid, high burst damage, group combat.
-[/list]
+[b]Red Priest Pathway (Hunter)[/b] [i]"The best hunters often appear as prey."[/i] [list] []Army of One: Drastically increases minion slots based on Sequence level (Sequence 1 grants +40 slots!). []Weakness Break: Extremely high critical damage bonuses and execution capabilities. []Weather Warlock: Summon thunder and fog to alter the battlefield environment. []Conqueror: Advance through a special ritual to gain absolute suppression over enemies. [*]Role: Summoner/Ranged Hybrid, High Burst, Group Warfare. [/list]
 
-[b]Moon Pathway[/b]
-[i]"The Moon represents life, but also terror."[/i]
-[list]
-[*]Summoning Gate: Open the gate to the Spirit World to summon random powerful creatures (with a very small chance to summon projections of Old Gods...).
-[*]Creation Domain: Unfold a domain that heals allies and continuously damages enemies.
-[*]Vampire Avatar: Transform into a swarm of bats or moonlight, gaining unparalleled survival capabilities.
-[*]Beauty Goddess: Charm all living beings, causing enemies to fight each other or lose the will to fight.
-[*]Role: Mage/Summoner, powerful healing, crowd control master.
-[/list]
+[b]Moon Pathway[/b] [i]"The Moon represents life, but also terror."[/i] [list] []Summoning Door: Open a gate to the Spirit World to summon random powerful creatures (with a slim chance to summon projections of Ancient Gods...). []Creation Domain: Unfold a domain that heals teammates and continuously damages enemies. []Vampire Incarnation: Transform into a swarm of bats or moonlight for unparalleled survival capabilities. []Beauty Goddess: Charm all living things, causing enemies to fight each other or lose the will to fight. [*]Role: Mage/Summoner, Strong Healing, Crowd Control Master. [/list]
+
+[b]New Addition: Visionary Dog (Dog)[/b] [i]"Maybe my pet's Sequence is higher than yours."[/i] [list] []Can consume potions from the five currently available pathways. []Features both "Follow" and "Sentry" modes. []Stats can be upgraded by using Life Crystals and equipping Accessories. []Summoned using a Dog Tag. [*]Name is customizable. [/list]
 
 [hr]
 
-[h1]Gameplay Guide[/h1]
+[h1]Gameplay Instructions (How to Play)[/h1]
 
-1. Recipes & Crafting: [Blasphemy Slates] will randomly spawn in treasure chests, recording potion recipes. Find special Beyonder materials (such as characteristics, blood, etc.) to craft potions.
-2. Advancement Mechanism: Some high sequences (e.g., Sequence 2 -> Sequence 1) require not only potions but also the completion of acting rituals (e.g., Hunters need to clear the map of all rivals).
-3. Keybinds:
-   Please bind Mod hotkeys in settings to use active skills!
-   [list]
-   [*][b]J Key[/b] (Default): Triggers core skills (e.g., Paper Figurine Substitute, Form Switching).
-   [*][b]Skill Keys[/b]: Used to unleash ultimate abilities (e.g., Summoning Gate, Ice Age).
-   [*][b]Check "Controls" settings for more keybinds.[/b]
-   [/list]
+[b]Recipes & Crafting:[/b] [Blasphemy Slates] will randomly appear in Chests, Fishing Crates, and Boss drops. They record potion recipes. Gather special Beyonder materials (like characteristics, blood, etc.) to craft potions.
+
+[b]Advancement Mechanism:[/b] High Sequences (e.g., Seq 2 -> Seq 1) require not just potions, but also the completion of "Acting" rituals (e.g., The Hunter needs to be unrivaled on the map).
+
+[b]Keybindings:[/b] Please bind Mod Hotkeys in the settings to use active skills! [list] [][b]J Key[/b] (Default): Core skill trigger (e.g., Paper Figurine, Form Switching). [][b]Skill Key[/b]: Used for Ultimate abilities (e.g., Summoning Door, Ice Age). [*]Check the "Controls" settings for more keybinds. [/list]
 
 [hr]
 
-[h1]⚠️ Notes[/h1]
-This Mod is quite overpowered. Please choose a higher difficulty yourself. You can enable dynamic balance mode via the config menu to use it alongside other mods (Supports Calamity, Thorium, Fargo's, Terror)!!!
-This Mod is currently in development (Beta) and will undergo balance adjustments.
-If you encounter bugs or have suggestions, feel free to leave a comment!
-You can also follow the author's Bilibili account: 433573566
-
-[i]Praise the Fool![/i]
+[h1]⚠️ Important Notes[/h1] This Mod is relatively OP (Overpowered). Please choose a higher difficulty for the best experience. You can enable "Dynamic Balance Mode" in the config menu to use it alongside other large content mods (Supports Calamity, Thorium, Fargo's, Dread, etc.)!!! This Mod is currently in Beta, and balance adjustments will occur. If you encounter any Bugs or have suggestions, please leave a comment! You can also follow or message the author on Bilibili: 433573566

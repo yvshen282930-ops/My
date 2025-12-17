@@ -229,6 +229,7 @@ namespace zhashi.Content.UI
                     text += "- [被动] 伤害转移 (抵挡致命伤)\n";
                     text += "- [被动] 水下呼吸 & 免疫束缚\n";
                     text += "- [技能] 空气弹 (获得魔法武器)\n";
+                    text += "- [能力] 制作纸人替身（抵挡伤害）\n";
                 }
                 if (p.currentFoolSequence <= 6)
                 {
