@@ -74,5 +74,20 @@ namespace zhashi.Content.Items.Materials
             }
             return true;
         }
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                // 核心材料：飞翔之魂 (象征对天空和天气的掌控)
+                .AddIngredient(ItemID.SoulofFlight, 5)
+                // 象征材料：雨云块 (直接对应降雨效果)
+                .AddIngredient(ItemID.RainCloud, 20)
+                // 魔法材料：蓝宝石 (象征水属性的魔力引导)
+                .AddIngredient(ItemID.Sapphire, 3)
+                // 载体材料：金锭 (作为符文的贵金属载体)
+                .AddIngredient(ItemID.GoldBar, 5)
+                // 制作环境：秘银砧/山铜砧 (困难模式工艺)
+                .AddTile(TileID.MythrilAnvil)
+                .Register();
+        }
     }
 }

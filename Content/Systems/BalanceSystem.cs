@@ -1,6 +1,7 @@
 ﻿using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
+using zhashi.Content.Configs;
 
 namespace zhashi.Content.Systems
 {

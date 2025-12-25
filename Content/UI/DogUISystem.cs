@@ -13,7 +13,15 @@ namespace zhashi.Content.UI
 
         public override void Load()
         {
-            // 游戏加载时初始化 UI
+            // 【关键修改】
+            //如果是专用服务器（即没有画面的服务端），直接返回，不加载任何 UI。
+            // 这样能防止服务器因为加载 UI 报错 (NullReferenceException) 而崩溃。
+            if (Main.dedServ)
+            {
+                return;
+            }
+
+            // 游戏加载时初始化 UI (现在只有客户端会运行这部分代码)
             dogStatsUI = new DogStatsUI();
             dogStatsUI.Activate();
             dogInterface = new UserInterface();
@@ -22,6 +30,7 @@ namespace zhashi.Content.UI
 
         public override void UpdateUI(GameTime gameTime)
         {
+            // 这里的 ?. 也是必要的，确保 dogInterface 不为空才更新
             if (DogStatsUI.Visible)
             {
                 dogInterface?.Update(gameTime);
@@ -39,7 +48,8 @@ namespace zhashi.Content.UI
                     {
                         if (DogStatsUI.Visible)
                         {
-                            dogInterface.Draw(Main.spriteBatch, new GameTime());
+                            // 只有 dogInterface 被成功初始化（即在客户端）时才绘制
+                            dogInterface?.Draw(Main.spriteBatch, new GameTime());
                         }
                         return true;
                     },

@@ -49,9 +49,6 @@ namespace zhashi.Content.Items.Potions.Moon
         // 当试图使用但条件不满足时 (给玩家提示)
         public override bool ConsumeItem(Player player)
         {
-            // CanUseItem 返回 true 才会执行到这里，所以这里不需要写逻辑
-            // 我们用 HoldItem 或者 OnMissingRequirement 来提示比较麻烦
-            // 最简单的是玩家点了没反应，他自己会去看描述
             return true;
         }
 

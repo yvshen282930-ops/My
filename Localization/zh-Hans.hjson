@@ -1,10 +1,39 @@
 Mods: {
 	zhashi: {
+		# ==========================================
+		#              Custom Messages
+		# ==========================================
+		Messages: {
+			// SpiritualityExhausted: Spirituality exhausted!
+			// RitualComplete: Ritual Complete: {0}
+			// ParasiteSuccess: Parasitized {0} (Regen Mode)
+			// ParasiteDeep: Deeply Parasitized {0} (Control/Steal Mode)
+			// ParasiteFail: Not enough Spirituality to parasitize!
+			// NoTarget: No valid target found.
+			// DeceitDomainOn: Deceit Domain: Reality distorted.
+			// DeceitDomainOff: Deceit Domain: Deactivated.
+			// TimeClockOn: Authority of Time: The Ancient Clock descends.
+			// TimeClockOff: Time phantom dissipates.
+			// MiracleWish: "[Miracle Wish]: {0} (Hold to cast)"
+			// MiracleLife: Life Restoration
+			// MiracleDestroy: Cataclysm
+			// MiracleTeleport: Teleportation
+			// MiracleDayNight: Day/Night Cycle
+			// PaperFigurine: Paper Figurine Substitute!
+			// DamageAvoided: Damage Avoided!
+			// AntiDivination: Anti-Divination triggered!
+			// IntuitionDodge: Intuitive Dodge!
+			// StealModeOn: Theft Mode: ON
+			// StealModeOff: Theft Mode: OFF
+			// StealSuccess: Stolen!
+			// FateSteal: Fate Stolen!
+			// TimeSteal: Time Stolen! -{0}
+		}
+
 		Items: {
 			# ==========================================
 			#              Special Items
 			# ==========================================
-			# Blasphemy Slate
 			BlasphemySlate: {
 				DisplayName: 亵渎石板
 				Tooltip:
@@ -16,7 +45,6 @@ Mods: {
 					'''
 			}
 
-			# Paper Card (Fool Weapon)
 			PaperCard: {
 				DisplayName: 塔罗牌
 				Tooltip:
@@ -26,16 +54,62 @@ Mods: {
 					'''
 			}
 
-			# Extraordinary Blood (Material)
 			ExtraordinaryBlood: {
 				DisplayName: 非凡血液
 				Tooltip: 蕴含着非凡力量的血液。
 			}
 
-			# Test Summon Item
 			TestSummon: {
 				DisplayName: 测试召唤杖
 				Tooltip: 用于测试召唤机制的开发者物品。
+			}
+
+			RoselleDiary: {
+				DisplayName: 罗塞尔的随记
+				Tooltip:
+					'''
+					"魔女的滋味真不错啊..."
+					但这页似乎写的是别的东西。
+					<点击左键阅读新手指引>
+					'''
+			}
+
+			UnshadowedCross: {
+				DisplayName: 无暗十字
+				Tooltip:
+					'''
+					[c/FFD700:【唯一神物】]
+					"赞美太阳！"
+
+					[c/FFA07A:作用：]
+					将所有途径重置，变回凡人
+					此物品蕴含永恒的神性，不会损坏或消耗
+					'''
+			}
+
+			PaperFigurine: {
+				DisplayName: 纸人
+				Tooltip: 纸人技能所需的媒介。
+			}
+
+			DogItem: {
+				DisplayName: 狗牌
+				Tooltip: 用于呼唤非凡猎犬。
+			}
+
+			ResurrectionReset: {
+				DisplayName: 重置复活冷却 (测试)
+				Tooltip: 立即重置所有复活技能的冷却时间。
+			}
+
+			RitualInstaComplete: {
+				DisplayName: 仪式瞬间完成 (测试)
+				Tooltip: 立即完成当前正在进行的魔药仪式。
+			}
+
+			SpiritualityRefill: {
+				DisplayName: 灵性回满 (测试)
+				Tooltip: 瞬间补满灵性值。
 			}
 
 			# ==========================================
@@ -212,7 +286,7 @@ Mods: {
 				DisplayName: 序列4：巫王魔药
 				Tooltip:
 					'''
-					服用后晋升为巫王。
+					在满月服用后晋升为巫王。
 					半神之始，寿命极长。
 					获得蝙蝠化身、纸人替身与黑暗凝视。
 					'''
@@ -556,52 +630,125 @@ Mods: {
 					'''
 			}
 
-			ResurrectionReset: {
-				DisplayName: 重置复活冷却 (测试)
-				Tooltip: 立即重置所有复活技能的冷却时间。
-			}
-
-			RitualInstaComplete: {
-				DisplayName: 仪式瞬间完成 (测试)
-				Tooltip: 立即完成当前正在进行的魔药仪式。
-			}
-
-			SpiritualityRefill: {
-				DisplayName: 灵性回满 (测试)
-				Tooltip: 瞬间补满灵性值。
-			}
-
-			DogItem: {
-				Tooltip: 用于呼唤非凡猎犬。
-				DisplayName: 狗牌
-			}
-
-			PaperFigurine: {
-				DisplayName: 纸人
-				Tooltip: 纸人技能所需的媒介。
-			}
-
-			UnshadowedCross: {
+			BardPotion: {
+				DisplayName: 序列9：歌颂者魔药
 				Tooltip:
 					'''
-					[c/FFD700:【唯一神物】]
-					"赞美太阳！"
-
-					[c/FFA07A:作用：]
-					将所有途径重置，变回凡人
-					此物品蕴含永恒的神性，不会损坏或消耗
+					服用后晋升为歌颂者。
+					擅长用歌声鼓舞队友。
+					获得[勇气]与[力量]光环。
 					'''
-				DisplayName: 无暗十字
 			}
 
-			RoselleDiary: {
-				DisplayName: 罗塞尔的随记
+			LightSupplicantPotion: {
 				Tooltip:
 					'''
-					"魔女的滋味真不错啊..."
-					但这页似乎写的是别的东西。
-					<点击左键阅读新手指引>
+					服用后晋升为祈光人。
+					能够施展光亮术与圣光术。
+					对死灵生物造成额外伤害。
 					'''
+				DisplayName: 序列8：祈光人魔药
+			}
+
+			SolarHighPriestPotion: {
+				DisplayName: 序列7：太阳神官魔药
+				Tooltip:
+					'''
+					服用后晋升为太阳神官。
+					精通各类光之神术。
+					获得召唤圣光与制造圣水的能力。
+					'''
+			}
+
+			NotaryPotion: {
+				Tooltip:
+					'''
+					服用后晋升为公证人。
+					公证誓言，强化友军或削弱敌人。
+					获得[公证]能力。
+					'''
+				DisplayName: 序列6：公证人魔药
+			}
+
+			PriestPotion: {
+				DisplayName: 序列5：光之祭司魔药
+				Tooltip:
+					'''
+					服用后晋升为光之祭司。
+					光明的传播者，净化的执行者。
+					获得神圣之光与光之风暴。
+					'''
+			}
+
+			UnshadowedPotion: {
+				DisplayName: 序列4：无暗者魔药
+				Tooltip:
+					'''
+					服用后晋升为无暗者 (半神)。
+					彻底净化一切污秽与阴影。
+					开启[无暗领域]，清除所有负面状态。
+					'''
+			}
+
+			JusticeMentorPotion: {
+				DisplayName: 序列3：正义导师魔药
+				Tooltip:
+					'''
+					服用后晋升为正义导师 (圣者)。
+					拥有洞察人心与执行正义的权柄。
+					获得[正义审判]能力。
+					'''
+			}
+
+			LightSeekerPotion: {
+				Tooltip:
+					'''
+					服用后晋升为逐光者 (天使)。
+					化身为光，追逐光芒。
+					获得光速移动与融化万物的能力。
+					'''
+				DisplayName: 序列2：逐光者魔药
+			}
+
+			WhiteAngelPotion: {
+				Tooltip:
+					'''
+					服用后晋升为白天使 (天使之王)。
+					纯粹的神圣，太阳的代行者。
+					获得[神圣光辉]与[天使降临]。
+					'''
+				DisplayName: 序列1：白天使魔药
+			}
+
+			HandOfGod: {
+				Tooltip:
+					'''
+					序列1：神之手的具象化武器。
+					看似虚无的手掌，却能轻易撕裂钢铁与法则。
+					攻击无视敌人的防御与伤害减免。
+					切记不要向着家的方向右键蓄力。
+					'''
+				DisplayName: 神之手
+			}
+
+			HandOfGodPotion: {
+				Tooltip:
+					'''
+					服用后晋升为神之手 (天使之王)。
+					巨人的顶点，掌握扭曲与撕裂的权柄。
+					获得[黄昏神躯]与[衰败权柄]。
+					'''
+				DisplayName: 序列1：神之手魔药
+			}
+
+			HandOfGodCharacteristic: {
+				Tooltip:
+					'''
+					析出巨人途径序列1特性的结晶。
+					蕴含着极度危险的撕裂规则。
+					用于晋升序列1：神之手。
+					'''
+				DisplayName: 神之手非凡特性
 			}
 		}
 
@@ -641,6 +788,16 @@ Mods: {
 			PyromaniacFireballWhite.DisplayName: 炽白火球
 			DogHealingOrb.DisplayName: 治愈法球
 			DogTimeClock.DisplayName: 狗的时钟
+			// HolyLightBeam.DisplayName: Holy Light Beam
+			// SunFireTrap.DisplayName: Sun Fire Trap
+			// FlaringSun.DisplayName: Flaring Sun
+			// UnshadowedSpear.DisplayName: Unshadowed Spear
+			// JusticeJudgment.DisplayName: Justice Judgment
+			// SunMessengerVisual.DisplayName: Sun Messenger Visual
+			// PureWhiteLight.DisplayName: Pure White Light
+			// HandOfGodProjectile.DisplayName: Hand Of God Projectile
+			// HandOfGodCharge.DisplayName: Hand Of God Charge
+			// HandOfGodAirCannon.DisplayName: Hand Of God Air Cannon
 		}
 
 		# ==========================================
@@ -651,6 +808,8 @@ Mods: {
 			TestBoss.DisplayName: 测试Boss
 
 			DogNPC: {
+				DisplayName: 卷毛狒狒
+
 				TownNPCMood: {
 					Princess_LovesNPC: 我喜欢 {NPCName}。
 					LikeNPC_Princess: 我喜欢 {NPCName}。
@@ -661,8 +820,6 @@ Mods: {
 					NoHome: 我讨厌没有家。
 					Content: 我很满足。
 				}
-
-				DisplayName: 卷毛狒狒
 			}
 		}
 
@@ -699,6 +856,66 @@ Mods: {
 				DisplayName: 深渊枷锁
 				Description: 被深渊的寒冷锁链束缚，无法移动。
 			}
+
+			FoolCurseBuff: {
+				Description:
+					'''
+					[c/FF0000:副作用生效中]
+					你的肉体如纸般脆弱。
+					物理防御归零 | 生命上限降低40% | 受到接触伤害翻倍
+					'''
+				DisplayName: 体质孱弱
+			}
+
+			GiantCurseBuff: {
+				DisplayName: 神性僵化
+				Description:
+					'''
+					[c/FF0000:副作用生效中]
+					为了容纳巨人的力量，你的肉体密度已超越钢铁。
+					飞行能力被封印/削弱 | 移动速度上限锁死 | 无法二段跳
+					'''
+			}
+
+			HunterCurseBuff: {
+				DisplayName: 战争渴望
+				Description:
+					'''
+					[c/FF0000:副作用生效中]
+					没有鲜血的滋润，伤口无法愈合。
+					无法自然回血 | 基础防御降低 | (入水时惩罚翻倍)
+					'''
+			}
+
+			MoonCurseBuff: {
+				DisplayName: 吸血鬼体质
+				Description:
+					'''
+					[c/FF0000:副作用生效中]
+					阳光在灼烧你的血液！
+					生命极速流失 | 无法自然回血 | 攻击力减半
+					'''
+			}
+
+			SanityDangerBuff: {
+				DisplayName: 灵性枯竭
+				Description:
+					'''
+					[c/FF0000:警告：灵性低于30%]
+					意识正在模糊，现实开始扭曲...
+					防御与伤害大幅降低 | 归零时将直接[失控]并重伤
+					'''
+			}
+
+			SunCurseBuff: {
+				DisplayName: 阳极必阴
+				Description:
+					'''
+					[c/FF0000:副作用生效中]
+					太阳已沉没，凡人的躯壳无法承载神性的重量。
+					防御力归零 | 伤害降低60% | 受到伤害增加50% | 移动减慢
+					'''
+			}
 		}
 
 		# ==========================================
@@ -710,12 +927,14 @@ Mods: {
 			ConquerorOnly: 仅限序列1: 征服者
 			IsSequence6: 需序列6: 黎明骑士
 			DogNotOwned: 未召唤
+			// IsLightSupplicant: Mods.zhashi.Conditions.IsLightSupplicant
 		}
 
 		# ==========================================
 		#              Keybinds
 		# ==========================================
 		Keybinds: {
+			# --- Hunter ---
 			"红祭司: 形态切换 (火焰/巨人).DisplayName": 红祭司: 形态切换 (K)
 			"红祭司: 闪现.DisplayName": 红祭司: 闪现 (V)
 			"红祭司: 火焰炸弹.DisplayName": 红祭司: 火焰炸弹 (X)
@@ -726,9 +945,11 @@ Mods: {
 			"红祭司: 集众.DisplayName": 红祭司: 集众 (J)
 			"红祭司: 雷击.DisplayName": 红祭司: 雷击 (Mouse2)
 			"红祭司: 冰河.DisplayName": 红祭司: 冰河 (R)
+			# --- Giant ---
 			"巨人: 水银化.DisplayName": 巨人: 水银化 (C)
 			"巨人: 守护姿态.DisplayName": 巨人: 守护姿态 (X)
 			"巨人: 黎明铠甲.DisplayName": 巨人: 黎明铠甲 (Z)
+			# --- Moon ---
 			"月亮: 黑暗之翼.DisplayName": 月亮: 黑暗之翼 (K)
 			"月亮: 深渊枷锁/闪现.DisplayName": 月亮: 深渊枷锁/闪现 (V)
 			"月亮: 深渊枷锁.DisplayName": 月亮: 深渊枷锁
@@ -740,6 +961,7 @@ Mods: {
 			"月亮: 月亮纸人.DisplayName": 月亮: 纸人/转化 (J)
 			"月亮: 黑暗凝视.DisplayName": 月亮: 凝视 (F)
 			"月亮: 召唤之门.DisplayName": 月亮: 召唤之门 (R)
+			# --- Fool ---
 			"愚者: 灵视开关.DisplayName": 愚者: 灵视 (C)
 			"愚者: 占卜术.DisplayName": 愚者: 占卜 (J)
 			"愚者: 火焰跳跃.DisplayName": 愚者: 火焰跳跃 (F)
@@ -753,9 +975,13 @@ Mods: {
 			"愚者: 奇迹愿望.DisplayName": 愚者: 奇迹愿望 (Shift+V)
 			"愚者: 嫁接.DisplayName": 愚者: 嫁接 (G)
 			"愚者: 灵肉转化.DisplayName": 愚者: 灵肉转化 (V)
+			# --- Marauder ---
 			"错误: 寄生/领域.DisplayName": 错误: 寄生/领域 (P)
 			"错误: 寄生.DisplayName": 错误: 寄生
 			"错误: 窃取/时间.DisplayName": 错误: 窃取/时间 (O)
+			"错误: 偷窃.DisplayName": 错误: 偷窃 (O)
+			"错误: 概念窃取 (位置/距离).DisplayName": 错误: 概念窃取 (K)
+			# --- Misc ---
 			"月亮: 纸人替身.DisplayName": 月亮: 纸人替身
 			"月亮: 满月/创生.DisplayName": 月亮: 满月/创生
 			"猎人: 形态切换.DisplayName": 猎人: 形态切换
@@ -769,15 +995,29 @@ Mods: {
 			"猎人: 天气操控.DisplayName": 猎人: 天气操控
 			"猎人: 冰河世纪.DisplayName": 猎人: 冰河世纪
 			"巨人: 晨曦之铠.DisplayName": 巨人: 晨曦之铠
-			"错误: 偷窃.DisplayName": 错误: 偷窃 (O)
-			"错误: 概念窃取 (位置/距离).DisplayName": 错误: 概念窃取 (K)
 			"月亮: 驯兽.DisplayName": 月亮: 驯兽
+			太阳：歌颂/赞美.DisplayName: 太阳：歌颂/赞美
+			太阳：日照/光之术.DisplayName: 太阳：日照/光之术
+			太阳：召唤圣光.DisplayName: 太阳：召唤圣光
+			太阳：神圣誓约.DisplayName: 太阳：神圣誓约
+			太阳：光明之火.DisplayName: 太阳：光明之火
+			太阳：公证.DisplayName: 太阳：公证
+			"太阳: 太阳使者.DisplayName": 太阳: 太阳使者
 		}
 
+		# ==========================================
+		#              Configs
+		# ==========================================
 		Configs: {
 			LotMConfig: {
 				DisplayName: 诡秘之主模组配置
-				Headers.平衡性设置: 平衡性设置
+
+				Headers: {
+					// 平衡性设置: Balance Settings
+					BaseSettings: 基础设置
+					ChallengeSettings: 挑战与限制 (默认关闭)
+					OtherSettings: 其他设置
+				}
 
 				DynamicProgression: {
 					Label: 启用动态世界等级
@@ -789,11 +1029,11 @@ Mods: {
 				}
 
 				NerfDivineAbilities: {
-					Label: 机制平衡化
+					Label: 削弱神性技能 (平衡模式)
 					Tooltip:
 						'''
-						将“绝对无敌/秒杀”替换为“高额减伤/百分比伤害”。
-						关闭此项将回归原著的变态强度。
+						开启后，无敌/秒杀类技能将变为高额减伤/高额伤害。
+						(推荐追求平衡体验的玩家开启)
 						'''
 				}
 
@@ -803,6 +1043,33 @@ Mods: {
 						'''
 						全局调整模组增加的生命值、伤害和防御。
 						1.0 为标准，0.5 为减半。
+						'''
+				}
+
+				EnableSanitySystem: {
+					Label: "[方案1] 启用理智值系统"
+					Tooltip:
+						'''
+						开启后，维持高阶技能或开启领域将持续消耗理智。
+						理智低于30%会导致属性削弱、画面扭曲甚至直接死亡。
+						'''
+				}
+
+				EnableWorldRestriction: {
+					Label: "[方案2] 启用世界位格压制"
+					Tooltip:
+						'''
+						开启后，你的非凡能力上限将受限于泰拉瑞亚的世界进度。
+						(例如：肉山前最多发挥序列6的实力)
+						'''
+				}
+
+				EnableDivineCurse: {
+					Label: "[方案3] 启用神性副作用"
+					Tooltip:
+						'''
+						开启后，每条途径都会获得致命弱点。
+						(例如：太阳途径在夜晚防御减半，月亮途径在白天室外掉血，巨人途径移速降低，猎人途径一段时间内不攻击生物降低回血速度，愚者与错误防御归零等)
 						'''
 				}
 			}

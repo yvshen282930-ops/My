@@ -1094,6 +1094,8 @@ namespace zhashi.Content.NPCs
                         // 【重要】标记为已处理，但不消耗物品 (不写 item.stack--)
                         handled = true;
                     }
+
+
                 }
 
                 if (handled && string.IsNullOrEmpty(OwnerName)) OwnerName = player.name;

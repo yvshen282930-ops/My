@@ -58,6 +58,15 @@ namespace zhashi
         public static ModKeybind MarauderSteal { get; private set; }
         public static ModKeybind Marauder_ConceptSteal { get; private set; }
 
+        // 新增：太阳途径技能按键
+        public static ModKeybind Sun_Sing { get; private set; }
+        public static ModKeybind Sun_Radiance { get; private set; }
+        public static ModKeybind Sun_HolyLight { get; private set; } // C键：召唤圣光
+        public static ModKeybind Sun_Oath { get; private set; }    // V键：神圣誓约
+        public static ModKeybind Sun_FireOcean { get; private set; }// G键：光明之火
+        public static ModKeybind Sun_Notarize { get; private set; } // 公证人技能键
+        public static ModKeybind Sun_Messenger { get; private set; } // 公证人技能键
+
         // ===================================================
         // 2. 注册按键 (Load)
         // ===================================================
@@ -112,6 +121,15 @@ namespace zhashi
             Marauder_ConceptSteal = KeybindLoader.RegisterKeybind(Mod, "错误: 概念窃取 (位置/距离)", "K");
             MarauderSteal = KeybindLoader.RegisterKeybind(Mod, "错误: 偷窃", "O");
             Marauder_Parasite = KeybindLoader.RegisterKeybind(Mod, "错误: 寄生", "P");
+
+            // Sun [新增]
+            Sun_Sing = KeybindLoader.RegisterKeybind(Mod, "太阳：歌颂/赞美", "Z"); // 默认 Z 键
+            Sun_Radiance = KeybindLoader.RegisterKeybind(Mod, "太阳：日照/光之术", "X");
+            Sun_HolyLight = KeybindLoader.RegisterKeybind(Mod, "太阳：召唤圣光", "C");
+            Sun_Oath = KeybindLoader.RegisterKeybind(Mod, "太阳：神圣誓约", "V");
+            Sun_FireOcean = KeybindLoader.RegisterKeybind(Mod, "太阳：光明之火", "G");
+            Sun_Notarize = KeybindLoader.RegisterKeybind(Mod, "太阳：公证", "J");
+            Sun_Messenger = KeybindLoader.RegisterKeybind(Mod, "太阳: 太阳使者", "P");
 
         }
 
@@ -169,6 +187,15 @@ namespace zhashi
             MarauderSteal = null;
             Marauder_Parasite = null;
             Marauder_ConceptSteal = null;
+
+            // Sun
+            Sun_Sing = null;
+            Sun_Radiance = null;
+            Sun_HolyLight = null;
+            Sun_Oath = null;
+            Sun_FireOcean = null;
+            Sun_Notarize = null;
+            Sun_Messenger = null;
         }
     }
 }
