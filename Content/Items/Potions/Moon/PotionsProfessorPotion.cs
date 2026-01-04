@@ -48,15 +48,25 @@ namespace zhashi.Content.Items.Potions.Moon
 
         public override void AddRecipes()
         {
+            // 配方 1：适配猩红世界 (使用灵液)
             CreateRecipe()
                 .AddIngredient(ItemID.BottledWater, 1)
                 .AddIngredient(ItemID.LifeCrystal, 1)    // 心脏
-                .AddIngredient(ItemID.Ichor, 5)          // 血液
-                                                         // 【核心修复】改为 SharkFin (鲨鱼鳍)
-                                                         // 原版没有 SharkTooth。或者你可以改用 ItemID.Vertebrae (椎骨)
+                .AddIngredient(ItemID.Ichor, 5)          // 灵液 (代表含有灵性的血液)
+                .AddIngredient(ItemID.SharkFin, 3)       // 鲨鱼鳍
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1) // 亵渎石板
+                .AddTile(TileID.Bottles)                 // 放置的瓶子作为制作站
+                .Register();
+
+            // 配方 2：适配腐化世界 (使用咒火)
+            // 这样无论玩家的世界是血腥还是腐化，都能合成这个魔药
+            CreateRecipe()
+                .AddIngredient(ItemID.BottledWater, 1)
+                .AddIngredient(ItemID.LifeCrystal, 1)
+                .AddIngredient(ItemID.CursedFlame, 5)    // 咒火 (作为灵液的替代品)
                 .AddIngredient(ItemID.SharkFin, 3)
-                .AddTile(TileID.Bottles)
                 .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
+                .AddTile(TileID.Bottles)
                 .Register();
         }
     }

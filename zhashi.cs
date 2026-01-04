@@ -40,12 +40,20 @@ namespace zhashi
                     modPlayer.currentHunterSequence = reader.ReadInt32();
                     modPlayer.currentMoonSequence = reader.ReadInt32();
                     modPlayer.spiritualityCurrent = reader.ReadSingle();
-                    
+                    modPlayer.currentSunSequence = reader.ReadInt32();       // 太阳 (之前漏了这个)
+
+                    modPlayer.spiritualityCurrent = reader.ReadSingle();     // 灵性
+
                     // 寄生数据
                     modPlayer.isParasitizing = reader.ReadBoolean();
                     modPlayer.parasiteTargetIndex = reader.ReadInt32();
                     modPlayer.parasiteIsTownNPC = reader.ReadBoolean();
                     modPlayer.parasiteIsPlayer = reader.ReadBoolean();
+
+                    modPlayer.purificationProgress = reader.ReadInt32();
+                    modPlayer.judgmentProgress = reader.ReadInt32();
+
+                    modPlayer.ironBloodRitualProgress = reader.ReadInt32();
 
                     // C. 服务器转发 (如果是服务器收到，就转发给其他玩家)
                     if (Main.netMode == Terraria.ID.NetmodeID.Server)

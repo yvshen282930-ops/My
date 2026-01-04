@@ -339,6 +339,9 @@ namespace zhashi.Content
             packet.Write(parasiteIsPlayer);         // Bool
             packet.Write(purificationProgress); // Int32
             packet.Write(judgmentProgress);     // Int32
+            packet.Write(ironBloodRitualProgress);
+
+            packet.Send(toWho, fromWho);
 
             // 3. 发送
             packet.Send(toWho, fromWho);
@@ -362,6 +365,7 @@ namespace zhashi.Content
             clone.parasiteIsPlayer = parasiteIsPlayer;
             clone.purificationProgress = purificationProgress;
             clone.judgmentProgress = judgmentProgress;
+            clone.ironBloodRitualProgress = ironBloodRitualProgress;
         }
 
         public override void SendClientChanges(ModPlayer clientPlayer)
@@ -383,7 +387,8 @@ namespace zhashi.Content
                 clone.isParasitizing != isParasitizing ||
                 clone.parasiteTargetIndex != parasiteTargetIndex ||
                 clone.parasiteIsTownNPC != parasiteIsTownNPC || // 之前可能漏了这个
-                clone.parasiteIsPlayer != parasiteIsPlayer;
+                clone.parasiteIsPlayer != parasiteIsPlayer ||
+            clone.ironBloodRitualProgress != ironBloodRitualProgress;
 
             // 如果有变化，就发包
             if (changed)
@@ -2666,18 +2671,31 @@ namespace zhashi.Content
                 }
             }
 
-            if (currentFoolSequence <= 6 && Main.rand.NextFloat() < 0.15f)
+            float dodgeChance = info.PvP ? 0.05f : 0.15f;
+
+            if (currentFoolSequence <= 6 && Main.rand.NextFloat() < dodgeChance)
             {
                 Player.SetImmuneTimeForAllTypes(60); // 1秒无敌
 
-                // 反占卜核心：清除负面状态
-                for (int i = 0; i < Player.MaxBuffs; i++)
+                // 2. 核心削弱：PVP 模式下【禁止】清除负面状态
+                // 只有非 PVP 模式才执行清除逻辑
+                if (!info.PvP)
                 {
-                    if (Player.buffType[i] > 0 && Main.debuff[Player.buffType[i]])
+                    // 反占卜核心：清除负面状态
+                    for (int i = 0; i < Player.MaxBuffs; i++)
                     {
-                        Player.DelBuff(i);
-                        i--;
+                        if (Player.buffType[i] > 0 && Main.debuff[Player.buffType[i]])
+                        {
+                            Player.DelBuff(i);
+                            i--;
+                        }
                     }
+                }
+                else
+                {
+                    // (可选) PVP触发提示，让对手知道发生了什么
+                    CombatText.NewText(Player.getRect(), Color.Gray, "直觉闪避!", true);
+                    return true;
                 }
 
                 // 视觉特效：神秘的灰色符文/烟雾
@@ -2730,7 +2748,7 @@ namespace zhashi.Content
             }
 
             if (LotMKeybinds.Moon_Gaze.JustPressed && currentMoonSequence <= 4) { if (darknessGazeCooldown <= 0 && TryConsumeSpirituality(200)) { bool hit = false; for (int i = 0; i < Main.maxNPCs; i++) { NPC npc = Main.npc[i]; if (npc.active && !npc.friendly && npc.getRect().Contains(Main.MouseWorld.ToPoint())) { int dmg = (int)(5000 * moonMult); if (currentMoonSequence <= 1 && !npc.boss) dmg = 999999; npc.SimpleStrikeNPC(dmg, 0, true, 0, DamageClass.Magic); npc.AddBuff(BuffID.Darkness, 600); npc.AddBuff(BuffID.ShadowFlame, 600); hit = true; } } if (hit) { SoundEngine.PlaySound(SoundID.Item104, Main.MouseWorld); darknessGazeCooldown = 1200; } } else if (darknessGazeCooldown > 0) Main.NewText($"凝视冷却: {darknessGazeCooldown / 60}s", 150, 150, 150); }
-            if (LotMKeybinds.Moon_Shackles.JustPressed && currentMoonSequence <= 7) { if (currentMoonSequence <= 5 && isFullMoonActive) { if (fireTeleportCooldown <= 0 && TryConsumeSpirituality(50)) { Vector2 targetPos = Main.MouseWorld; if (Player.Distance(targetPos) < 800f && Collision.CanHit(Player.position, Player.width, Player.height, targetPos, Player.width, Player.height)) { SoundEngine.PlaySound(SoundID.Item8, Player.position); Player.Teleport(targetPos, 1); fireTeleportCooldown = 30; } } } else if (abyssShackleCooldown <= 0 && TryConsumeSpirituality(30)) { Vector2 dir = (Main.MouseWorld - Player.Center).SafeNormalize(Vector2.Zero) * 12f; Projectile.NewProjectile(Player.GetSource_FromThis(), Player.Center, dir, ModContent.ProjectileType<AbyssShackleProjectile>(), 20, 0f, Player.whoAmI); SoundEngine.PlaySound(SoundID.Item8, Player.position); abyssShackleCooldown = 180; } }
+            if (LotMKeybinds.Moon_Shackles.JustPressed && currentMoonSequence <= 7) {if (abyssShackleCooldown <= 0 && TryConsumeSpirituality(30)) { Vector2 dir = (Main.MouseWorld - Player.Center).SafeNormalize(Vector2.Zero) * 12f; Projectile.NewProjectile(Player.GetSource_FromThis(), Player.Center, dir, ModContent.ProjectileType<AbyssShackleProjectile>(), 20, 0f, Player.whoAmI); SoundEngine.PlaySound(SoundID.Item8, Player.position); abyssShackleCooldown = 180; } }
             if (LotMKeybinds.Moon_Grenade.JustPressed && currentMoonSequence <= 6)
             {
                 if (currentMoonSequence <= 2) { if (purifyCooldown <= 0 && TryConsumeSpirituality(1000)) { int radius = 60; int centerX = (int)(Player.Center.X / 16f); int centerY = (int)(Player.Center.Y / 16f); for (int x = centerX - radius; x <= centerX + radius; x++) for (int y = centerY - radius; y <= centerY + radius; y++) WorldGen.Convert(x, y, 0, 0, false, false); SoundEngine.PlaySound(SoundID.Item29, Player.position); Main.NewText("大地重获新生。", 100, 255, 100); purifyCooldown = 600; } }
@@ -2786,18 +2804,39 @@ namespace zhashi.Content
             if (currentFoolSequence <= 1)
             {
                 // 1. 愿望逻辑 (Shift + V)
-                if ((shiftPressed && vKeyCurrent) || (wishCastTimer > 0 && vKeyCurrent))
-                {
-                    if (vKeyJustPressed && shiftPressed)
-                    {
-                        selectedWish++; if (selectedWish > 3) selectedWish = 0;
-                        string n = selectedWish == 0 ? "生命复苏" : selectedWish == 1 ? "毁灭天灾" : selectedWish == 2 ? "空间传送" : "昼夜更替";
-                        Main.NewText($"[奇迹愿望]: {n} (保持按住以实现)", 255, 215, 0);
-                        wishCastTimer = 0;
-                    }
-                    wishCastTimer++;
-                    if (wishCastTimer % 10 == 0) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Enchanted_Gold, 0, -2);
+                bool isChoosing = (currentFoolSequence <= 1 && shiftPressed && vKeyCurrent) || (currentFoolSequence == 2 && vKeyCurrent);
+                bool isJustPressed = (currentFoolSequence <= 1 && shiftPressed && vKeyJustPressed) || (currentFoolSequence == 2 && vKeyJustPressed);
 
+                if (isChoosing)
+                {
+                    if (isJustPressed)
+                    {
+                        selectedWish++;
+                        if (selectedWish > 7) selectedWish = 0; // 扩展到 0-7
+
+                        string wishName = "";
+                        switch (selectedWish)
+                        {
+                            case 0: wishName = "生命复苏 (治疗/解控)"; break;
+                            case 1: wishName = "毁灭天灾 (雷暴伤害)"; break;
+                            case 2: wishName = "空间传送 (全图位移)"; break;
+                            case 3: wishName = "昼夜更替 (改变时间)"; break;
+                            case 4: wishName = "呼风唤雨 (切换天气)"; break; // 新增
+                            case 5: wishName = "绯红之月 (调整月相)"; break; // 新增
+                            case 6: wishName = "历史投影 (召唤建筑)"; break; // 新增
+                            case 7: wishName = "欺诈外貌 (变形他人)"; break; // 新增
+                        }
+
+                        Main.NewText($"[奇迹愿望]: {wishName}", 255, 215, 0);
+                        wishCastTimer = 0; // 重置蓄力
+                    }
+
+                    wishCastTimer++;
+                    // 蓄力特效
+                    if (wishCastTimer % 10 == 0)
+                        Dust.NewDust(Player.position, Player.width, Player.height, DustID.Enchanted_Gold, 0, -2);
+
+                    // 蓄力 1 秒后释放
                     if (wishCastTimer >= 60)
                     {
                         CastMiracleWish();
@@ -3755,37 +3794,136 @@ namespace zhashi.Content
         // 辅助方法：执行奇迹愿望
         private void CastMiracleWish()
         {
+            // 消耗 2000 灵性
             if (miracleCooldown <= 0 && TryConsumeSpirituality(2000))
             {
-                SoundEngine.PlaySound(SoundID.Item29, Player.position);
-                miracleCooldown = 3600;
+                SoundEngine.PlaySound(SoundID.Item29, Player.position); // 奇迹音效
+                miracleCooldown = 3600; // 60秒冷却
+
                 switch (selectedWish)
                 {
                     case 0: // 生命
-                        Player.statLife = Player.statLifeMax2; Player.HealEffect(Player.statLifeMax2);
-                        for (int i = 0; i < Player.MaxBuffs; i++) if (Main.debuff[Player.buffType[i]]) Player.DelBuff(i);
+                        Player.statLife = Player.statLifeMax2;
+                        Player.HealEffect(Player.statLifeMax2);
+                        for (int i = 0; i < Player.MaxBuffs; i++)
+                            if (Main.debuff[Player.buffType[i]]) Player.DelBuff(i);
                         Main.NewText("奇迹：生命复苏！", 0, 255, 0);
                         break;
+
                     case 1: // 毁灭
-                        foreach (NPC n in Main.ActiveNPCs) if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 1500f)
+                        foreach (NPC n in Main.ActiveNPCs)
+                        {
+                            if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 1500f)
                             {
-                                Player.ApplyDamageToNPC(n, 10000, 0, 0, false);
+                                Player.ApplyDamageToNPC(n, 10000, 0, 0, false); // 10000 真实伤害
+                                                                                // 召唤雷电球特效
                                 Projectile.NewProjectile(Player.GetSource_FromThis(), n.Center, Vector2.Zero, ProjectileID.Electrosphere, 1000, 0, Player.whoAmI);
                             }
+                        }
                         Main.NewText("奇迹：毁灭天灾！", 255, 0, 0);
                         break;
-                    case 2: // 空间传送
-                        waitingForTeleport = true; // 开启等待状态
-                        Main.NewText("奇迹：空间折叠已展开，请打开地图(M)或在屏幕上点击任意位置进行传送。", 0, 255, 255);
+
+                    case 2: // 传送
+                        waitingForTeleport = true; // 开启地图点击传送状态
+                        Main.NewText("奇迹：空间折叠已展开，请打开地图(M)或点击屏幕任意位置传送。", 0, 255, 255);
                         break;
+
                     case 3: // 昼夜
-                        Main.time = 0; Main.dayTime = !Main.dayTime;
+                        Main.time = 0;
+                        Main.dayTime = !Main.dayTime;
+                        if (Main.netMode == NetmodeID.Server)
+                            NetMessage.SendData(MessageID.WorldData); // 联机同步时间
                         Main.NewText("奇迹：昼夜更替。", 200, 200, 200);
+                        break;
+
+                    // --- 新增效果 ---
+
+                    case 4: // 天气 (Weather)
+                        if (Main.raining)
+                        {
+                            Main.StopRain();
+                            Main.NewText("奇迹：云销雨霁。", 255, 255, 0);
+                        }
+                        else
+                        {
+                            Main.StartRain();
+                            Main.NewText("奇迹：风雨如晦。", 0, 0, 255);
+                        }
+                        if (Main.netMode == NetmodeID.Server)
+                            NetMessage.SendData(MessageID.WorldData); // 同步天气
+                        break;
+
+                    case 5: // 月相 (Moon Phase)
+                        Main.moonPhase = (Main.moonPhase + 1) % 8;
+                        if (Main.netMode == NetmodeID.Server)
+                            NetMessage.SendData(MessageID.WorldData); // 同步月相
+                        string moonText = Main.moonPhase == 0 ? "满月" : "月相变迁";
+                        Main.NewText($"奇迹：{moonText} 已至。", 150, 150, 255);
+                        break;
+
+                    case 6: // 建筑 (Historical Building)
+                            // 移除旧的，生成新的
+                        for (int i = 0; i < Main.maxProjectiles; i++)
+                        {
+                            if (Main.projectile[i].active && Main.projectile[i].owner == Player.whoAmI &&
+                                Main.projectile[i].type == ModContent.ProjectileType<Projectiles.HistoricalSceneProjectile>())
+                            {
+                                Main.projectile[i].Kill();
+                            }
+                        }
+                        Projectile.NewProjectile(Player.GetSource_FromThis(), Player.Center, Vector2.Zero,
+                            ModContent.ProjectileType<Projectiles.HistoricalSceneProjectile>(), 0, 0, Player.whoAmI);
+                        Main.NewText("奇迹：历史的投影降临于此。", 200, 200, 255);
+                        break;
+
+                    case 7: // 外貌 (Appearance - 对最近的玩家)
+                        int targetIdx = -1;
+                        float minDist = 800f;
+                        // 寻找最近的玩家（不包括自己）
+                        for (int i = 0; i < Main.maxPlayers; i++)
+                        {
+                            Player p = Main.player[i];
+                            if (p.active && !p.dead && i != Player.whoAmI && Player.Distance(p.Center) < minDist)
+                            {
+                                minDist = Player.Distance(p.Center);
+                                targetIdx = i;
+                            }
+                        }
+
+                        if (targetIdx != -1)
+                        {
+                            Player target = Main.player[targetIdx];
+                            // 随机施加一种变形 Buff (狼人、人鱼、隐身、石化)
+                            int[] buffs = { BuffID.Werewolf, BuffID.Merfolk, BuffID.Invisibility, BuffID.Stoned };
+                            int selectedBuff = buffs[Main.rand.Next(buffs.Length)];
+
+                            target.AddBuff(selectedBuff, 3600); // 持续1分钟
+
+                            // 发送简单的文字提示
+                            string look = selectedBuff == BuffID.Werewolf ? "狼人" : selectedBuff == BuffID.Merfolk ? "人鱼" : "虚无";
+                            Main.NewText($"奇迹：{target.name} 的外貌被篡改成了 {look}！", 255, 100, 200);
+
+                            // 特效
+                            for (int k = 0; k < 20; k++)
+                                Dust.NewDust(target.position, target.width, target.height, DustID.Confetti, 0, 0, 0, default, 1.5f);
+                        }
+                        else
+                        {
+                            Main.NewText("附近没有可以修改的目标...", 150, 150, 150);
+                            spiritualityCurrent += 2000; // 返还灵性
+                            miracleCooldown = 60; // 缩短冷却
+                        }
                         break;
                 }
             }
-            else if (miracleCooldown > 0) Main.NewText($"奇迹冷却中: {miracleCooldown / 60}s", 150, 150, 150);
-            else Main.NewText("灵性不足！", 255, 50, 50);
+            else if (miracleCooldown > 0)
+            {
+                Main.NewText($"奇迹冷却中: {miracleCooldown / 60}s", 150, 150, 150);
+            }
+            else
+            {
+                Main.NewText("灵性不足 (需2000点)！", 255, 50, 50);
+            }
         }
 
         // 辅助方法：打印命运状态
@@ -3974,12 +4112,12 @@ namespace zhashi.Content
             // 2. 防脱战 (Boss)
             if (target.boss || target.type == NPCID.EaterofWorldsHead)
             {
-                target.target = Player.whoAmI;
+                //target.target = Player.whoAmI;
                 target.timeLeft = 1000;
             }
 
             // 3. 锁定位置
-            Player.Center = target.Center;
+            Player.Center = target.Center + new Vector2(0, 2);
             Player.velocity = target.velocity;
             Player.gfxOffY = 0;
 
