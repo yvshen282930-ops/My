@@ -387,7 +387,7 @@ namespace zhashi.Content.UI
                 {
                     text += $"序列九: [c/D8BFD8:药师]\n";
                     text += "- [被动] 免疫中毒/剧毒，生命回复提升\n";
-                    text += "- [被动] 药物精通：使用恢复类物品效果翻倍(概率)\n";
+                    text += "- [被动] 药物精通：制作药水类物品翻倍(概率)\n";
                     text += "- [能力] 怪物感知：能看到周围的生物\n";
                 }
                 if (p.currentMoonSequence <= 8) // 驯兽师
@@ -509,7 +509,7 @@ namespace zhashi.Content.UI
                     string cdJump = p.flameJumpCooldown > 0 ? $" [c/FF0000:({p.flameJumpCooldown / 60}s)]" : "";
                     string cdTransfer = p.damageTransferCooldown > 0 ? $" [c/FF0000:({p.damageTransferCooldown / 60}s)]" : "";
 
-                    text += $"- [能力] 火焰跳跃 (F键){cdJump}: 瞬间传送至鼠标位置\n";
+                    text += $"- [能力] 火焰跳跃 (F键){cdJump}: 瞬间传送至鼠标指向的任何火焰\n";
                     text += $"- [被动] 伤害转移{cdTransfer}: 受到致命伤时由纸人替死\n";
                     text += "- [被动] 水下呼吸 & 免疫束缚/石化\n";
                     text += "- [技能] 空气弹: 获得专属魔法武器\n";
@@ -821,6 +821,7 @@ namespace zhashi.Content.UI
                     text += "- [半神] 无暗之域: 照亮一切，看破隐形，免疫黑暗\n";
                     text += "- [被动] 神圣盔甲: 获得极高的防御力与伤害减免\n";
                     text += $"- [质变] 净化 (Z键){cdNotarize}: 范围翻倍，清除一切负面状态\n";
+                    text += $"- [压制] 无暗压制{cdNotarize}: 在pvp中使用净化（Z）可强行降低敌方序列x1\n";
                     text += $"- [技能] 无暗之枪 (X键){cdSpear}: 投掷纯净的光之长枪\n";
                     text += $"- [大招] 阳炎 (G键){cdSun}: 召唤微缩太阳，毁灭一切污秽\n";
 

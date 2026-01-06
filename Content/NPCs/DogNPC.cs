@@ -22,6 +22,8 @@ using zhashi.Content.Items.Potions.Moon;
 using zhashi.Content.Items.Potions.Hunter;
 using zhashi.Content.Items.Potions.Fool;
 using zhashi.Content.Items.Potions.Marauder;
+using zhashi.Content.Items.Potions.Sun; // 引用太阳魔药
+using zhashi.Content.Projectiles.Sun;   // 引用太阳弹幕
 
 namespace zhashi.Content.NPCs
 {
@@ -182,6 +184,8 @@ namespace zhashi.Content.NPCs
                     Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, ModContent.ProjectileType<DogTimeClock>(), NPC.damage, 0f, owner.whoAmI, NPC.whoAmI);
                 }
             }
+
+            UpdateSunInferno();
 
             // 核心移动与战斗
 
@@ -654,11 +658,125 @@ namespace zhashi.Content.NPCs
                         skillUsed = true;
                     }
                     break;
+                case 6: // 太阳 (光束/火焰/神圣)
+                    if (target != null)
+                    {
+                        // 序列 4+: 阳炎 / 审判
+                        if (currentSequence <= 4)
+                        {
+                            Vector2 spawnPos = target.Center + new Vector2(0, -400);
+                            Vector2 vel = new Vector2(0, 15f);
+                            Projectile.NewProjectile(NPC.GetSource_FromAI(), spawnPos, vel, ModContent.ProjectileType<JusticeJudgment>(), NPC.damage * 4, 6f, Main.myPlayer);
+                            SoundEngine.PlaySound(SoundID.Item29, target.Center);
+                            skillUsed = true;
+                        }
+                        // 序列 6: 太阳神官 (神圣之光)
+                        else if (currentSequence <= 6)
+                        {
+                            Vector2 dir = (target.Center - NPC.Center).SafeNormalize(Vector2.Zero) * 12f;
+                            Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center, dir, ModContent.ProjectileType<HolyLightBeam>(), NPC.damage * 2, 2f, Main.myPlayer);
+                            SoundEngine.PlaySound(SoundID.Item72, NPC.Center);
+                            skillUsed = true;
+                        }
+                        // 序列 7: 公证人 (神圣公证 - 削弱敌人)
+                        // 【修复：直接接 else if，不要在前面加 else】
+                        else if (currentSequence <= 7)
+                        {
+                            Vector2 dir = (target.Center - NPC.Center).SafeNormalize(Vector2.Zero) * 14f;
+                            // 黄金雨 (Golden Shower)
+                            int p = Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center, dir, ProjectileID.GoldenShowerFriendly, NPC.damage, 0f, Main.myPlayer);
+                            Main.projectile[p].timeLeft = 600;
+                            SoundEngine.PlaySound(SoundID.Item13, NPC.Center);
+                            skillUsed = true;
+                        }
+                        // 序列 8 & 9 (如果距离远，偶尔丢个火球)
+                        // 【修复：这是最后的 else，处理所有剩余情况】
+                        else
+                        {
+                            Vector2 dir = (target.Center - NPC.Center).SafeNormalize(Vector2.Zero) * 10f;
+                            // 魔法飞弹
+                            Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center, dir, ProjectileID.BallofFire, NPC.damage, 1f, Main.myPlayer);
+                            skillUsed = true;
+                        }
+                    }
+                    break;
+
             }
 
             if (skillUsed && Main.rand.NextBool(5)) // 偶尔叫一声
             {
                 CombatText.NewText(NPC.getRect(), Color.Cyan, "汪!", true);
+            }
+        }
+        private void UpdateSunInferno()
+        {
+            // 仅太阳途径 (ID: 6) 且已开启序列 (<= 9) 生效
+            if (currentPathway == 6 && currentSequence <= 9)
+            {
+                // 1. 视觉特效：双重旋转火圈 (模拟狱火药水)
+                if (Main.netMode != NetmodeID.Server) // 仅客户端绘制
+                {
+                    float radius = 80f; // 火圈半径
+                    float rotSpeed = 0.15f; // 旋转速度
+                    float angle = Main.GameUpdateCount * rotSpeed;
+
+                    // 内圈：金色神圣之火
+                    for (int i = 0; i < 2; i++)
+                    {
+                        Vector2 offset = (angle + i * MathHelper.Pi).ToRotationVector2() * radius;
+                        // 随机微调位置，让火焰看起来在跳动
+                        offset += Main.rand.NextVector2Circular(5, 5);
+
+                        int d = Dust.NewDust(NPC.Center + offset, 0, 0, DustID.GoldFlame, 0, 0, 100, default, 1.5f);
+                        Main.dust[d].noGravity = true;
+                        Main.dust[d].velocity = Vector2.Zero; // 粒子固定在轨道上
+                    }
+
+                    // 外圈：普通烈焰 (稍微慢一点，反向旋转，增加层次感)
+                    float angle2 = Main.GameUpdateCount * (rotSpeed * -0.8f);
+                    for (int i = 0; i < 2; i++)
+                    {
+                        Vector2 offset = (angle2 + i * MathHelper.Pi).ToRotationVector2() * (radius + 25f);
+                        int d = Dust.NewDust(NPC.Center + offset, 0, 0, DustID.Torch, 0, 0, 100, default, 1.5f);
+                        Main.dust[d].noGravity = true;
+                        Main.dust[d].velocity = Vector2.Zero;
+                    }
+                }
+
+                // 2. 伤害逻辑：烧伤周围敌人 (每 15 帧 / 0.25秒 判定一次)
+                if (Main.GameUpdateCount % 15 == 0)
+                {
+                    float range = 130f; // 伤害范围略大于视觉范围
+                    foreach (NPC target in Main.ActiveNPCs)
+                    {
+                        // 排除友方、自己、无法选中的目标
+                        if (target.CanBeChasedBy() && target.Distance(NPC.Center) < range)
+                        {
+                            // 基础伤害随序列提升
+                            // 序列9: 20点, 序列1: 100点 (每级+10)
+                            int dmg = 20 + (9 - currentSequence) * 10;
+
+                            // 对不死/邪恶生物伤害翻倍
+                            if (NPCID.Sets.Zombies[target.type] || NPCID.Sets.Skeletons[target.type])
+                            {
+                                dmg *= 2;
+                            }
+
+                            // 施加“狱火”Debuff (OnFire3 是泰拉瑞亚里更强的火)
+                            target.AddBuff(BuffID.OnFire3, 180); // 持续3秒
+
+                            // 造成无敌帧独立的伤害
+                            NPC.HitInfo hit = new NPC.HitInfo();
+                            hit.Damage = dmg;
+                            hit.Knockback = 2f; // 轻微击退，防止怪贴脸
+                            hit.HitDirection = (target.Center.X > NPC.Center.X) ? 1 : -1;
+                            target.StrikeNPC(hit);
+                        }
+                    }
+                }
+
+                // 3. 自身照明
+                Lighting.AddLight(NPC.Center, 0.8f, 0.6f, 0.2f);
             }
         }
         private void HandleDogSkills(Player owner)
@@ -739,6 +857,100 @@ namespace zhashi.Content.NPCs
                         }
                         break;
                     case 5: if (target != null) { if (currentSequence <= 3) { int stealDmg = target.lifeMax / 20; if (stealDmg > NPC.damage * 5) stealDmg = NPC.damage * 5; target.StrikeNPC(new NPC.HitInfo { Damage = stealDmg, Knockback = 0f }); HealOwner(owner, stealDmg / 5); CombatText.NewText(target.getRect(), Color.Purple, "命运窃取!", true); skillUsed = true; } else if (currentSequence <= 6) { target.StrikeNPC(new NPC.HitInfo { Damage = (int)(NPC.damage * 1.5f), Knockback = 2f }); HealOwner(owner, 10); skillUsed = true; } else { target.AddBuff(BuffID.Slow, 300); owner.AddBuff(BuffID.Swiftness, 300); CombatText.NewText(target.getRect(), Color.Silver, "速度窃取!", true); skillUsed = true; } } break;
+                    case 6: // 太阳
+                        // 序列 9: 歌颂者 (勇气赞歌 - 攻防一体 + 震慑)
+                        if (currentSequence >= 9)
+                        {
+                            // 1. 强力 Buff：怒气(加攻) + 铁皮(加防)
+                            owner.AddBuff(BuffID.Wrath, 600);
+                            owner.AddBuff(BuffID.Ironskin, 600);
+
+                            // 2. 歌颂震慑：每隔几秒吼一声，把附近的敌人震退/眩晕
+                            if (Main.GameUpdateCount % 180 == 0) // 每3秒
+                            {
+                                bool anyEnemyHit = false;
+                                foreach (NPC targetNPC in Main.ActiveNPCs)
+                                {
+                                    // 范围 300 像素内的敌人
+                                    if (targetNPC.CanBeChasedBy() && targetNPC.Distance(NPC.Center) < 300f)
+                                    {
+                                        targetNPC.AddBuff(BuffID.Confused, 120); // 混乱2秒
+                                        targetNPC.velocity += (targetNPC.Center - NPC.Center).SafeNormalize(Vector2.Zero) * 5f; // 击退
+                                        anyEnemyHit = true;
+                                    }
+                                }
+                                if (anyEnemyHit)
+                                {
+                                    SoundEngine.PlaySound(SoundID.Item4, NPC.Center); // 吼叫声
+                                    CombatText.NewText(NPC.getRect(), Color.Gold, "勇气!", true);
+                                    // 生成一圈金色音符特效
+                                    for (int i = 0; i < 20; i++)
+                                    {
+                                        Vector2 v = Main.rand.NextVector2Circular(5, 5);
+                                        Dust.NewDustPerfect(NPC.Center, DustID.Enchanted_Gold, v, 0, default, 1.5f).noGravity = true;
+                                    }
+                                }
+                            }
+                            skillUsed = true;
+                        }
+
+                        // 序列 8: 祈光人 (神圣光环 - 烧怪 + 强力回血)
+                        if (currentSequence <= 8)
+                        {
+                            // 1. 快速治疗 (Rapid Healing) 而不是普通再生
+                            owner.AddBuff(BuffID.RapidHealing, 600);
+
+                            // 2. 灼热光环：每秒对周围敌人造成伤害
+                            if (Main.GameUpdateCount % 60 == 0)
+                            {
+                                foreach (NPC targetNPC in Main.ActiveNPCs)
+                                {
+                                    if (targetNPC.CanBeChasedBy() && targetNPC.Distance(NPC.Center) < 250f)
+                                    {
+                                        // 直接扣血，不触发无敌帧 (模拟环境伤害)
+                                        targetNPC.life -= 15;
+                                        targetNPC.HitEffect(0, 15);
+                                        if (targetNPC.life <= 0) targetNPC.checkDead();
+
+                                        // 视觉特效：身上着火
+                                        for (int i = 0; i < 5; i++) Dust.NewDust(targetNPC.position, targetNPC.width, targetNPC.height, DustID.GoldFlame);
+                                    }
+                                }
+                            }
+
+                            // 视觉：狗身边一直有光圈
+                            if (Main.rand.NextBool(5))
+                            {
+                                Dust.NewDust(NPC.position, NPC.width, NPC.height, DustID.GoldFlame, 0, -1, 150, default, 0.8f);
+                            }
+                        }
+                        // 序列 5: 无暗者 (净化/范围伤害)
+                        else if (currentSequence <= 5)
+                        {
+                            // 以狗为中心产生光爆 (Unshadowed Domain 简化版)
+                            Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center, Vector2.Zero, ModContent.ProjectileType<FlaringSun>(), NPC.damage * 3, 8f, Main.myPlayer);
+
+                            // 净化主人 Debuff (简单实现)
+                            if (owner.buffType.Length > 0)
+                            {
+                                // 这里简单清除一个负面Buff，实际需要更复杂的判断
+                                owner.ClearBuff(BuffID.Poisoned);
+                                owner.ClearBuff(BuffID.OnFire);
+                            }
+                            SoundEngine.PlaySound(SoundID.Item29, NPC.Center);
+                            skillUsed = true;
+                        }
+                        // 中序列: 召唤光之矛
+                        else
+                        {
+                            if (target != null)
+                            {
+                                Vector2 dir = (target.Center - NPC.Center).SafeNormalize(Vector2.Zero) * 15f;
+                                Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center, dir, ModContent.ProjectileType<UnshadowedSpear>(), NPC.damage * 2, 4f, Main.myPlayer);
+                                skillUsed = true;
+                            }
+                        }
+                        break;
                 }
                 if (skillUsed) skillTimer = Main.rand.Next(-100, 50);
             }
@@ -796,6 +1008,7 @@ namespace zhashi.Content.NPCs
                 case 3: return "月亮";
                 case 4: return "愚者";
                 case 5: return "错误";
+                case 6: return "太阳";
                 default: return "未知";
             }
         }
@@ -843,6 +1056,13 @@ namespace zhashi.Content.NPCs
                     {
                         skillName = "偷盗者：速度窃取 (减速)";
                     }
+                    break;
+                case 6:
+                    if (currentSequence <= 3) skillName = "正义导师：神圣审判 (毁灭)";
+                    else if (currentSequence <= 6) skillName = "光之祭司：净化之光 (激光)";
+                    else if (currentSequence <= 7) skillName = "公证人：神圣公证 (削弱/灵液)"; // 新增
+                    else if (currentSequence <= 8) skillName = "祈光人：灼热光环 (烧怪)"; // 新增
+                    else skillName = "歌颂者：勇气赞歌 (攻防Buff/震慑)"; // 新增
                     break;
             }
             return $"当前技能: {skillName}";
@@ -940,6 +1160,11 @@ namespace zhashi.Content.NPCs
                     chat.Add("你的背包里刚才是不是少了一块肉？别看我，我不知道。");
                     chat.Add("如果时间可以被偷走，我想偷走等待晚饭的那段时间。");
                     break;
+                case 6: // 太阳
+                    chat.Add("赞美太阳！哪怕是在地底，我也能感受到祂的光辉。");
+                    chat.Add("你的影子...很干净，这很好。");
+                    chat.Add("我要净化这块腐肉再吃...这是仪式感。");
+                    break;
             }
 
             // 4. 基于玩家途径的彩蛋对话
@@ -1018,6 +1243,16 @@ namespace zhashi.Content.NPCs
                     else if (item.type == ModContent.ItemType<MentorPotion>()) { potionPathway = 5; potionSequence = 3; }
                     else if (item.type == ModContent.ItemType<TrojanHorsePotion>()) { potionPathway = 5; potionSequence = 2; }
                     else if (item.type == ModContent.ItemType<WormOfTimePotion>()) { potionPathway = 5; potionSequence = 1; }
+                    // === 太阳途径 (ID: 6) ===
+                    else if (item.type == ModContent.ItemType<BardPotion>()) { potionPathway = 6; potionSequence = 9; }
+                    else if (item.type == ModContent.ItemType<LightSupplicantPotion>()) { potionPathway = 6; potionSequence = 8; }
+                    else if (item.type == ModContent.ItemType<SolarHighPriestPotion>()) { potionPathway = 6; potionSequence = 7; }
+                    else if (item.type == ModContent.ItemType<NotaryPotion>()) { potionPathway = 6; potionSequence = 6; }
+                    else if (item.type == ModContent.ItemType<PriestPotion>()) { potionPathway = 6; potionSequence = 5; }
+                    else if (item.type == ModContent.ItemType<UnshadowedPotion>()) { potionPathway = 6; potionSequence = 4; }
+                    else if (item.type == ModContent.ItemType<JusticeMentorPotion>()) { potionPathway = 6; potionSequence = 3; }
+                    else if (item.type == ModContent.ItemType<LightSeekerPotion>()) { potionPathway = 6; potionSequence = 2; }
+                    else if (item.type == ModContent.ItemType<WhiteAngelPotion>()) { potionPathway = 6; potionSequence = 1; }
 
                     if (potionPathway > 0)
                     {

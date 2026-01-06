@@ -828,6 +828,11 @@ Mods: {
 				DisplayName: Sun Curse Buff
 				Description: Mods.zhashi.Buffs.SunCurseBuff.Description
 			}
+
+			SunSuppressionDebuff: {
+				Description: Mods.zhashi.Buffs.SunSuppressionDebuff.Description
+				DisplayName: Sun Suppression Debuff
+			}
 		}
 
 		# ==========================================
@@ -971,6 +976,16 @@ Mods: {
 				EnableDivineCurse: {
 					Label: Enable Divine Curse
 					Tooltip: ""
+				}
+
+				CalamityAdaptationMode: {
+					Label: 灾厄适配模式
+					Tooltip:
+						'''
+						开启后：
+						1. 玩家造成的伤害降低 60%，防御降低 40%
+						2. 只有击败特定 Boss 后才能服用对应序列的魔药
+						'''
 				}
 			}
 

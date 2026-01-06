@@ -36,19 +36,16 @@ namespace zhashi.Content.Items.Potions.Moon
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
-                // 【一致性修复】检查是否已是非凡者，并给出提示
                 if (modPlayer.IsBeyonder)
                 {
-                    Main.NewText("你的灵性已定型，无法开启第二条途径，强行服用只会导致失控！", 255, 50, 50);
-                    return true; // 消耗掉，作为惩罚（或者 return false 不消耗）
+                    Main.NewText("你的灵性已定型...", 255, 50, 50);
+                    return true;
                 }
 
-                // 晋升逻辑
-                modPlayer.currentMoonSequence = 9;
+                modPlayer.currentMoonSequence = 9; // 现在这行肯定能跑到了
 
                 CombatText.NewText(player.getRect(), Color.LightGreen, "晋升：药师", true);
                 Main.NewText("你感觉自己对草药与生命有了更深的理解...", 100, 255, 100);
-
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
             }
             return true;

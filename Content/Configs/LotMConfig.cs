@@ -33,5 +33,13 @@ namespace zhashi.Content.Configs
 
         [DefaultValue(false)]
         public bool NerfDivineAbilities;
+
+
+        [Header("平衡性设置")] // 添加一个标题
+
+        [Label("灾厄适配模式")]
+        [Tooltip("开启后：\n1. 玩家造成的伤害降低 60%，防御降低 40%\n2. 只有击败特定 Boss 后才能服用对应序列的魔药")]
+        [DefaultValue(false)]
+        public bool CalamityAdaptationMode;
     }
 }

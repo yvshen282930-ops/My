@@ -99,9 +99,24 @@ namespace zhashi.Content.UI
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            if (!Visible) return;
-            try { base.Draw(spriteBatch); }
-            catch { Visible = false; TargetDog = null; Main.NewText("UI渲染异常", Color.Red); }
+            // 【核心修复】这里必须用 TargetDog.NPC.active
+            if (TargetDog == null || !TargetDog.NPC.active) return;
+
+            // 1. 数据同步：从 NPC -> UI
+            for (int i = 0; i < 3; i++)
+            {
+                if (TargetDog.DogInventory[i] == null) TargetDog.DogInventory[i] = new Item();
+                equipSlots[i].Item = TargetDog.DogInventory[i];
+            }
+
+            // 2. 执行绘制
+            base.Draw(spriteBatch);
+
+            // 3. 数据同步：UI -> NPC
+            for (int i = 0; i < 3; i++)
+            {
+                TargetDog.DogInventory[i] = equipSlots[i].Item;
+            }
         }
 
         public override void Update(GameTime gameTime)
@@ -159,6 +174,7 @@ namespace zhashi.Content.UI
                 case 3: seqColor = "DC143C"; break;
                 case 4: seqColor = "800080"; break;
                 case 5: seqColor = "C0C0C0"; break;
+                case 6: seqColor = "FFD700"; break;
             }
 
             string seqDisplay = TargetDog.currentSequence >= 10
@@ -179,7 +195,7 @@ namespace zhashi.Content.UI
 
         private string GetPathwayName(int id)
         {
-            switch (id) { case 1: return "巨人"; case 2: return "猎人"; case 3: return "月亮"; case 4: return "愚者"; case 5: return "错误"; default: return "未知"; }
+            switch (id) { case 1: return "巨人"; case 2: return "猎人"; case 3: return "月亮"; case 4: return "愚者"; case 5: return "错误"; case 6: return "太阳"; default: return "未知"; }
         }
     }
 }

@@ -19,7 +19,8 @@ using zhashi.Content.Buffs;
 using zhashi.Content.Items;
 using ReLogic.Utilities;
 using zhashi.Content.Configs;
-using Terraria.Graphics.Effects; // 【新增】用于屏幕滤镜特效
+using Terraria.Graphics.Effects;
+using Terraria.Localization;
 
 namespace zhashi.Content
 {
@@ -747,6 +748,26 @@ namespace zhashi.Content
             ApplySequenceStats();
             ApplyMarauderStats();
             CheckConquerorRitual();
+
+
+            // === 灾厄适配模式：强力压制 ===
+            if (ModContent.GetInstance<LotMConfig>().CalamityAdaptationMode)
+            {
+                // 1. 伤害直接砍半再砍半
+                Player.GetDamage(DamageClass.Generic) *= 0.3f;
+
+                // 2. 削减暴击率
+                Player.GetCritChance(DamageClass.Generic) -= 20;
+
+                // 3. 削弱防御力
+                Player.statDefense *= 0.5f;
+
+                // 4. 限制伤害减免 (DR)
+                Player.endurance *= 0.5f; // 所有的免伤效果减半
+
+                // 5. 削弱生命恢复
+                Player.lifeRegen /= 3;
+            }
 
         }
 
@@ -1995,7 +2016,7 @@ namespace zhashi.Content
                     Player.moveSpeed *= 0.5f;
                     Player.maxRunSpeed *= 0.5f;
 
-                    if (Main.GameUpdateCount % 300 == 0)
+                    if (Main.GameUpdateCount % 3600 == 0)
                         CombatText.NewText(Player.getRect(), Color.Gold, "太阳沉没...凡人躯壳...", true);
                 }
 
@@ -2794,7 +2815,33 @@ namespace zhashi.Content
             if (LotMKeybinds.RP_Glacier.JustPressed && currentHunterSequence <= 2) { if (glacierCooldown <= 0 && TryConsumeSpirituality(1000)) { Main.NewText("冰河世纪！", 0, 255, 255); glacierCooldown = 1800; foreach (NPC npc in Main.ActiveNPCs) { if (!npc.friendly && !npc.dontTakeDamage && npc.Distance(Player.Center) < 2000f) { npc.AddBuff(BuffID.Frozen, 300); npc.AddBuff(BuffID.Frostburn2, 600); npc.AddBuff(BuffID.Slow, 600); if (!npc.boss) npc.velocity = Vector2.Zero; } } } }
             if (LotMKeybinds.Giant_Mercury.JustPressed && currentSequence <= 3) { if (!isGuardianStance) { if (!isMercuryForm) { if (TryConsumeSpirituality(500)) isMercuryForm = true; } else isMercuryForm = false; } }
             if (LotMKeybinds.Giant_Armor.JustPressed && currentSequence <= 6) { if (!isMercuryForm && !dawnArmorBroken) dawnArmorActive = !dawnArmorActive; }
-            if (currentSequence <= 5 && LotMKeybinds.Giant_Guardian.Current && !isMercuryForm) { if (TryConsumeSpirituality(10.0f)) isGuardianStance = true; else isGuardianStance = false; } else isGuardianStance = false;
+            if (currentSequence <= 5 && LotMKeybinds.Giant_Guardian.Current && !isMercuryForm)
+            {
+                if (TryConsumeSpirituality(10.0f)) 
+                {
+                    isGuardianStance = true;
+                    if (Player.ownedProjectileCounts[ModContent.ProjectileType<GuardianShieldProjectile>()] < 1)
+                    {
+                        Projectile.NewProjectile(
+                            Player.GetSource_FromThis(),
+                            Player.Center,
+                            Vector2.Zero,
+                            ModContent.ProjectileType<GuardianShieldProjectile>(),
+                            0, 
+                            0,
+                            Player.whoAmI
+                        );
+                    }
+                }
+                else
+                {
+                    isGuardianStance = false;
+                }
+            }
+            else
+            {
+                isGuardianStance = false;
+            }
 
             bool vKeyJustPressed = LotMKeybinds.Fool_SpiritForm.JustPressed || LotMKeybinds.Fool_Miracle.JustPressed || LotMKeybinds.Fool_Faceless.JustPressed;
             bool vKeyCurrent = LotMKeybinds.Fool_SpiritForm.Current || LotMKeybinds.Fool_Miracle.Current || LotMKeybinds.Fool_Faceless.Current;
@@ -3141,17 +3188,130 @@ namespace zhashi.Content
             }
 
             // F: 火焰跳跃 (序列7)
+            // F: 火焰跳跃 (序列7) - 增强版：万火皆可跃
             if (LotMKeybinds.Fool_FlameJump.JustPressed && currentFoolSequence <= 7)
             {
-                if (flameJumpCooldown <= 0 && TryConsumeSpirituality(100))
+                if (flameJumpCooldown <= 0)
                 {
-                    Player.Teleport(Main.MouseWorld, 1);
-                    SoundEngine.PlaySound(SoundID.Item45, Player.position);
-                    flameJumpCooldown = 60;
-                }
-                else if (flameJumpCooldown <= 0)
-                {
-                    Main.NewText("灵性不足 (需100点)", 255, 50, 50);
+                    Vector2 targetPos = Vector2.Zero;
+                    bool foundFire = false;
+                    float searchRange = 100f; // 鼠标周围 100 像素范围
+
+                    // 1. 检测物块 (Tile)
+                    Point mouseTile = Main.MouseWorld.ToTileCoordinates();
+                    int tileRange = 6;
+
+                    for (int x = mouseTile.X - tileRange; x <= mouseTile.X + tileRange; x++)
+                    {
+                        for (int y = mouseTile.Y - tileRange; y <= mouseTile.Y + tileRange; y++)
+                        {
+                            if (!WorldGen.InWorld(x, y)) continue;
+                            Tile tile = Main.tile[x, y];
+                            if (tile.HasTile && (
+                                tile.TileType == TileID.Torches || tile.TileType == TileID.Campfire ||
+                                tile.TileType == TileID.Candles || tile.TileType == TileID.PlatinumCandle ||
+                                tile.TileType == TileID.LivingFire || tile.TileType == TileID.LivingCursedFire ||
+                                tile.TileType == TileID.LivingDemonFire || tile.TileType == TileID.LivingFrostFire ||
+                                tile.TileType == TileID.Fireplace || tile.TileType == TileID.Chandeliers ||
+                                tile.TileType == TileID.Candelabras || tile.TileType == TileID.HangingLanterns ||
+                                tile.TileType == TileID.ChineseLanterns || tile.TileType == TileID.Jackolanterns ||
+                                tile.TileType == TileID.SkullLanterns || tile.TileType == TileID.Lamps ||
+                                tile.TileType == TileID.Furnaces || tile.TileType == TileID.Hellforge ||
+                                tile.TileType == TileID.AdamantiteForge || tile.TileType == TileID.GlassKiln
+                                ))
+                            {
+                                foundFire = true;
+                                if (tile.TileType == TileID.Chandeliers || tile.TileType == TileID.HangingLanterns || tile.TileType == TileID.ChineseLanterns)
+                                    targetPos = new Vector2(x * 16 + 8 - Player.width / 2, y * 16 + 16);
+                                else if (Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType])
+                                    targetPos = new Vector2(x * 16 + 8 - Player.width / 2, y * 16 - Player.height);
+                                else
+                                    targetPos = new Vector2(x * 16 + 8 - Player.width / 2, y * 16 - Player.height / 2);
+                                break;
+                            }
+                        }
+                        if (foundFire) break;
+                    }
+
+                    // 2. 检测弹幕 (Projectile)
+                    if (!foundFire)
+                    {
+                        foreach (Projectile p in Main.projectile)
+                        {
+                            if (p.active && p.Distance(Main.MouseWorld) < searchRange)
+                            {
+                                string name = p.Name.ToLower();
+                                bool isFireProjectile =
+                                    name.Contains("fire") || name.Contains("flame") || name.Contains("torch") ||
+                                    name.Contains("magma") || name.Contains("solar") || name.Contains("napalm") ||
+                                    p.type == ProjectileID.MolotovFire || p.type == ProjectileID.GreekFire1 ||
+                                    p.type == ProjectileID.GreekFire2 || p.type == ProjectileID.GreekFire3 ||
+                                    // 【核心修复】直接使用类名，去掉 zhashi.Content... 前缀
+                                    p.type == ModContent.ProjectileType<PyromaniacFireball>() ||
+                                    p.type == ModContent.ProjectileType<PyromaniacBomb>();
+
+                                if (isFireProjectile)
+                                {
+                                    foundFire = true;
+                                    targetPos = p.Center - new Vector2(0, Player.height / 2);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // 3. 检测 NPC
+                    if (!foundFire)
+                    {
+                        foreach (NPC npc in Main.npc)
+                        {
+                            if (npc.active && npc.Distance(Main.MouseWorld) < searchRange)
+                            {
+                                bool isBurning =
+                                    npc.HasBuff(BuffID.OnFire) || npc.HasBuff(BuffID.OnFire3) ||
+                                    npc.HasBuff(BuffID.CursedInferno) || npc.HasBuff(BuffID.ShadowFlame) ||
+                                    npc.HasBuff(BuffID.Frostburn) || npc.HasBuff(BuffID.Frostburn2);
+
+                                bool isFireMob =
+                                    npc.type == NPCID.Hellbat || npc.type == NPCID.Lavabat ||
+                                    npc.type == NPCID.LavaSlime || npc.type == NPCID.MeteorHead ||
+                                    npc.type == NPCID.FireImp || npc.type == NPCID.BurningSphere;
+
+                                if (isBurning || isFireMob)
+                                {
+                                    foundFire = true;
+                                    targetPos = npc.Center - new Vector2(0, Player.height);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    // 执行传送
+                    if (foundFire)
+                    {
+                        if (TryConsumeSpirituality(100))
+                        {
+                            Vector2 oldPos = Player.Center;
+                            Player.Teleport(targetPos, 1);
+
+                            SoundEngine.PlaySound(SoundID.Item45, Player.position);
+                            SoundEngine.PlaySound(SoundID.Item20, Player.position);
+
+                            for (int i = 0; i < 20; i++) Dust.NewDust(oldPos, Player.width, Player.height, DustID.Torch, 0, 0, 0, default, 2f);
+                            for (int i = 0; i < 20; i++) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Torch, 0, 0, 0, default, 2f);
+
+                            flameJumpCooldown = 60;
+                        }
+                        else
+                        {
+                            Main.NewText("灵性不足 (需100点)", 255, 50, 50);
+                        }
+                    }
+                    else
+                    {
+                        CombatText.NewText(Player.getRect(), Color.Gray, "未感知到火焰...", true);
+                    }
                 }
             }
 
@@ -3611,6 +3771,8 @@ namespace zhashi.Content
                         Main.NewText("除了纯白与太阳，一切都将分崩离析。", 255, 255, 255);
                         SoundEngine.PlaySound(SoundID.Item29, Player.position);
 
+                        RunSunSuppression(3000f);
+
                         // 基础伤害 30000 (配合倍率和Projectile内的10倍加成，是对全屏的毁灭性打击)
                         int dmg = (int)(30000 * GetSequenceMultiplier(currentSunSequence));
 
@@ -3626,6 +3788,8 @@ namespace zhashi.Content
                     if (notarizeCooldown <= 0 && TryConsumeSpirituality(1500))
                     {
                         notarizeCooldown = 600; // 10秒冷却
+
+                        RunSunSuppression(2000f);
 
                         // --- 索敌逻辑 ---
                         int targetIdx = -1;
@@ -3703,7 +3867,6 @@ namespace zhashi.Content
                 }
                 else
                 {
-                    // 序列4及以下：执行原来的公证/净化
                     CastNotarize();
                 }
             }
@@ -3932,6 +4095,16 @@ namespace zhashi.Content
             if (fateDisturbanceActive) Main.NewText("命运干扰: 开启", 200, 100, 255);
             else Main.NewText("命运干扰: 关闭", 150, 150, 150);
         }
+        public override void PostUpdateBuffs()
+        {
+            // 药师序列9以上：强制清除所有毒素
+            if (currentMoonSequence <= 9)
+            {
+                // 只要身上有毒，下一帧直接删掉
+                if (Player.HasBuff(BuffID.Poisoned)) Player.ClearBuff(BuffID.Poisoned);
+                if (Player.HasBuff(BuffID.Venom)) Player.ClearBuff(BuffID.Venom);
+            }
+        }
 
         // 8. 辅助
         public float GetSequenceMultiplier(int seq) { if (seq > 9) return 1f; return 1f + (9 - seq) * 0.3f; }
@@ -3955,9 +4128,9 @@ namespace zhashi.Content
             // 未来更高序列可继续添加...
 
             // --- 2. 月亮途径 (Moon) ---
-            if (currentMoonSequence <= 9) max = Math.Max(max, 150); // 药师灵性稍低
+            if (currentMoonSequence <= 9) max = Math.Max(max, 150); 
             if (currentMoonSequence <= 8) max = Math.Max(max, 250);
-            if (currentMoonSequence <= 7) max = Math.Max(max, 600); // 吸血鬼质变
+            if (currentMoonSequence <= 7) max = Math.Max(max, 600); 
             if (currentMoonSequence <= 6) max = Math.Max(max, 1000);
             if (currentMoonSequence <= 5) max = Math.Max(max, 2000);
             if (currentMoonSequence <= 4) max = Math.Max(max, 5000);
@@ -3979,15 +4152,15 @@ namespace zhashi.Content
 
             // --- 4. 巨人途径 (Giant) ---
             // 战士途径灵性最低，主要靠体力
-            if (currentSequence <= 9) max = Math.Max(max, 110);
-            if (currentSequence <= 8) max = Math.Max(max, 130);
-            if (currentSequence <= 7) max = Math.Max(max, 200);
+            if (currentSequence <= 9) max = Math.Max(max, 100);
+            if (currentSequence <= 8) max = Math.Max(max, 150);
+            if (currentSequence <= 7) max = Math.Max(max, 250);
             if (currentSequence <= 6) max = Math.Max(max, 400); // 黎明骑士
             if (currentSequence <= 5) max = Math.Max(max, 700);
             if (currentSequence <= 4) max = Math.Max(max, 1200);
-            if (currentSequence <= 3) max = Math.Max(max, 2500); // 银骑士
+            if (currentSequence <= 3) max = Math.Max(max, 3000); // 银骑士
             if (currentSequence <= 2) max = Math.Max(max, 10000); // 荣耀战神 (神性质变)
-            if (currentSequence <= 1) max = Math.Max(max, 20000);
+            if (currentSequence <= 1) max = Math.Max(max, 30000);
 
             // --- 5. 错误途径 (灵性专长，成长较高)---
             if (currentMarauderSequence <= 9) max = Math.Max(max, 100);
@@ -4459,6 +4632,53 @@ namespace zhashi.Content
                 target.AddBuff(BuffID.Endurance, 2);
             }
         }
+        // === 太阳途径新增：通用的 PVP 序列压制逻辑 ===
+        private void RunSunSuppression(float range)
+        {
+            // 只有序列 4 及以上才生效
+            if (currentSunSequence > 4) return;
+
+            // 游戏内一天 = 86400 帧
+            int debuffDuration = 86400;
+
+            for (int i = 0; i < Main.maxPlayers; i++)
+            {
+                Player target = Main.player[i];
+
+                // 判定目标：活跃 + 没死 + 不是自己
+                if (target.active && !target.dead && target.whoAmI != Player.whoAmI)
+                {
+                    // 判定敌对：双方都开启了 PVP + 处于不同队伍
+                    bool isHostile = Player.hostile && target.hostile && (Player.team == 0 || Player.team != target.team);
+
+                    if (isHostile && target.Distance(Player.Center) < range)
+                    {
+                        LotMPlayer targetLotM = target.GetModPlayer<LotMPlayer>();
+
+                        // 计算目标的最高序列
+                        int targetBestSequence = 10;
+                        targetBestSequence = Math.Min(targetBestSequence, targetLotM.currentSequence);
+                        targetBestSequence = Math.Min(targetBestSequence, targetLotM.currentHunterSequence);
+                        targetBestSequence = Math.Min(targetBestSequence, targetLotM.currentMoonSequence);
+                        targetBestSequence = Math.Min(targetBestSequence, targetLotM.currentFoolSequence);
+                        targetBestSequence = Math.Min(targetBestSequence, targetLotM.currentMarauderSequence);
+                        targetBestSequence = Math.Min(targetBestSequence, targetLotM.currentSunSequence);
+
+                        // 判定位格：如果对方序列不高于自己 (数值 >= 自己的数值)
+                        if (targetBestSequence >= currentSunSequence)
+                        {
+                            // 施加压制
+                            target.AddBuff(ModContent.BuffType<Buffs.SunSuppressionDebuff>(), debuffDuration);
+
+                            // 视觉反馈
+                            CombatText.NewText(target.getRect(), Color.Gold, "序列压制!", true);
+                            for (int k = 0; k < 30; k++)
+                                Dust.NewDust(target.position, target.width, target.height, DustID.GoldFlame, 0, 0, 0, default, 2f);
+                        }
+                    }
+                }
+            }
+        }
         private void CastNotarize()
         {
             int cost = currentSunSequence <= 4 ? 300 : 150;
@@ -4471,14 +4691,16 @@ namespace zhashi.Content
 
                 float range = currentSunSequence <= 4 ? 2000f : 1000f; // 范围翻倍
 
-                // 1. 净化 (对自己和队友)
+                if (currentSunSequence <= 4)
+                {
+                    RunSunSuppression(range);
+                }
+
                 for (int i = 0; i < Main.maxPlayers; i++)
                 {
                     Player p = Main.player[i];
                     if (p.active && !p.dead && p.Distance(Player.Center) < range)
                     {
-                        // 序列4：强制清除所有 Debuff (包括不可清除的)
-                        // 简单粗暴遍历所有Buff，只要是Debuff就删
                         for (int k = 0; k < p.buffType.Length; k++)
                         {
                             if (p.buffType[k] > 0 && Main.debuff[p.buffType[k]])
@@ -4496,8 +4718,6 @@ namespace zhashi.Content
                         CombatText.NewText(p.getRect(), Color.Gold, "净化完毕!", true);
                     }
                 }
-
-                // 2. 净化 (对敌人)
                 foreach (NPC npc in Main.ActiveNPCs)
                 {
                     if (!npc.friendly && npc.Distance(Player.Center) < range)
@@ -4505,16 +4725,13 @@ namespace zhashi.Content
                         int damage = (int)(200 * GetSequenceMultiplier(currentSunSequence));
                         bool isUnholy = NPCID.Sets.Zombies[npc.type] || NPCID.Sets.Skeletons[npc.type];
 
-                        // 序列4：对污秽生物造成毁灭性打击
                         if (currentSunSequence <= 4 && isUnholy) damage *= 5;
                         else if (isUnholy) damage *= 2;
 
                         Player.ApplyDamageToNPC(npc, damage, 0f, 0, false);
 
-                        // 削弱
                         npc.AddBuff(BuffID.Ichor, 600);
                         npc.AddBuff(BuffID.Confused, 180);
-                        // 序列4特有：阳炎点燃
                         if (currentSunSequence <= 4) npc.AddBuff(BuffID.Daybreak, 600);
                     }
                 }

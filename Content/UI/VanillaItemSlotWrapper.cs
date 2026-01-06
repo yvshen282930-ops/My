@@ -2,20 +2,19 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
-using Terraria.GameContent;
+using Terraria.GameContent; // 【关键引用】
 using Terraria.GameInput;
 using Terraria.UI;
 
 namespace zhashi.Content.UI
 {
-    // 这是一个封装了泰拉瑞亚原生 ItemSlot 的 UI 元素
-    // 修复了可能导致空指针崩溃的 Bug
+    // 这是一个封装了原版物品槽的 UI 控件
     public class VanillaItemSlotWrapper : UIElement
     {
-        internal Item Item;
-        private readonly int _context;
-        private readonly float _scale;
-        public Func<Item, bool> ValidItemFunc;
+        internal Item Item; // 当前槽位内的物品
+        private readonly int _context; // 物品槽上下文 (例如 BankItem, InventoryItem 等)
+        private readonly float _scale; // 缩放比例
+        internal Func<Item, bool> ValidItemFunc; // 可选：限制能放入的物品规则
 
         public VanillaItemSlotWrapper(int context = ItemSlot.Context.BankItem, float scale = 1f)
         {
@@ -24,50 +23,43 @@ namespace zhashi.Content.UI
             Item = new Item();
             Item.SetDefaults(0);
 
-            // 设置 UI 元素的宽高，防止点击判定偏移
-            Width.Set(TextureAssets.InventoryBack9.Value.Width * scale, 0f);
-            Height.Set(TextureAssets.InventoryBack9.Value.Height * scale, 0f);
+            // 【核心修复】Main.inventoryBackTexture 已废弃，改为 TextureAssets.InventoryBack.Value
+            Width.Set(TextureAssets.InventoryBack.Value.Width * scale, 0f);
+            Height.Set(TextureAssets.InventoryBack.Value.Height * scale, 0f);
         }
 
         protected override void DrawSelf(SpriteBatch spriteBatch)
         {
-            // 1. 确保 Item 绝对不为空，防止崩溃
-            if (Item == null)
-            {
-                Item = new Item();
-                Item.SetDefaults(0);
-            }
-
+            // 1. 【核心修复】备份原版缩放 (防止污染全局 UI)
             float oldScale = Main.inventoryScale;
             Main.inventoryScale = _scale;
 
-            // 2. 获取位置
+            // 2. 计算绘制位置
             Rectangle rectangle = GetDimensions().ToRectangle();
 
-            // 3. 处理鼠标交互 (放入/取出物品)
+            // 3. 处理交互 (点击/放入/取出)
             if (ContainsPoint(Main.MouseScreen) && !PlayerInput.IgnoreMouseInterface)
             {
-                Main.LocalPlayer.mouseInterface = true;
+                Main.LocalPlayer.mouseInterface = true; // 告诉游戏鼠标在 UI 上
 
-                // 处理点击交互
                 if (ValidItemFunc == null || ValidItemFunc(Main.mouseItem))
                 {
-                    // 使用原生方法处理交互，自带音效和逻辑
+                    // ItemSlot.Handle 会处理所有的交换、放入逻辑
                     ItemSlot.Handle(ref Item, _context);
                 }
             }
 
-            // 4. 绘制背景和物品
-            // 使用 try-catch 包裹绘制过程，防止因为贴图缺失导致的闪屏
-            try
+            // 4. 绘制槽位
+            ItemSlot.Draw(spriteBatch, ref Item, _context, rectangle.TopLeft());
+
+            // 5. 绘制悬停提示
+            if (ContainsPoint(Main.MouseScreen))
             {
-                ItemSlot.Draw(spriteBatch, ref Item, _context, rectangle.TopLeft());
-            }
-            catch
-            {
-                // 如果绘制失败，画一个红叉或者直接跳过，不要崩游戏
+                Main.HoverItem = Item.Clone();
+                Main.hoverItemName = Item.Name;
             }
 
+            // 6. 【核心修复】还原缩放！
             Main.inventoryScale = oldScale;
         }
     }

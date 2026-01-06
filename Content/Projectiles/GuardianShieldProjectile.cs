@@ -50,7 +50,7 @@ namespace zhashi.Content.Projectiles
             // 3. 位置锁定：始终粘在玩家身前
             // player.direction: 1是向右，-1是向左
             Projectile.spriteDirection = player.direction;
-            Vector2 offset = new Vector2(player.direction * 20, -10); // 向前20，稍微向上提一点
+            Vector2 offset = new Vector2(player.direction * 0, -10); // 向前20，稍微向上提一点
             Projectile.Center = player.Center + offset;
 
             // 4. 动画播放逻辑

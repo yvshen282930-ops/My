@@ -6,6 +6,7 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using Terraria.Localization;
 using zhashi.Content.NPCs;
+using Terraria.Audio; // 引用音效
 
 namespace zhashi.Content.Items
 {
@@ -42,26 +43,37 @@ namespace zhashi.Content.Items
                 .Register();
         }
 
+        // ========================================================
+        // 核心修复部分
+        // ========================================================
         public override bool? UseItem(Player player)
         {
-            if (player.whoAmI != Main.myPlayer) return true;
-
-            // 检查狗是否活着
+            // 1. 检查狗是否活着 (本地检查)
             NPC existingDog = GetActiveDog(player);
 
             // ------------------------------------------------
-            // 情况 A：狗还活着 -> 传送
+            // 情况 A：狗还活着 -> 传送 (无需复活)
             // ------------------------------------------------
             if (existingDog != null)
             {
+                // 传送逻辑建议只在本地或服务端执行一次同步，通常直接修改位置即可
                 existingDog.Center = player.Center;
                 existingDog.velocity = Vector2.Zero;
                 if (existingDog.ModNPC is DogNPC dogScript)
                 {
                     dogScript.attackState = 0;
                     dogScript.isStaying = false;
+                    // 同步状态变化
+                    if (Main.netMode != NetmodeID.SinglePlayer)
+                        existingDog.netUpdate = true;
                 }
-                Main.NewText($"{GetDogNameDisplay()} 回到了你身边！", 100, 255, 100);
+
+                // 仅本地玩家显示提示
+                if (player.whoAmI == Main.myPlayer)
+                {
+                    Main.NewText($"{GetDogNameDisplay()} 回到了你身边！", 100, 255, 100);
+                    SoundEngine.PlaySound(SoundID.Item6, player.position); // 传送音效
+                }
                 return true;
             }
 
@@ -69,56 +81,76 @@ namespace zhashi.Content.Items
             // 情况 B：狗死了 -> 消耗材料复活
             // ------------------------------------------------
 
-            // 检查材料
+            // 检查材料 (仅客户端检查提示，服务端也需要检查防止作弊，这里简化为通用逻辑)
             int boneCount = player.CountItem(ItemID.Bone);
             int fleshCount = player.CountItem(ItemID.RottenChunk);
 
+            // 如果材料不足
             if (boneCount < 100 || fleshCount < 100)
             {
-                Main.NewText($"无法复活！缺少复活材料：", Color.Red);
-                if (boneCount < 100) Main.NewText($"- 骨头: {boneCount}/100", Color.Red);
-                if (fleshCount < 100) Main.NewText($"- 腐肉: {fleshCount}/100", Color.Red);
+                if (player.whoAmI == Main.myPlayer)
+                {
+                    Main.NewText($"无法复活！缺少复活材料：", Color.Red);
+                    if (boneCount < 100) Main.NewText($"- 骨头: {boneCount}/100", Color.Red);
+                    if (fleshCount < 100) Main.NewText($"- 腐肉: {fleshCount}/100", Color.Red);
+                }
                 return true;
             }
 
-            // 消耗材料
+            // 消耗材料 (全端执行，保证库存同步)
+            // 注意：ConsumeItem 在联机客户端调用会自动同步消耗
             for (int i = 0; i < 100; i++) player.ConsumeItem(ItemID.Bone);
             for (int i = 0; i < 100; i++) player.ConsumeItem(ItemID.RottenChunk);
 
-            // 召唤新狗
-            int index = NPC.NewNPC(player.GetSource_ItemUse(Item), (int)player.Center.X, (int)player.Center.Y, ModContent.NPCType<DogNPC>());
-
-            if (Main.npc[index].ModNPC is DogNPC newDog)
+            // --- 召唤新狗 (仅限 服务端 或 单人模式) ---
+            // 客户端绝对不能调用 NewNPC，否则会生成一个只有自己能看见且马上消失的假NPC
+            if (Main.netMode != NetmodeID.MultiplayerClient)
             {
-                // 【核心修复】读取物品自身 (this) 的数据注入给新狗
-                // 之前如果这里读取的是 player.GetModPlayer<LotMPlayer>()，名字可能没更新
+                int spawnX = (int)player.Center.X;
+                int spawnY = (int)player.Bottom.Y - 40;
 
-                newDog.MyName = this.DogName; // 确保名字传递过去！
-                newDog.currentPathway = this.DogPathway;
-                newDog.currentSequence = this.DogSequence;
-                newDog.BonusMaxHP = this.BonusMaxLife;
-                newDog.OwnerName = player.name;
+                int index = NPC.NewNPC(player.GetSource_ItemUse(Item), spawnX, spawnY, ModContent.NPCType<DogNPC>());
 
-                // 恢复装备
-                if (this.Equipment != null)
+                if (index >= 0 && index < Main.maxNPCs && Main.npc[index].ModNPC is DogNPC newDog)
                 {
-                    for (int i = 0; i < 3; i++)
+                    // 注入数据
+                    newDog.MyName = this.DogName;
+                    newDog.currentPathway = this.DogPathway;
+                    newDog.currentSequence = this.DogSequence;
+                    newDog.BonusMaxHP = this.BonusMaxLife;
+                    newDog.OwnerName = player.name;
+
+                    // 恢复装备
+                    if (this.Equipment != null)
                     {
-                        if (this.Equipment[i] != null) newDog.DogInventory[i] = this.Equipment[i].Clone();
+                        newDog.DogInventory = new Item[3];
+                        for (int i = 0; i < 3; i++)
+                        {
+                            if (this.Equipment[i] != null) newDog.DogInventory[i] = this.Equipment[i].Clone();
+                            else newDog.DogInventory[i] = new Item();
+                        }
+                    }
+
+                    // 初始化血量
+                    newDog.NPC.lifeMax = 300 + newDog.BonusMaxHP + (newDog.currentSequence < 10 ? (10 - newDog.currentSequence) * 30 : 0);
+                    newDog.NPC.life = newDog.NPC.lifeMax;
+                    newDog.isInitialized = true;
+
+                    // 【关键】强制网络同步
+                    // 告诉所有客户端：这里有个NPC，并且它的自定义数据（ModNPC数据）变了
+                    if (Main.netMode == NetmodeID.Server)
+                    {
+                        NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, index); // 同步基础NPC
+                        newDog.NPC.netUpdate = true; // 触发 ModNPC.SendExtraAI 同步自定义数据
                     }
                 }
+            }
 
-                // 初始化血量
-                newDog.NPC.lifeMax = 300 + newDog.BonusMaxHP + (newDog.currentSequence < 10 ? (10 - newDog.currentSequence) * 30 : 0);
-                newDog.NPC.life = newDog.NPC.lifeMax;
-
-                // 标记为已初始化
-                newDog.isInitialized = true;
-
-                if (Main.netMode == NetmodeID.Server)
-                    NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, index);
-
-                Main.NewText($"{newDog.MyName} 在血肉与白骨的献祭中重生了！", 200, 50, 255);
+            // --- 客户端视觉反馈 ---
+            if (player.whoAmI == Main.myPlayer)
+            {
+                Main.NewText($"{this.DogName} 在血肉与白骨的献祭中重生了！", 200, 50, 255);
+                SoundEngine.PlaySound(SoundID.Item29, player.position); // 复活音效
             }
 
             return true;
@@ -140,7 +172,7 @@ namespace zhashi.Content.Items
                 : "[c/FF0000:死亡 (需100骨头+100腐肉复活)]";
 
             string pathwayName = "凡狗";
-            switch (pathway) { case 1: pathwayName = "巨人"; break; case 2: pathwayName = "猎人"; break; case 3: pathwayName = "月亮"; break; case 4: pathwayName = "愚者"; break; case 5: pathwayName = "错误"; break; }
+            switch (pathway) { case 1: pathwayName = "巨人"; break; case 2: pathwayName = "猎人"; break; case 3: pathwayName = "月亮"; break; case 4: pathwayName = "愚者"; break; case 5: pathwayName = "错误"; break; case 6: pathwayName = "太阳"; break; }
             string seqText = sequence < 10 ? $"[{pathwayName} 序列{sequence}]" : "(未开启途径)";
 
             tooltips.Add(new TooltipLine(Mod, "DogStatus", $"状态: {status}"));

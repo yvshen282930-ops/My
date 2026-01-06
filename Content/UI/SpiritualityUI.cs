@@ -53,64 +53,85 @@ namespace zhashi.Content.UI
                 initialized = true;
             }
 
-            if (textureWidth == 0) return;
+            // 如果还没加载出贴图，先用默认尺寸算，或者跳过
+            // 这里我们用你提供的 321x100 作为兜底，防止第一帧跳过导致逻辑断层
+            float baseW = textureWidth > 0 ? textureWidth : 321f;
+            float baseH = textureHeight > 0 ? textureHeight : 100f;
 
             // === 3. 【核心】坐标系统一 ===
-            // 泰拉瑞亚的 UI 坐标 = 屏幕像素 / UIScale
-            // 我们统一把鼠标转换到 UI 坐标系下，这样就没有缩放误差了
             Vector2 mouseUISpace = Main.MouseScreen / Main.UIScale;
 
-            // === 4. 判定区域计算 ===
-            // 在 UI 坐标系下，HitBox 就是简单的矩形
+            // === 4. 【修复】精细化判定区域 ===
+            // 既然贴图是 321x100，我们定义一个缩减量（Padding）
+            // 假设上下左右各缩进 10-20 像素，只保留中间核心区域
+            // 你可以根据实际手感调整这两个数字
+            float shrinkX = 40f; // 左右总共缩减 40 像素 (左20 右20)
+            float shrinkY = 30f; // 上下总共缩减 30 像素 (上15 下15)
+
+            // 计算实际绘制尺寸
+            float drawW = baseW * currentScale;
+            float drawH = baseH * currentScale;
+
+            // 计算缩减后的判定尺寸 (不能小于 10x10)
+            float hitW = drawW - (shrinkX * currentScale);
+            float hitH = drawH - (shrinkY * currentScale);
+            if (hitW < 10) hitW = 10;
+            if (hitH < 10) hitH = 10;
+
+            // 计算判定框的偏移 (让它居中)
+            float offsetX = (drawW - hitW) / 2f;
+            float offsetY = (drawH - hitH) / 2f;
+
+            // 生成最终的判定矩形 (HitBox)
             Rectangle hitBox = new Rectangle(
-                (int)currentPos.X,
-                (int)currentPos.Y,
-                (int)(textureWidth * currentScale),
-                (int)(textureHeight * currentScale)
+                (int)(currentPos.X + offsetX),
+                (int)(currentPos.Y + offsetY),
+                (int)hitW,
+                (int)hitH
             );
 
-            // 检查鼠标是否在矩形内
+            // 检查鼠标是否在缩小后的矩形内
             isHovering = hitBox.Contains(mouseUISpace.ToPoint());
 
             // 交互锁定：防止拖拽时挥剑
+            // 只有当真正悬停在“核心区域”时才阻断操作
             if (isHovering || dragging)
             {
                 Main.LocalPlayer.mouseInterface = true;
                 if (!dragging) Main.instance.MouseText("");
             }
 
-            // === 5. 【修复】拖拽逻辑 (偏移锁定法) ===
+            // === 5. 拖拽逻辑 (保持不变) ===
             bool currentMouseLeft = Main.mouseLeft;
-            bool justPressed = currentMouseLeft && !oldMouseLeft; // 这一帧按了 + 上一帧没按 = 刚按下
+            bool justPressed = currentMouseLeft && !oldMouseLeft;
 
             if (dragging)
             {
-                // A. 正在拖拽
                 if (currentMouseLeft)
                 {
-                    // 新位置 = 当前鼠标UI坐标 - 刚开始抓的偏移量
+                    // 核心修正：currentPos 是绘制的左上角，不是 HitBox 的左上角
+                    // 拖拽逻辑需要保持 currentPos 的相对位置不变
+                    // 这里的 dragOffset 是基于 (鼠标 - 绘制左上角) 计算的，所以逻辑不用变
                     currentPos = mouseUISpace - dragOffset;
 
-                    // 简单的边界限制 (防止拖出屏幕)
                     float maxW = Main.screenWidth / Main.UIScale;
                     float maxH = Main.screenHeight / Main.UIScale;
-                    currentPos.X = MathHelper.Clamp(currentPos.X, 0, maxW - hitBox.Width);
-                    currentPos.Y = MathHelper.Clamp(currentPos.Y, 0, maxH - hitBox.Height);
+                    // 限制范围时，还是用绘制尺寸来限制比较自然
+                    currentPos.X = MathHelper.Clamp(currentPos.X, 0, maxW - drawW);
+                    currentPos.Y = MathHelper.Clamp(currentPos.Y, 0, maxH - drawH);
                 }
                 else
                 {
-                    // B. 松开鼠标
                     dragging = false;
                     SaveConfig();
                 }
             }
             else
             {
-                // C. 开始拖拽检测
                 if (isHovering && justPressed)
                 {
                     dragging = true;
-                    // 记录“抓哪里了”：偏移量 = 鼠标位置 - UI左上角
+                    // 记录偏移量：鼠标相对于“绘制左上角”的位置
                     dragOffset = mouseUISpace - currentPos;
                 }
             }
@@ -131,7 +152,6 @@ namespace zhashi.Content.UI
                 }
             }
 
-            // 更新鼠标状态缓存
             oldMouseLeft = currentMouseLeft;
         }
 
