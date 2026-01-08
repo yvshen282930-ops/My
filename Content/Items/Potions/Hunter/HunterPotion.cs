@@ -49,7 +49,7 @@ namespace zhashi.Content.Items.Potions.Hunter // 建议加上 .Hunter 区分命�
                 }
 
                 // 晋升逻辑：猎人途径
-                modPlayer.currentHunterSequence = 9;
+                modPlayer.baseHunterSequence = 9;
 
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
                 Main.NewText("你的感官瞬间变得敏锐，仿佛能嗅到空气中猎物的气息...", 200, 100, 50);

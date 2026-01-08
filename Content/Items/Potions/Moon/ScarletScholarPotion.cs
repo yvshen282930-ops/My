@@ -26,7 +26,7 @@ namespace zhashi.Content.Items.Potions.Moon
         public override bool CanUseItem(Player player)
         {
             // 必须是 序列6：魔药教授
-            return player.GetModPlayer<LotMPlayer>().currentMoonSequence == 6;
+            return player.GetModPlayer<LotMPlayer>().baseMoonSequence == 6;
         }
 
         public override bool? UseItem(Player player)
@@ -34,7 +34,7 @@ namespace zhashi.Content.Items.Potions.Moon
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentMoonSequence = 5; // 晋升
+                modPlayer.baseMoonSequence = 5; // 晋升
 
                 CombatText.NewText(player.getRect(), Color.Crimson, "晋升：深红学者", true);
                 Main.NewText("你的眼中映照出一轮猩红的圆月...", 220, 20, 60);

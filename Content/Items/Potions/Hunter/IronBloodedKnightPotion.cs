@@ -30,7 +30,7 @@ namespace zhashi.Content.Items.Potions.Hunter
             var modPlayer = Main.LocalPlayer.GetModPlayer<LotMPlayer>();
 
             // 只有当玩家是序列5（收割者）时才显示进度
-            if (modPlayer.currentHunterSequence == 5)
+            if (modPlayer.baseHunterSequence == 5)
             {
                 // 根据进度变色 (红色未完成，绿色已完成)
                 string statusColor = (modPlayer.ironBloodRitualProgress >= LotMPlayer.IRON_BLOOD_RITUAL_TARGET) ? "00FF00" : "FF0000";
@@ -39,7 +39,7 @@ namespace zhashi.Content.Items.Potions.Hunter
                 tooltips.Add(new TooltipLine(Mod, "RitualDesc", "晋升仪式: 在至少有5名随从(召唤物)的情况下，无死亡累计击杀100个敌人。"));
                 tooltips.Add(new TooltipLine(Mod, "RitualProgress", progressText));
             }
-            else if (modPlayer.currentHunterSequence > 5)
+            else if (modPlayer.baseHunterSequence > 5)
             {
                 tooltips.Add(new TooltipLine(Mod, "RitualHint", "[c/808080:需要序列5才能查看仪式进度]"));
             }
@@ -60,21 +60,21 @@ namespace zhashi.Content.Items.Potions.Hunter
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
             // --- 情况 A: 已经是高序列 (序列4及以上) ---
-            if (modPlayer.currentHunterSequence <= 4)
+            if (modPlayer.baseHunterSequence <= 4)
             {
                 Main.NewText("你已是铁血骑士或更高序列，无需再次服用。", 200, 200, 200);
                 return false; // 【不消耗】
             }
 
             // --- 情况 B: 序列过低 (序列6及以下) ---
-            if (modPlayer.currentHunterSequence > 5)
+            if (modPlayer.baseHunterSequence > 5)
             {
                 Main.NewText("你的灵性还不足以容纳这份魔药，请先成为【收割者】。", 200, 50, 50);
                 return false; // 【不消耗】
             }
 
             // --- 情况 C: 正确序列 (序列5)，检查仪式 ---
-            if (modPlayer.currentHunterSequence == 5)
+            if (modPlayer.baseHunterSequence == 5)
             {
                 // 检查进度是否达标
                 // 注意：这里只检查了进度变量。
@@ -87,7 +87,7 @@ namespace zhashi.Content.Items.Potions.Hunter
                 }
 
                 // --- 晋升成功 ---
-                modPlayer.currentHunterSequence = 4;
+                modPlayer.baseHunterSequence = 4;
 
                 // 播放音效和特效
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);

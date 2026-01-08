@@ -38,13 +38,13 @@ namespace zhashi.Content.Items.Potions.Marauder
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            if (modPlayer.currentMarauderSequence == 7)
+            if (modPlayer.baseMarauderSequence == 7)
             {
-                modPlayer.currentMarauderSequence = 6;
+                modPlayer.baseMarauderSequence = 6;
                 Main.NewText("你感觉到体内的灵性燃烧起来，双手仿佛能探入虚空窃取万物...", 255, 100, 0);
                 return true;
             }
-            else if (modPlayer.currentMarauderSequence < 6)
+            else if (modPlayer.baseMarauderSequence < 6)
             {
                 Main.NewText("你已经掌握了盗火的奥秘，无需再次服用。", 150, 150, 150);
                 return false;

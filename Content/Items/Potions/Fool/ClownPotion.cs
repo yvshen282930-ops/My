@@ -36,7 +36,7 @@ namespace zhashi.Content.Items.Potions.Fool
         {
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
             // 只有当前是序列9（占卜家）才能晋升
-            return modPlayer.currentFoolSequence == 9;
+            return modPlayer.baseFoolSequence == 9;
         }
 
         public override bool? UseItem(Player player)
@@ -44,7 +44,7 @@ namespace zhashi.Content.Items.Potions.Fool
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentFoolSequence = 8; // 晋升为序列8
+                modPlayer.baseFoolSequence = 8; // 晋升为序列8
 
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
                 Main.NewText("你的嘴角不自觉地上扬，世界在你眼中变得滑稽而清晰...", 255, 165, 0);

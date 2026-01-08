@@ -20,7 +20,7 @@ namespace zhashi.Content.Items.Potions.Hunter
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             var modPlayer = Main.LocalPlayer.GetModPlayer<LotMPlayer>();
-            if (modPlayer.currentHunterSequence == 3)
+            if (modPlayer.baseHunterSequence == 3)
             {
                 // 【修改1】判定标准改为 10次 (与符文一致)
                 // 【修改2】直接读取 weatherRitualComplete 标记，而不是不稳定的 count
@@ -43,7 +43,7 @@ namespace zhashi.Content.Items.Potions.Hunter
 
             // 【修改3】核心修复：检测永久标记 weatherRitualComplete
             // 只要符文触发过一次成功（达到10次），这个标记就为 true，永远不会被清零
-            if (modPlayer.currentHunterSequence == 3 && !modPlayer.weatherRitualComplete)
+            if (modPlayer.baseHunterSequence == 3 && !modPlayer.weatherRitualComplete)
             {
                 if (player.whoAmI == Main.myPlayer) Main.NewText("你还未展现出对天气的绝对掌控... (需连续使用符文10次)", 255, 50, 50);
                 return false;
@@ -54,9 +54,9 @@ namespace zhashi.Content.Items.Potions.Hunter
         public override bool? UseItem(Player player)
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
-            if (modPlayer.currentHunterSequence == 3)
+            if (modPlayer.baseHunterSequence == 3)
             {
-                modPlayer.currentHunterSequence = 2;
+                modPlayer.baseHunterSequence = 2;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
                 Main.NewText("风暴、雷电、迷雾听从你的号令！", 0, 255, 255);
                 Main.NewText("晋升成功：序列2 天气术士 (天使)！", 0, 255, 255);

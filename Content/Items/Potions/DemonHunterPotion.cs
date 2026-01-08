@@ -27,7 +27,7 @@ namespace zhashi.Content.Items.Potions
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             var modPlayer = Main.LocalPlayer.GetModPlayer<LotMPlayer>();
-            if (modPlayer.currentSequence == 5)
+            if (modPlayer.baseSequence == 5)
             {
                 string statusColor = (modPlayer.demonHunterRitualProgress >= LotMPlayer.DEMON_HUNTER_RITUAL_TARGET) ? "00FF00" : "FF0000";
                 string progressText = $"[c/{statusColor}:仪式进度: {modPlayer.demonHunterRitualProgress} / {LotMPlayer.DEMON_HUNTER_RITUAL_TARGET}]";
@@ -40,7 +40,7 @@ namespace zhashi.Content.Items.Potions
         public override bool CanUseItem(Player player)
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
-            if (modPlayer.currentSequence == 5)
+            if (modPlayer.baseSequence == 5)
             {
                 if (modPlayer.demonHunterRitualProgress < LotMPlayer.DEMON_HUNTER_RITUAL_TARGET)
                 {
@@ -58,9 +58,9 @@ namespace zhashi.Content.Items.Potions
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            if (modPlayer.currentSequence == 5)
+            if (modPlayer.baseSequence == 5)
             {
-                modPlayer.currentSequence = 4;
+                modPlayer.baseSequence = 4;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
                 Main.NewText("你的双眼看穿了万物的弱点，你已不再是凡人...", 255, 0, 255); // 紫色文字
@@ -69,7 +69,7 @@ namespace zhashi.Content.Items.Potions
                 Main.NewText("获得能力：【弱点看破】(攻击削弱敌人防御)", 255, 255, 255);
                 return true;
             }
-            else if (modPlayer.currentSequence > 5)
+            else if (modPlayer.baseSequence > 5)
             {
                 Main.NewText("你还未成为守护者，无法承受半神之力。", 200, 50, 50);
                 return true;

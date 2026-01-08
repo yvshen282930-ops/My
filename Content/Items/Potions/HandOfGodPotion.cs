@@ -11,7 +11,7 @@ namespace zhashi.Content.Items.Potions
         {
             Item.width = 32;
             Item.height = 32;
-            Item.maxStack = 1;
+            Item.maxStack = 9999;
             Item.useTime = 45;
             Item.useAnimation = 45;
             Item.useStyle = ItemUseStyleID.DrinkLiquid;
@@ -24,7 +24,7 @@ namespace zhashi.Content.Items.Potions
         public override bool CanUseItem(Player player)
         {
             // 必须是序列2 荣耀战神 才能服用
-            return player.GetModPlayer<LotMPlayer>().currentSequence == 2;
+            return player.GetModPlayer<LotMPlayer>().baseSequence == 2;
         }
 
         public override bool? UseItem(Player player)
@@ -33,10 +33,8 @@ namespace zhashi.Content.Items.Potions
             if (player.itemAnimation > 0 && player.itemTime == 0)
             {
                 // 1. 晋升逻辑
-                modPlayer.currentSequence = 1;
+                modPlayer.baseSequence = 1;
 
-                // 2. 给予武器 (核心需求：自动塞入背包)
-                // 【关键修复】这里的方法名从 GetSource_UseItem 改为 GetSource_ItemUse
                 player.QuickSpawnItem(player.GetSource_ItemUse(Item), ModContent.ItemType<Weapons.HandOfGod>());
 
                 // 3. 文本与特效
@@ -56,6 +54,7 @@ namespace zhashi.Content.Items.Potions
                 .AddIngredient(ItemID.BottledWater, 9)
                 .AddIngredient(ItemID.LifeFruit, 5)
                 .AddIngredient(ItemID.Ectoplasm, 20)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .AddTile(TileID.DemonAltar)
                 .AddCondition(Condition.InGraveyard)
                 .Register();

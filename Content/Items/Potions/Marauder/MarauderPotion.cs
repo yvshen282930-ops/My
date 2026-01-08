@@ -47,7 +47,7 @@ namespace zhashi.Content.Items.Potions.Marauder
             }
 
             // 只有当玩家完全是凡人时，才允许晋升
-            modPlayer.currentMarauderSequence = 9;
+            modPlayer.baseMarauderSequence = 9;
             Main.NewText("你的手指变得灵活，眼中闪烁着奇异的光芒... 你成为了[偷盗者]！", 50, 50, 200);
             return true;
         }

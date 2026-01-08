@@ -56,7 +56,7 @@ namespace zhashi.Content.Items.Potions.Fool
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentFoolSequence = 4; // 晋升序列4
+                modPlayer.baseFoolSequence = 4; // 晋升序列4
 
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
                 Main.NewText("你分裂了，你重组了，你成为了诡异的主宰...", 128, 0, 128);

@@ -35,7 +35,7 @@ namespace zhashi.Content.Items.Potions.Marauder
         {
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
             // 1. 检查序列是否为 5
-            if (modPlayer.currentMarauderSequence != 5) return false;
+            if (modPlayer.baseMarauderSequence != 5) return false;
 
             // 2. 检查仪式是否完成
             if (modPlayer.parasiteRitualProgress < LotMPlayer.PARASITE_RITUAL_TARGET)
@@ -55,7 +55,7 @@ namespace zhashi.Content.Items.Potions.Marauder
             if (player.itemAnimation > 0 && player.itemTime == 0)
             {
                 // 晋升逻辑
-                modPlayer.currentMarauderSequence = 4;
+                modPlayer.baseMarauderSequence = 4;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position); // 晋升时的咆哮
                 Main.NewText("你感到身体在分解，无数微小的虫豸重组了你的血肉...", 175, 238, 238);
                 Main.NewText("你晋升为 序列4：寄生者！", 255, 215, 0);

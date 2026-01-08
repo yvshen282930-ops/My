@@ -30,7 +30,7 @@ namespace zhashi.Content.Items.Potions
             var modPlayer = Main.LocalPlayer.GetModPlayer<LotMPlayer>();
 
             // 只有当玩家是序列6时，才显示仪式进度
-            if (modPlayer.currentSequence == 6)
+            if (modPlayer.baseSequence == 6)
             {
                 // 计算颜色：完成显示绿色，未完成显示红色
                 string statusColor = (modPlayer.guardianRitualProgress >= LotMPlayer.GUARDIAN_RITUAL_TARGET) ? "00FF00" : "FF0000";
@@ -48,7 +48,7 @@ namespace zhashi.Content.Items.Potions
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
             // 如果是序列6，必须检查仪式进度
-            if (modPlayer.currentSequence == 6)
+            if (modPlayer.baseSequence == 6)
             {
                 if (modPlayer.guardianRitualProgress < LotMPlayer.GUARDIAN_RITUAL_TARGET)
                 {
@@ -72,10 +72,10 @@ namespace zhashi.Content.Items.Potions
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            if (modPlayer.currentSequence == 6)
+            if (modPlayer.baseSequence == 6)
             {
                 // 因为 CanUseItem 已经检查过进度了，能进到这里说明进度一定达标了
-                modPlayer.currentSequence = 5;
+                modPlayer.baseSequence = 5;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
                 Main.NewText("你的皮肤泛起金属的光泽，你发誓守护这一切...", 255, 215, 0);
@@ -84,7 +84,7 @@ namespace zhashi.Content.Items.Potions
                 Main.NewText("被动能力：免疫幻觉，攻击无视大量防御，并在受到攻击时保护队友。", 200, 200, 200);
                 return true;
             }
-            else if (modPlayer.currentSequence > 6)
+            else if (modPlayer.baseSequence > 6)
             {
                 Main.NewText("你的晨曦之力还不够纯粹，无法承担守护的重任。", 200, 50, 50);
                 return true; // 消耗掉药水作为惩罚

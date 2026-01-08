@@ -1,6 +1,9 @@
-﻿using Terraria;
+﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using zhashi.Content;
 
 namespace zhashi.Content.Items.Potions.Sun
 {
@@ -22,10 +25,24 @@ namespace zhashi.Content.Items.Potions.Sun
             Item.buffTime = 3600;
         }
 
+        // 【新增】动态提示：直观显示条件满足情况
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            Player player = Main.LocalPlayer;
+            LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
+
+            // 检查是否满足前置序列 (序列9 歌颂者)
+            bool seqReady = modPlayer.baseSunSequence == 9;
+            string seqColor = seqReady ? "00FF00" : "FF0000"; // 绿/红
+            string statusText = seqReady ? "已满足" : "未满足";
+
+            tooltips.Add(new TooltipLine(Mod, "SeqReq", $"[c/{seqColor}:条件: 需序列9 歌颂者 ({statusText})]"));
+        }
+
+        // 【核心拦截】只有序列9才能用，防止误用
         public override bool CanUseItem(Player player)
         {
-            // 必须是序列9 歌颂者 才能服用
-            return player.GetModPlayer<LotMPlayer>().currentSunSequence == 9;
+            return player.GetModPlayer<LotMPlayer>().baseSunSequence == 9;
         }
 
         public override bool? UseItem(Player player)
@@ -33,8 +50,26 @@ namespace zhashi.Content.Items.Potions.Sun
             if (player.whoAmI == Main.myPlayer)
             {
                 var p = player.GetModPlayer<LotMPlayer>();
-                p.currentSunSequence = 8; // 晋升为祈光人
-                Main.NewText("你感觉到炽热的光辉在体内流淌，你成为了祈光人！", 255, 215, 0);
+
+                // 双重保险检查
+                if (p.baseSunSequence == 9)
+                {
+                    // 1. 修改 Base (存档用)
+                    p.baseSunSequence = 8;
+                    // 2. 同步 Current (立刻生效用)
+                    p.currentSunSequence = 8;
+
+                    Main.NewText("你感觉到炽热的光辉在体内流淌，你成为了祈光人！", 255, 215, 0);
+
+                    // 3. 播放音效
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item3, player.position);
+
+                    // (可选) 播放一点简单的晋升粒子特效
+                    for (int i = 0; i < 20; i++)
+                    {
+                        Dust.NewDust(player.position, player.width, player.height, DustID.GoldFlame, 0, 0, 100, default, 1.5f);
+                    }
+                }
             }
             return true;
         }
@@ -44,18 +79,12 @@ namespace zhashi.Content.Items.Potions.Sun
             CreateRecipe()
                 .AddIngredient(ItemID.FallenStar, 3)
                 .AddIngredient(ItemID.Fireblossom, 1)
-
-                // 主材料：岩浆石 (熔浆巨怪之心) - 保持不变
                 .AddIngredient(ItemID.MagmaStone, 1)
-                // 辅材料：红葡萄酒 -> 麦芽酒 - 保持不变
                 .AddIngredient(ItemID.Ale, 1)
-                // 辅材料：金边太阳花 -> 向日葵 - 保持不变
                 .AddIngredient(ItemID.Sunflower, 1)
-                // 辅材料：附子汁液 -> 水叶草 - 保持不变
                 .AddIngredient(ItemID.Waterleaf, 1)
-                // 辅材料：太阳信仰物品 -> 金锭 - 保持不变
                 .AddIngredient(ItemID.GoldBar, 1)
-
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1) // 确保引用了亵渎石板
                 .AddTile(TileID.Bottles)
                 .Register();
         }

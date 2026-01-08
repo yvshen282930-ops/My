@@ -42,7 +42,7 @@ namespace zhashi.Content.Items.Potions.Moon
                     return true;
                 }
 
-                modPlayer.currentMoonSequence = 9; // 现在这行肯定能跑到了
+                modPlayer.baseMoonSequence = 9; // 现在这行肯定能跑到了
 
                 CombatText.NewText(player.getRect(), Color.LightGreen, "晋升：药师", true);
                 Main.NewText("你感觉自己对草药与生命有了更深的理解...", 100, 255, 100);

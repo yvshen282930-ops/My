@@ -26,7 +26,7 @@ namespace zhashi.Content.Items.Potions.Marauder
         {
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            if (modPlayer.currentMarauderSequence != 3) return false;
+            if (modPlayer.baseMarauderSequence != 3) return false;
 
             // 检查仪式：累积寄生5分钟
             if (modPlayer.trojanRitualTimer < LotMPlayer.TROJAN_RITUAL_TARGET)
@@ -43,7 +43,7 @@ namespace zhashi.Content.Items.Potions.Marauder
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
             if (player.itemAnimation > 0 && player.itemTime == 0)
             {
-                modPlayer.currentMarauderSequence = 2;
+                modPlayer.baseMarauderSequence = 2;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
                 Main.NewText("你感觉自己沉入了命运的长河，无数的可能性在眼前展开...", 175, 238, 238);

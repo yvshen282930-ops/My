@@ -26,7 +26,7 @@ namespace zhashi.Content.Items.Potions.Moon
         public override bool CanUseItem(Player player)
         {
             // 必须是 序列3：召唤大师
-            if (player.GetModPlayer<LotMPlayer>().currentMoonSequence != 3) return false;
+            if (player.GetModPlayer<LotMPlayer>().baseMoonSequence != 3) return false;
 
             // 【仪式条件】：濒死状态 (血量低于 5%)
             if (player.statLife > player.statLifeMax2 * 0.05f)
@@ -48,7 +48,7 @@ namespace zhashi.Content.Items.Potions.Moon
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentMoonSequence = 2; // 晋升：创生者
+                modPlayer.baseMoonSequence = 2; // 晋升：创生者
 
                 // 瞬间满血复活 (仪式完成)
                 player.statLife = player.statLifeMax2;

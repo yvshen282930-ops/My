@@ -26,9 +26,9 @@ namespace zhashi.Content.Items.Potions.Hunter
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            if (modPlayer.currentHunterSequence == 8)
+            if (modPlayer.baseHunterSequence == 8)
             {
-                modPlayer.currentHunterSequence = 7;
+                modPlayer.baseHunterSequence = 7;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item74, player.position); // 火焰音效
 
                 Main.NewText("你的血液仿佛沸腾了...", 255, 100, 0);
@@ -36,7 +36,7 @@ namespace zhashi.Content.Items.Potions.Hunter
                 Main.NewText("能力：【火焰亲和】(免火) | 【火球术】(按F键)", 255, 255, 255);
                 return true;
             }
-            else if (modPlayer.currentHunterSequence > 8)
+            else if (modPlayer.baseHunterSequence > 8)
             {
                 Main.NewText("你还未成为挑衅者。", 200, 50, 50);
                 return true;

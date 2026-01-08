@@ -39,14 +39,14 @@ namespace zhashi.Content.Items.Potions.Marauder
 
             // 晋升逻辑：必须是序列9偷盗者(9) 才能晋升为 诈骗师(8)
             // 如果还没写偷盗者，这里假设玩家至少开启了途径
-            if (modPlayer.currentMarauderSequence == 9)
+            if (modPlayer.baseMarauderSequence == 9)
             {
-                modPlayer.currentMarauderSequence = 8;
+                modPlayer.baseMarauderSequence = 8;
                 Main.NewText("你感到思维变得更加敏捷，言语中充满了魔力...", 200, 50, 200);
                 // 播放音效或特效
                 return true;
             }
-            else if (modPlayer.currentMarauderSequence < 8)
+            else if (modPlayer.baseMarauderSequence < 8)
             {
                 Main.NewText("你已经掌握了更高深的欺诈技巧，无需服用。", 150, 150, 150);
             }

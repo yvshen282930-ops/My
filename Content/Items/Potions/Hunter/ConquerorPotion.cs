@@ -36,8 +36,8 @@ namespace zhashi.Content.Items.Potions.Hunter
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
             // 1. 序列检测
-            string seqColor = (modPlayer.currentHunterSequence == 2) ? "00FF00" : "FF0000";
-            string seqText = (modPlayer.currentHunterSequence == 2) ? "已满足" : "未满足 (需序列2)";
+            string seqColor = (modPlayer.baseHunterSequence == 2) ? "00FF00" : "FF0000";
+            string seqText = (modPlayer.baseHunterSequence == 2) ? "已满足" : "未满足 (需序列2)";
             tooltips.Add(new TooltipLine(Mod, "SeqReq", $"[c/{seqColor}:条件1: {seqText}]"));
 
             // 2. 仪式检测
@@ -63,10 +63,10 @@ namespace zhashi.Content.Items.Potions.Hunter
         public override bool CanUseItem(Player player)
         {
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-            if (modPlayer.currentHunterSequence <= 1) return false; // 已经是序列1了
+            if (modPlayer.baseHunterSequence <= 1) return false; // 已经是序列1了
 
             // 只有同时满足两个条件才能喝
-            if (modPlayer.currentHunterSequence == 2 && modPlayer.conquerorRitualComplete)
+            if (modPlayer.baseHunterSequence == 2 && modPlayer.conquerorRitualComplete)
             {
                 return true;
             }
@@ -76,7 +76,7 @@ namespace zhashi.Content.Items.Potions.Hunter
         public override bool? UseItem(Player player)
         {
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-            modPlayer.currentHunterSequence = 1;
+            modPlayer.baseHunterSequence = 1;
 
             Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 

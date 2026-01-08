@@ -30,7 +30,7 @@ namespace zhashi.Content.Items.Potions.Moon
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
             // 1. 必须是序列5：深红学者
-            if (modPlayer.currentMoonSequence != 5) return false;
+            if (modPlayer.baseMoonSequence != 5) return false;
 
             // 2. 【核心仪式】必须是晚上 (Main.dayTime == false) 且 满月 (Main.moonPhase == 0)
             if (Main.dayTime)
@@ -57,7 +57,7 @@ namespace zhashi.Content.Items.Potions.Moon
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentMoonSequence = 4; // 晋升：巫王
+                modPlayer.baseMoonSequence = 4; // 晋升：巫王
 
                 CombatText.NewText(player.getRect(), Color.DarkViolet, "晋升：巫王！", true);
                 Main.NewText("你感受到了来自月亮最深处的黑暗...", 180, 0, 255);

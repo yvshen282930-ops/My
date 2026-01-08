@@ -27,15 +27,15 @@ namespace zhashi.Content.Items.Potions
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
             // 必须是序列8才能晋升序列7
-            if (modPlayer.currentSequence == 8)
+            if (modPlayer.baseSequence == 8)
             {
-                modPlayer.currentSequence = 7;
+                modPlayer.baseSequence = 7;
                 // 播放更强的吼声
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
                 Main.NewText("你对武器的理解达到了新的高度... 晋升成功：序列7 武器大师！", 255, 165, 0); // 橙色字
                 return true;
             }
-            else if (modPlayer.currentSequence > 8)
+            else if (modPlayer.baseSequence > 8)
             {
                 Main.NewText("你还未掌握格斗家的技巧，无法晋升。", 200, 50, 50);
                 return true;

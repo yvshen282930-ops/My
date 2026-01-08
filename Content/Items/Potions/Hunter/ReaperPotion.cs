@@ -26,9 +26,9 @@ namespace zhashi.Content.Items.Potions.Hunter
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            if (modPlayer.currentHunterSequence == 6)
+            if (modPlayer.baseHunterSequence == 6)
             {
-                modPlayer.currentHunterSequence = 5;
+                modPlayer.baseHunterSequence = 5;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
                 Main.NewText("你看到了万物的死线...", 255, 50, 50);
@@ -36,7 +36,7 @@ namespace zhashi.Content.Items.Potions.Hunter
                 Main.NewText("能力：【弱点攻击】(暴击伤害提升) | 【致命攻击】(斩杀低血量) | 【屠杀】(按J键)", 255, 255, 255);
                 return true;
             }
-            else if (modPlayer.currentHunterSequence > 6)
+            else if (modPlayer.baseHunterSequence > 6)
             {
                 Main.NewText("你还未成为阴谋家。", 200, 50, 50);
                 return true;

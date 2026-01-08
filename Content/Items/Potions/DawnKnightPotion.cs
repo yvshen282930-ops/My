@@ -26,16 +26,16 @@ namespace zhashi.Content.Items.Potions
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            if (modPlayer.currentSequence == 7)
+            if (modPlayer.baseSequence == 7)
             {
-                modPlayer.currentSequence = 6;
+                modPlayer.baseSequence = 6;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
                 Main.NewText("晨曦的光芒照亮了你的灵魂... 晋升成功：序列6 黎明骑士！", 255, 215, 0);
                 Main.NewText("获得技能：【黎明铠甲】 (按 Z 键开启/关闭)", 255, 255, 255);
                 return true;
             }
-            else if (modPlayer.currentSequence > 7)
+            else if (modPlayer.baseSequence > 7)
             {
                 Main.NewText("你还未成为武器大师，无法承受晨曦之力。", 200, 50, 50);
                 return true;

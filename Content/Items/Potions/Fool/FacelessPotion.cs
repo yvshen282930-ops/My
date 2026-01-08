@@ -30,7 +30,7 @@ namespace zhashi.Content.Items.Potions.Fool
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentFoolSequence = 6; // 晋升序列6
+                modPlayer.baseFoolSequence = 6; // 晋升序列6
 
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
                 Main.NewText("你忘记了自己的模样，又似乎记起了所有人的模样...", 200, 200, 255);

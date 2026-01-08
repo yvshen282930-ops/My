@@ -27,7 +27,7 @@ namespace zhashi.Content.Items.Potions.Moon
         public override bool CanUseItem(Player player)
         {
             // 必须是 序列4：巫王
-            return player.GetModPlayer<LotMPlayer>().currentMoonSequence == 4;
+            return player.GetModPlayer<LotMPlayer>().baseMoonSequence == 4;
         }
 
         public override bool? UseItem(Player player)
@@ -35,7 +35,7 @@ namespace zhashi.Content.Items.Potions.Moon
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentMoonSequence = 3; // 晋升
+                modPlayer.baseMoonSequence = 3; // 晋升
 
                 CombatText.NewText(player.getRect(), Color.MediumPurple, "晋升：召唤大师", true);
                 Main.NewText("你听到了灵界万千生物的呼唤，你是它们的主宰...", 200, 100, 255);

@@ -40,7 +40,7 @@ namespace zhashi.Content.Items.Potions.Fool
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentFoolSequence = 5; // 晋升序列5
+                modPlayer.baseFoolSequence = 5; // 晋升序列5
 
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
                 Main.NewText("你看见了无数根丝线，它们连接着万物...", 148, 0, 211);

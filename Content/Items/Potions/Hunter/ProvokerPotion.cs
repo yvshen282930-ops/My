@@ -27,9 +27,9 @@ namespace zhashi.Content.Items.Potions.Hunter
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
             // 必须先成为 序列9 猎人
-            if (modPlayer.currentHunterSequence == 9)
+            if (modPlayer.baseHunterSequence == 9)
             {
-                modPlayer.currentHunterSequence = 8;
+                modPlayer.baseHunterSequence = 8;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
                 Main.NewText("你感觉喉咙里像吞了一块火炭，想要大声嘲笑这个世界...", 255, 150, 50);
@@ -37,7 +37,7 @@ namespace zhashi.Content.Items.Potions.Hunter
                 Main.NewText("获得能力：【挑衅】(大幅吸引仇恨) | 【格斗体魄】", 255, 255, 255);
                 return true;
             }
-            else if (modPlayer.currentHunterSequence > 9)
+            else if (modPlayer.baseHunterSequence > 9)
             {
                 Main.NewText("你还未成为猎人，无法消化这份非凡特性。", 200, 50, 50);
                 return true;

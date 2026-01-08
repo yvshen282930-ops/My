@@ -32,7 +32,7 @@ namespace zhashi.Content.Items.Potions.Marauder
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
             // 1. 必须是序列4
-            if (modPlayer.currentMarauderSequence != 4) return false;
+            if (modPlayer.baseMarauderSequence != 4) return false;
 
             // 2. 检查仪式：9个冤魂
             if (modPlayer.mentorRitualProgress < LotMPlayer.MENTOR_RITUAL_TARGET)
@@ -49,7 +49,7 @@ namespace zhashi.Content.Items.Potions.Marauder
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
             if (player.itemAnimation > 0 && player.itemTime == 0)
             {
-                modPlayer.currentMarauderSequence = 3;
+                modPlayer.baseMarauderSequence = 3;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
                 Main.NewText("你感觉思维变得冰冷而滑腻，规则在你眼中出现了无数漏洞...", 0, 255, 127);

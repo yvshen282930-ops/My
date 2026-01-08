@@ -38,13 +38,13 @@ namespace zhashi.Content.Items.Potions.Marauder
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
             // 晋升逻辑：必须是序列8 诈骗师 才能晋升
-            if (modPlayer.currentMarauderSequence == 8)
+            if (modPlayer.baseMarauderSequence == 8)
             {
-                modPlayer.currentMarauderSequence = 7;
+                modPlayer.baseMarauderSequence = 7;
                 Main.NewText("你的大脑仿佛被剥离了皮层，无数纷乱的线条在眼中重组为真相...", 200, 50, 200);
                 return true;
             }
-            else if (modPlayer.currentMarauderSequence < 7)
+            else if (modPlayer.baseMarauderSequence < 7)
             {
                 Main.NewText("你已经掌握了真理的钥匙，无需再次服用。", 150, 150, 150);
                 return false;

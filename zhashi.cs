@@ -1,66 +1,114 @@
 using Terraria.ModLoader;
 using System.IO;
+using Terraria.ID;
 using Terraria;
-using zhashi.Content; // 确保引用了 LotMPlayer 的位置
+using zhashi.Content;
+using zhashi.Content.Buffs; // 确保引用了 Buff 所在的命名空间
 
 namespace zhashi
 {
-    // 【修改】将枚举改名，并放在类外面，防止与类名冲突
+    // 将枚举放在类外是好习惯
     public enum LotMNetMsg : byte
     {
-        PlayerSync
+        PlayerSync,
+        ApplySunSuppression
     }
 
     public class zhashi : Mod
     {
-        // 处理接收到的网络数据包
         public override void HandlePacket(BinaryReader reader, int whoAmI)
         {
-            // 1. 读取消息类型
             LotMNetMsg msgType = (LotMNetMsg)reader.ReadByte();
 
             switch (msgType)
             {
                 case LotMNetMsg.PlayerSync:
-                    // A. 读取玩家 ID
                     byte playernumber = reader.ReadByte();
-                    
-                    // 安全检查：防止 ID 越界或玩家未激活
-                    if (playernumber >= Main.maxPlayers || !Main.player[playernumber].active) 
-                        return; 
-                    
-                    // 获取 ModPlayer
+
+                    // 安全检查
+                    if (playernumber >= Main.maxPlayers || !Main.player[playernumber].active)
+                        return;
+
                     LotMPlayer modPlayer = Main.player[playernumber].GetModPlayer<LotMPlayer>();
 
-                    // B. 【关键】按顺序读取变量
-                    // 必须与 LotMPlayer.cs 中的 SyncPlayer 写入顺序一模一样！
+
+                    // 1. 基础序列等级
                     modPlayer.currentSequence = reader.ReadInt32();
                     modPlayer.currentMarauderSequence = reader.ReadInt32();
                     modPlayer.currentFoolSequence = reader.ReadInt32();
                     modPlayer.currentHunterSequence = reader.ReadInt32();
                     modPlayer.currentMoonSequence = reader.ReadInt32();
+                    modPlayer.currentSunSequence = reader.ReadInt32(); // 修正：按通常逻辑放在灵性之前
+
+                    // 2. 灵性值 (你之前的代码里读了两次，这里保留一次)
                     modPlayer.spiritualityCurrent = reader.ReadSingle();
-                    modPlayer.currentSunSequence = reader.ReadInt32();       // 太阳 (之前漏了这个)
 
-                    modPlayer.spiritualityCurrent = reader.ReadSingle();     // 灵性
-
-                    // 寄生数据
+                    // 3. 寄生相关数据
                     modPlayer.isParasitizing = reader.ReadBoolean();
                     modPlayer.parasiteTargetIndex = reader.ReadInt32();
                     modPlayer.parasiteIsTownNPC = reader.ReadBoolean();
                     modPlayer.parasiteIsPlayer = reader.ReadBoolean();
 
+                    // 4. 进度条/仪式数据
                     modPlayer.purificationProgress = reader.ReadInt32();
                     modPlayer.judgmentProgress = reader.ReadInt32();
-
                     modPlayer.ironBloodRitualProgress = reader.ReadInt32();
 
-                    // C. 服务器转发 (如果是服务器收到，就转发给其他玩家)
-                    if (Main.netMode == Terraria.ID.NetmodeID.Server)
+                    modPlayer.spiritWorms = reader.ReadInt32(); // 资源
+
+                    // 愚者
+                    modPlayer.isSpiritVisionActive = reader.ReadBoolean();
+                    modPlayer.isSpiritForm = reader.ReadBoolean();
+                    modPlayer.graftingMode = reader.ReadInt32(); // 注意是 Int
+                    modPlayer.spiritThreadTargetIndex = reader.ReadInt32(); // 注意是 Int
+
+                    // 月亮
+                    modPlayer.isTamingActive = reader.ReadBoolean();
+                    modPlayer.isVampireWings = reader.ReadBoolean();
+                    modPlayer.isBatSwarm = reader.ReadBoolean();
+                    modPlayer.isMoonlightized = reader.ReadBoolean();
+                    modPlayer.isFullMoonActive = reader.ReadBoolean();
+                    modPlayer.isCreationDomain = reader.ReadBoolean();
+
+                    // 错误
+                    modPlayer.isDeceitDomainActive = reader.ReadBoolean();
+                    modPlayer.isTimeClockActive = reader.ReadBoolean();
+
+                    // 猎人
+                    modPlayer.isFireForm = reader.ReadBoolean();
+                    modPlayer.isCalamityGiant = reader.ReadBoolean();
+                    modPlayer.isFlameCloakActive = reader.ReadBoolean();
+
+                    // 巨人
+                    modPlayer.isGuardianStance = reader.ReadBoolean();
+                    modPlayer.isMercuryForm = reader.ReadBoolean();
+                    modPlayer.dawnArmorActive = reader.ReadBoolean();
+
+                    // 太阳
+                    modPlayer.isSinging = reader.ReadBoolean();
+                    modPlayer.isSunMessenger = reader.ReadBoolean();
+
+                    // 服务器转发逻辑
+                    if (Main.netMode == NetmodeID.Server)
                     {
-                        // 这里的 -1 表示发给所有人，whoAmI 表示“除了发送者”
-                        // 最后一个参数 true/false 取决于你的 SyncPlayer 定义，通常设为 false 即可
+                        // 服务器收到后，转发给除了发送者以外的所有人
                         modPlayer.SyncPlayer(-1, whoAmI, false);
+                    }
+                    break;
+
+                case LotMNetMsg.ApplySunSuppression:
+                    int targetWho = reader.ReadByte();
+                    int duration = reader.ReadInt32();
+
+                    if (Main.netMode == NetmodeID.Server)
+                    {
+                        Player target = Main.player[targetWho];
+                        if (target.active)
+                        {
+                            // 假设 SunSuppressionDebuff 在 Content.Buffs 命名空间下
+                            // 如果报错找不到类型，请检查类名是否正确
+                            target.AddBuff(ModContent.BuffType<SunSuppressionDebuff>(), duration);
+                        }
                     }
                     break;
             }

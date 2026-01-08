@@ -37,6 +37,15 @@ namespace zhashi.Content
         // ===================================================
         // 1. 核心变量定义
         // ===================================================
+
+        public int baseSequence = 10;
+        public int baseHunterSequence = 10;
+        public int baseMoonSequence = 10;
+        public int baseFoolSequence = 10;
+        public int baseMarauderSequence = 10;
+        public int baseSunSequence = 10;
+
+
         public int currentSequence = 10;       // 巨人/战士途径 (9-2)
         public int currentGiantSequence = 10;
         public int currentHunterSequence = 10; // 猎人途径 (9-1)
@@ -226,10 +235,16 @@ namespace zhashi.Content
         // ===================================================
         public override void SaveData(TagCompound tag)
         {
-            tag["CurrentSequence"] = currentSequence;
-            tag["HunterSequence"] = currentHunterSequence;
-            tag["MoonSequence"] = currentMoonSequence;
-            tag["FoolSequence"] = currentFoolSequence;
+
+
+            tag["CurrentSequence"] = baseSequence;
+            tag["HunterSequence"] = baseHunterSequence;
+            tag["MoonSequence"] = baseMoonSequence;
+            tag["FoolSequence"] = baseFoolSequence;
+            tag["MarauderSequence"] = baseMarauderSequence;
+            tag["SunSequence"] = baseSunSequence;
+
+           
             tag["Spirituality"] = spiritualityCurrent;
             tag["GuardianRitual"] = guardianRitualProgress;
             tag["DemonHunterRitual"] = demonHunterRitualProgress;
@@ -241,7 +256,7 @@ namespace zhashi.Content
             tag["MarauderSequence"] = currentMarauderSequence;
             tag["AttendantRitual"] = attendantRitualProgress;
             tag["AttendantRitualComplete"] = attendantRitualComplete;
-            tag["MarauderSequence"] = currentMarauderSequence;
+
             tag["WormificationCD"] = wormificationCooldown;
             tag["ParasiteRitual"] = parasiteRitualProgress;
             tag["MentorRitual"] = mentorRitualProgress;
@@ -251,7 +266,7 @@ namespace zhashi.Content
             tag["MyDog_Pathway"] = DogPathway;
             tag["MyDog_Sequence"] = DogSequence;
             tag["MyDog_BonusHP"] = DogBonusHP;
-            tag["SunSequence"] = currentSunSequence;
+
             tag["PurificationProgress"] = purificationProgress;
             tag["JudgmentProgress"] = judgmentProgress;
             tag["Sanity"] = sanityCurrent;
@@ -266,6 +281,13 @@ namespace zhashi.Content
 
         public override void LoadData(TagCompound tag)
         {
+            if (tag.ContainsKey("CurrentSequence")) baseSequence = tag.GetInt("CurrentSequence");
+            if (tag.ContainsKey("HunterSequence")) baseHunterSequence = tag.GetInt("HunterSequence");
+            if (tag.ContainsKey("MoonSequence")) baseMoonSequence = tag.GetInt("MoonSequence");
+            if (tag.ContainsKey("FoolSequence")) baseFoolSequence = tag.GetInt("FoolSequence");
+            if (tag.ContainsKey("MarauderSequence")) baseMarauderSequence = tag.GetInt("MarauderSequence");
+            if (tag.ContainsKey("SunSequence")) baseSunSequence = tag.GetInt("SunSequence");
+
             if (tag.ContainsKey("CurrentSequence")) currentSequence = tag.GetInt("CurrentSequence");
             if (tag.ContainsKey("HunterSequence")) currentHunterSequence = tag.GetInt("HunterSequence");
             if (tag.ContainsKey("MoonSequence")) currentMoonSequence = tag.GetInt("MoonSequence");
@@ -342,6 +364,45 @@ namespace zhashi.Content
             packet.Write(judgmentProgress);     // Int32
             packet.Write(ironBloodRitualProgress);
 
+            packet.Write(isSpiritVisionActive); // 愚者灵视
+            packet.Write(isTamingActive);       // 月亮驯兽
+            packet.Write(isDeceitDomainActive); // 欺瞒领域 
+            packet.Write(isTimeClockActive);    // 时之虫领域 
+            packet.Write(spiritWorms); // 【修复】必须同步灵之虫数量
+
+            // --- 4. 持续性开关/状态 (如果不写，队友看不到特效或吃不到Buff) ---
+            // 愚者
+            packet.Write(isSpiritVisionActive);
+            packet.Write(isSpiritForm);         // 【修复】灵体化
+            packet.Write(graftingMode);         // 【修复】嫁接模式 (int)
+            packet.Write(spiritThreadTargetIndex); // 【修复】灵体之线目标 (int)
+
+            // 月亮
+            packet.Write(isTamingActive);
+            packet.Write(isVampireWings);       // 【修复】翅膀
+            packet.Write(isBatSwarm);           // 【修复】蝙蝠化身
+            packet.Write(isMoonlightized);      // 【修复】月光化
+            packet.Write(isFullMoonActive);     // 【修复】满月
+            packet.Write(isCreationDomain);     // 【修复】创生领域
+
+            // 错误
+            packet.Write(isDeceitDomainActive);
+            packet.Write(isTimeClockActive);
+
+            // 猎人
+            packet.Write(isFireForm);           // 【修复】火焰形态
+            packet.Write(isCalamityGiant);      // 【修复】灾祸巨人
+            packet.Write(isFlameCloakActive);   // 【修复】火焰披风
+
+            // 巨人
+            packet.Write(isGuardianStance);     // 【修复】守护姿态
+            packet.Write(isMercuryForm);        // 【修复】水银化
+            packet.Write(dawnArmorActive);      // 【修复】黎明铠甲
+
+            // 太阳
+            packet.Write(isSinging);            // 【修复】歌唱状态 (最重要！否则队友没Buff)
+            packet.Write(isSunMessenger);       // 【修复】太阳使者
+
             packet.Send(toWho, fromWho);
 
             // 3. 发送
@@ -367,6 +428,35 @@ namespace zhashi.Content
             clone.purificationProgress = purificationProgress;
             clone.judgmentProgress = judgmentProgress;
             clone.ironBloodRitualProgress = ironBloodRitualProgress;
+
+            clone.spiritWorms = spiritWorms;
+
+            // 状态开关
+            clone.isSpiritVisionActive = isSpiritVisionActive;
+            clone.isSpiritForm = isSpiritForm;
+            clone.graftingMode = graftingMode;
+            clone.spiritThreadTargetIndex = spiritThreadTargetIndex;
+
+            clone.isTamingActive = isTamingActive;
+            clone.isVampireWings = isVampireWings;
+            clone.isBatSwarm = isBatSwarm;
+            clone.isMoonlightized = isMoonlightized;
+            clone.isFullMoonActive = isFullMoonActive;
+            clone.isCreationDomain = isCreationDomain;
+
+            clone.isDeceitDomainActive = isDeceitDomainActive;
+            clone.isTimeClockActive = isTimeClockActive;
+
+            clone.isFireForm = isFireForm;
+            clone.isCalamityGiant = isCalamityGiant;
+            clone.isFlameCloakActive = isFlameCloakActive;
+
+            clone.isGuardianStance = isGuardianStance;
+            clone.isMercuryForm = isMercuryForm;
+            clone.dawnArmorActive = dawnArmorActive;
+
+            clone.isSinging = isSinging;
+            clone.isSunMessenger = isSunMessenger;
         }
 
         public override void SendClientChanges(ModPlayer clientPlayer)
@@ -384,12 +474,37 @@ namespace zhashi.Content
                 clone.spiritualityCurrent != spiritualityCurrent ||
                 clone.purificationProgress != purificationProgress ||
                 clone.judgmentProgress != judgmentProgress ||
+                clone.ironBloodRitualProgress != ironBloodRitualProgress ||
+                
+                clone.spiritWorms != spiritWorms ||
+                clone.isSpiritVisionActive != isSpiritVisionActive ||
+        clone.isSpiritForm != isSpiritForm ||
+        clone.graftingMode != graftingMode ||
+        clone.spiritThreadTargetIndex != spiritThreadTargetIndex ||
 
-                clone.isParasitizing != isParasitizing ||
-                clone.parasiteTargetIndex != parasiteTargetIndex ||
-                clone.parasiteIsTownNPC != parasiteIsTownNPC || // 之前可能漏了这个
-                clone.parasiteIsPlayer != parasiteIsPlayer ||
-            clone.ironBloodRitualProgress != ironBloodRitualProgress;
+        clone.isTamingActive != isTamingActive ||
+        clone.isVampireWings != isVampireWings ||
+        clone.isBatSwarm != isBatSwarm ||
+        clone.isMoonlightized != isMoonlightized ||
+        clone.isFullMoonActive != isFullMoonActive ||
+        clone.isCreationDomain != isCreationDomain ||
+
+        clone.isDeceitDomainActive != isDeceitDomainActive ||
+        clone.isTimeClockActive != isTimeClockActive ||
+
+        clone.isFireForm != isFireForm ||
+        clone.isCalamityGiant != isCalamityGiant ||
+        clone.isFlameCloakActive != isFlameCloakActive ||
+
+        clone.isGuardianStance != isGuardianStance ||
+        clone.isMercuryForm != isMercuryForm ||
+        clone.dawnArmorActive != dawnArmorActive ||
+
+        clone.isSinging != isSinging ||
+        clone.isSunMessenger != isSunMessenger;
+
+
+
 
             // 如果有变化，就发包
             if (changed)
@@ -578,6 +693,14 @@ namespace zhashi.Content
 
         public override void ResetEffects()
         {
+            currentSequence = baseSequence;
+            currentHunterSequence = baseHunterSequence;
+            currentMoonSequence = baseMoonSequence;
+            currentFoolSequence = baseFoolSequence;
+            currentMarauderSequence = baseMarauderSequence;
+            currentSunSequence = baseSunSequence;
+
+
             CalculateMaxSpirituality();
             HandleSpiritualityRegen();
             HandleDawnArmorLogic();
@@ -2268,6 +2391,12 @@ namespace zhashi.Content
 
                             // 添加驯服 Buff
                             target.AddBuff(ModContent.BuffType<Buffs.TamedBuff>(), 18000);
+                            if (target.TryGetGlobalNPC(out global::zhashi.Content.NPCs.TamingGlobalNPC tamingGlobal))
+                            {
+                                tamingGlobal.ownerIndex = Player.whoAmI;
+                                // 强制同步这个变化给所有客户端和服务器
+                                target.netUpdate = true;
+                            }
 
                             // 特效
                             CombatText.NewText(target.getRect(), Color.LightGreen, "驯服成功!", true);
@@ -2308,8 +2437,6 @@ namespace zhashi.Content
 
                 if (nerf)
                 {
-                    // 【平衡模式】
-                    // 机制：附加目标最大生命值百分比的真实伤害
                     float worldMult = Systems.BalanceSystem.GetWorldTierMultiplier();
 
                     // 伤害上限计算：开局500 -> 终灾25000
@@ -2365,7 +2492,7 @@ namespace zhashi.Content
                     }
                 }
             }
-            if (currentSunSequence == 5 && purificationProgress < PURIFICATION_RITUAL_TARGET)
+            if (currentSunSequence == 6 && purificationProgress < PURIFICATION_RITUAL_TARGET)
             {
                 bool isUndead = NPCID.Sets.Zombies[target.type] || NPCID.Sets.Skeletons[target.type] || target.aiStyle == 22;
                 if (isUndead)
@@ -2380,7 +2507,7 @@ namespace zhashi.Content
                 }
             }
 
-            if (currentSunSequence == 4 && judgmentProgress < JUDGMENT_RITUAL_TARGET)
+            if (currentSunSequence == 5 && judgmentProgress < JUDGMENT_RITUAL_TARGET)
             {
                 if (target.boss || target.lifeMax > 2000)
                 {
@@ -2429,7 +2556,6 @@ namespace zhashi.Content
             // =================================================
             // 【新增】序列1：概念嫁接 (防御模式)
             // =================================================
-            // 如果玩家即将死亡，且是诡秘侍者，尝试消耗灵性嫁接死亡概念
             if (currentFoolSequence <= 1)
             {
                 // 需要 5000 灵性来嫁接一次死亡
@@ -4635,43 +4761,53 @@ namespace zhashi.Content
         // === 太阳途径新增：通用的 PVP 序列压制逻辑 ===
         private void RunSunSuppression(float range)
         {
-            // 只有序列 4 及以上才生效
             if (currentSunSequence > 4) return;
-
-            // 游戏内一天 = 86400 帧
-            int debuffDuration = 86400;
+            int debuffDuration = 86400; // 一整天
 
             for (int i = 0; i < Main.maxPlayers; i++)
             {
                 Player target = Main.player[i];
-
-                // 判定目标：活跃 + 没死 + 不是自己
                 if (target.active && !target.dead && target.whoAmI != Player.whoAmI)
                 {
-                    // 判定敌对：双方都开启了 PVP + 处于不同队伍
+                    // PVP 判定
                     bool isHostile = Player.hostile && target.hostile && (Player.team == 0 || Player.team != target.team);
 
                     if (isHostile && target.Distance(Player.Center) < range)
                     {
                         LotMPlayer targetLotM = target.GetModPlayer<LotMPlayer>();
 
-                        // 计算目标的最高序列
-                        int targetBestSequence = 10;
-                        targetBestSequence = Math.Min(targetBestSequence, targetLotM.currentSequence);
-                        targetBestSequence = Math.Min(targetBestSequence, targetLotM.currentHunterSequence);
-                        targetBestSequence = Math.Min(targetBestSequence, targetLotM.currentMoonSequence);
-                        targetBestSequence = Math.Min(targetBestSequence, targetLotM.currentFoolSequence);
-                        targetBestSequence = Math.Min(targetBestSequence, targetLotM.currentMarauderSequence);
-                        targetBestSequence = Math.Min(targetBestSequence, targetLotM.currentSunSequence);
+                        // 计算目标的最高序列 (取最小值)
+                        int targetBest = 10;
+                        targetBest = Math.Min(targetBest, targetLotM.currentSequence); // 这里读 current 没问题，因为ResetEffects保证了它是准的
+                        targetBest = Math.Min(targetBest, targetLotM.currentHunterSequence);
+                        targetBest = Math.Min(targetBest, targetLotM.currentMoonSequence);
+                        targetBest = Math.Min(targetBest, targetLotM.currentFoolSequence);
+                        targetBest = Math.Min(targetBest, targetLotM.currentMarauderSequence);
+                        targetBest = Math.Min(targetBest, targetLotM.currentSunSequence);
 
-                        // 判定位格：如果对方序列不高于自己 (数值 >= 自己的数值)
-                        if (targetBestSequence >= currentSunSequence)
+                        // 只有对方位格不高于自己时才生效
+                        if (targetBest >= currentSunSequence)
                         {
-                            // 施加压制
-                            target.AddBuff(ModContent.BuffType<Buffs.SunSuppressionDebuff>(), debuffDuration);
+                            // === 核心修改：联机发包 ===
+                            int buffType = ModContent.BuffType<Buffs.SunSuppressionDebuff>();
 
-                            // 视觉反馈
-                            CombatText.NewText(target.getRect(), Color.Gold, "序列压制!", true);
+                            if (Main.netMode == NetmodeID.SinglePlayer)
+                            {
+                                // 单人模式直接加
+                                target.AddBuff(buffType, debuffDuration);
+                            }
+                            else
+                            {
+                                // 联机模式：告诉服务器“给这家伙加Buff”
+                                ModPacket packet = Mod.GetPacket();
+                                packet.Write((byte)LotMNetMsg.ApplySunSuppression);
+                                packet.Write((byte)target.whoAmI);
+                                packet.Write(debuffDuration);
+                                packet.Send();
+                            }
+
+                            // 视觉特效 (本地播放即可)
+                            CombatText.NewText(target.getRect(), Color.Gold, "无暗序列压制!", true);
                             for (int k = 0; k < 30; k++)
                                 Dust.NewDust(target.position, target.width, target.height, DustID.GoldFlame, 0, 0, 0, default, 2f);
                         }

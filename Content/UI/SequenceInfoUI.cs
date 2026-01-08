@@ -783,61 +783,52 @@ namespace zhashi.Content.UI
                     text += "- [被动] 商业公证: 商店购物半价，拾取范围扩大\n";
                     text += "- [被动] 规则体质: 生命防御大幅提升，免疫流血/中毒\n";
                     text += $"- [技能] 公证 (Z键){cdNotarize}: \n";
-                    text += "    > 以太阳之名，确立[有效]与[无效]\n";
-                    text += "    > 队友: 驱散所有Debuff，并赋予全属性增益\n";
-                    text += "    > 敌人: 造成神圣伤害，并强制削弱(破甲/混乱)\n";
-                }
-                if (p.currentSunSequence <= 5) // 光之祭司
-                {
-                    text += $"序列五: [c/FF8C00:光之祭司]\n";
-                    string cdHoly = p.holyLightCooldown > 0 ? $" [c/FF0000:({p.holyLightCooldown / 60}s)]" : "";
+                    text += "    > 队友: 驱散Debuff并赋予增益\n";
+                    text += "    > 敌人: 造成神圣伤害并削弱\n";
 
-                    text += "- [被动] 光之眼: 获得夜视与危险感知，看破污秽\n";
-                    text += "- [被动] 净化光环: 金色波纹不断扩散，自动灼烧死灵生物\n";
-                    text += $"- [质变] 神圣之光 (C键){cdHoly}: \n";
-                    text += "    > 召唤圣光进化为宏大的光柱，伤害极大提升\n";
-                    text += "    > 彻底蒸发范围内的死灵与污秽\n";
-
-                    if (p.currentSunSequence == 5)
+                    if (p.currentSunSequence == 6)
                     {
-                        int target = 100;
+                        int target = 100; // LotMPlayer.PURIFICATION_RITUAL_TARGET
                         int current = p.purificationProgress;
 
                         string status = current >= target ? "[已完成]" : $"[{current}/{target}]";
                         string colorHex = current >= target ? "00FF00" : "FFA500";
 
-                        text += $"[c/{colorHex}:[晋升仪式] 净化之路: {status}]\n";
-                        text += "  (提示: 使用神圣能力消灭不死生物)\n";
+                        text += $"\n[c/{colorHex}:[晋升仪式] 净化之路: {status}]\n";
+                        text += "  (提示: 需净化100个不死生物以晋升光之祭司)\n";
                     }
                 }
 
-                if (p.currentSunSequence <= 4) // 无暗者
+                if (p.currentSunSequence <= 5) // 光之祭司
                 {
-                    text += $"序列四: [c/FF4500:无暗者 (半神)]\n";
-                    string cdNotarize = p.notarizeCooldown > 0 ? $" [c/FF0000:({p.notarizeCooldown / 60}s)]" : "";
-                    string cdSpear = p.sunRadianceCooldown > 0 ? $" [c/FF0000:({p.sunRadianceCooldown / 60}s)]" : "";
-                    string cdSun = p.fireOceanCooldown > 0 ? $" [c/FF0000:({p.fireOceanCooldown / 60}s)]" : "";
+                    text += $"序列五: [c/FF8C00:光之祭司]\n";
+                    string cdHoly = p.holyLightCooldown > 0 ? $" [c/FF0000:({p.holyLightCooldown / 60}s)]" : "";
 
-                    text += "- [半神] 无暗之域: 照亮一切，看破隐形，免疫黑暗\n";
-                    text += "- [被动] 神圣盔甲: 获得极高的防御力与伤害减免\n";
-                    text += $"- [质变] 净化 (Z键){cdNotarize}: 范围翻倍，清除一切负面状态\n";
-                    text += $"- [压制] 无暗压制{cdNotarize}: 在pvp中使用净化（Z）可强行降低敌方序列x1\n";
-                    text += $"- [技能] 无暗之枪 (X键){cdSpear}: 投掷纯净的光之长枪\n";
-                    text += $"- [大招] 阳炎 (G键){cdSun}: 召唤微缩太阳，毁灭一切污秽\n";
+                    text += "- [被动] 光之眼: 获得夜视与危险感知\n";
+                    text += "- [被动] 净化光环: 自动灼烧周围死灵\n";
+                    text += $"- [质变] 神圣之光 (C键){cdHoly}: 召唤光柱净化污秽\n";
 
-                    // 【新增】序列4 晋升仪式显示
-                    if (p.currentSunSequence == 4)
+                    // 【修正】序列 5 显示晋升序列 4 的条件
+                    // 条件：审判进度 + 无暗十字
+                    if (p.currentSunSequence == 5)
                     {
-                        // 假设：目标是审判/公证 20 个强力目标
-                        int target = 20;
-                        // 同理，需要你在 LotMPlayer 里有 judgmentProgress 变量
+                        // 1. 击杀进度
+                        int target = 20; // LotMPlayer.JUDGMENT_RITUAL_TARGET
                         int current = p.judgmentProgress;
+                        string killStatus = current >= target ? "[审判完成]" : $"[审判: {current}/{target}]";
 
-                        string status = current >= target ? "[已完成]" : $"[{current}/{target}]";
-                        string colorHex = current >= target ? "00FF00" : "FFA500";
+                        // 2. 物品要求
+                        bool hasItem = p.Player.HasItem(ModContent.ItemType<Items.UnshadowedCross>());
+                        string itemStatus = hasItem ? "[十字就绪]" : "[缺无暗十字]";
 
-                        text += $"[c/{colorHex}:[晋升仪式] 契约签订: {status}]\n";
-                        text += "  (提示: 使用公证/审判击败Boss或强敌)\n";
+                        // 综合判定
+                        bool ready = (current >= target) && hasItem;
+                        string colorHex = ready ? "00FF00" : "FFA500";
+
+                        text += $"\n[c/{colorHex}:[晋升仪式] 无暗者]\n";
+                        text += $"  1. {killStatus}\n";
+                        text += $"  2. 条件: {itemStatus}\n";
+                        text += "  (提示: 审判20个强敌，并持有无暗十字)\n";
                     }
                 }
 
@@ -848,18 +839,17 @@ namespace zhashi.Content.UI
                     string cdSpear = p.sunRadianceCooldown > 0 ? $" [c/FF0000:({p.sunRadianceCooldown / 60}s)]" : "";
                     string cdSun = p.fireOceanCooldown > 0 ? $" [c/FF0000:({p.fireOceanCooldown / 60}s)]" : "";
 
-                    text += "- [半神] 无暗之域: 照亮一切，看破隐形，免疫黑暗\n";
-                    text += "- [被动] 神圣盔甲: 获得极高的防御力与伤害减免\n";
-                    text += $"- [质变] 净化 (Z键){cdNotarize}: 范围翻倍，清除一切负面状态\n";
-                    text += $"- [技能] 无暗之枪 (X键){cdSpear}: 投掷纯净的光之长枪\n";
-                    text += $"- [大招] 阳炎 (G键){cdSun}: 召唤微缩太阳，毁灭一切污秽\n";
+                    text += "- [半神] 无暗之域: 免疫黑暗，看破隐形\n";
+                    text += "- [被动] 神圣盔甲: 极高防御与减伤\n";
+                    text += $"- [技能] 无暗之枪 (X键){cdSpear}\n";
+                    text += $"- [大招] 阳炎 (G键){cdSun}\n";
 
+                    // 【修正】序列 4 显示晋升序列 3 的条件
+                    // 条件：白天 + 徽章 + 纯净
                     if (p.currentSunSequence == 4)
                     {
                         bool isDay = Main.dayTime;
-
                         bool hasEmblem = p.Player.HasItem(ItemID.AvengerEmblem);
-
                         bool isClean = !p.Player.HasBuff(BuffID.Bleeding) && !p.Player.HasBuff(BuffID.Poisoned);
 
                         string timeStatus = isDay ? "[白天]" : "[等待白天]";
@@ -868,19 +858,46 @@ namespace zhashi.Content.UI
 
                         string colorHex = (isDay && hasEmblem && isClean) ? "00FF00" : "FFA500";
 
-                        text += $"[c/{colorHex}:[晋升仪式] 正义导师]\n";
+                        text += $"\n[c/{colorHex}:[晋升仪式] 正义导师]\n";
                         text += $"  条件: {timeStatus} {itemStatus} {cleanStatus}\n";
                         text += "  (提示: 白天，持有复仇者徽章，且无流血/中毒状态)\n";
                     }
                 }
 
-                if (p.currentSunSequence <= 2)
+                if (p.currentSunSequence <= 3) // 正义导师
+                {
+                    text += $"序列三: [c/FF6347:正义导师 (圣者)]\n";
+                    string cdJudge = p.notarizeCooldown > 0 ? $" [c/FF0000:({p.notarizeCooldown / 60}s)]" : "";
+                    string cdContract = p.holyOathCooldown > 0 ? $" [c/FF0000:({p.holyOathCooldown / 60}s)]" : "";
+
+                    text += "- [被动] 圣者体质 / 召唤上限+3\n";
+                    text += $"- [质变] 正义审判 (Z键){cdJudge}: 巨额单体伤害\n";
+                    text += $"- [技能] 神圣契约 (V键){cdContract}: 提升全属性\n";
+
+                    if (p.currentSunSequence == 3)
+                    {
+                        // 这里沿用你的逻辑：需击败光之女皇
+                        bool condition = NPC.downedEmpressOfLight;
+                        // 补上序列2魔药里写的条件：需持有日耀圣物
+                        bool hasArtifact = p.Player.HasItem(ItemID.DayBreak) || p.Player.HasItem(ItemID.SolarEruption);
+
+                        string bossStatus = condition ? "[光女已败]" : "[需击败光之女皇]";
+                        string itemStatus = hasArtifact ? "[圣物就绪]" : "[缺日耀武器]";
+
+                        bool ready = condition && hasArtifact;
+                        string colorHex = ready ? "00FF00" : "FFA500";
+
+                        text += $"\n[c/{colorHex}:[晋升仪式] 逐光者]\n";
+                        text += $"  条件: {bossStatus} {itemStatus}\n";
+                        text += "  (提示: 击败光之女皇，并持有日耀圣物)\n";
+                    }
+                }
+
+                if (p.currentSunSequence <= 2) // 逐光者
                 {
                     text += $"序列二: [c/FF0000:逐光者 (天使)]\n";
-                    text += "- [被动] 光化重组: 35%几率闪避瞬移\n";
-                    text += "- [技能] 太阳使者 (P键): \n";
-                    text += "    > 开启无限飞行与狱火光环，持续灼烧\n";
-                    text += "- [强化] 正义审判造成 3-5 倍伤害\n";
+                    text += "- [被动] 光化重组: 闪避瞬移\n";
+                    text += "- [技能] 太阳使者 (P键): 无限飞行与狱火光环\n";
 
                     if (p.currentSunSequence == 2)
                     {
@@ -889,28 +906,23 @@ namespace zhashi.Content.UI
                         for (int i = 0; i < Main.maxNPCs; i++) if (Main.npc[i].active && Main.npc[i].townNPC) npcCount++;
 
                         string countStatus = npcCount >= 15 ? "[信徒充足]" : $"[信徒: {npcCount}/15]";
-                        string colorHex = (isNoon && npcCount >= 15) ? "00FF00" : "FFA500";
+                        string timeStatus = isNoon ? "[正午]" : "[等待正午]";
 
-                        text += $"[c/{colorHex}:[晋升仪式] 纯白国度]\n";
-                        text += $"  条件: {countStatus}\n";
-                        text += "  (提示: 正午，至少15位城镇NPC存活，持有秩序圣物)\n";
+                        bool ready = isNoon && npcCount >= 15;
+                        string colorHex = ready ? "00FF00" : "FFA500";
+
+                        text += $"\n[c/{colorHex}:[晋升仪式] 纯白国度]\n";
+                        text += $"  条件: {timeStatus} {countStatus}\n";
+                        text += "  (提示: 正午时分，至少15位城镇NPC存活)\n";
                     }
                 }
 
                 if (p.currentSunSequence <= 1)
                 {
                     text += $"[c/FFFFFF:序列1: 纯白天使 (天使之王)]\n";
-                    text += "- [被动] 神圣之国: 纯白领域，压制全场，斩杀亡灵\n";
-                    text += "- [被动] 秩序化身: 城镇NPC提供额外防御与恢复\n";
-                    text += "- [强化] 太阳使者 (P键): 转化为纯白形态，伤害翻倍\n";
-
-                    string cdWhite = p.notarizeCooldown > 0 ? $" [c/FF0000:({p.notarizeCooldown / 60}s)]" : "";
-                    text += $"- [替换] 审判 -> 纯白之光 (Z键){cdWhite}: \n";
-                    text += "    > 降下毁灭性的纯白光辉，对全屏敌人造成核爆级净化\n";
-
-                    string cdFaith = p.holyOathCooldown > 0 ? $" [c/FF0000:({p.holyOathCooldown / 60}s)]" : "";
-                    text += $"- [替换] 契约 -> 信仰之仆 (V键){cdFaith}: \n";
-                    text += "    > 获得5秒绝对无敌，全属性狂热增幅\n";
+                    text += "- [被动] 神圣之国: 压制全场，斩杀亡灵\n";
+                    text += "- [技能] 纯白之光 / 信仰之仆\n";
+                    text += "  (已达当前版本顶峰)";
                 }
             }
 

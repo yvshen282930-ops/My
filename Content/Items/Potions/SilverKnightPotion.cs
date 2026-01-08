@@ -27,7 +27,7 @@ namespace zhashi.Content.Items.Potions
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             var modPlayer = Main.LocalPlayer.GetModPlayer<LotMPlayer>();
-            if (modPlayer.currentSequence == 4)
+            if (modPlayer.baseSequence == 4)
             {
                 // 【关键修复】使用 1.4.4 新版变量名
                 bool frostMoonDone = NPC.downedChristmasTree && NPC.downedChristmasSantank && NPC.downedChristmasIceQueen;
@@ -45,7 +45,7 @@ namespace zhashi.Content.Items.Potions
         public override bool CanUseItem(Player player)
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
-            if (modPlayer.currentSequence == 4)
+            if (modPlayer.baseSequence == 4)
             {
                 // 【关键修复】使用 1.4.4 新版变量名
                 bool frostMoonDone = NPC.downedChristmasTree && NPC.downedChristmasSantank && NPC.downedChristmasIceQueen;
@@ -65,9 +65,9 @@ namespace zhashi.Content.Items.Potions
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            if (modPlayer.currentSequence == 4)
+            if (modPlayer.baseSequence == 4)
             {
-                modPlayer.currentSequence = 3;
+                modPlayer.baseSequence = 3;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
                 Main.NewText("这是一场献给神明的血腥祭祀！", 255, 20, 20);
@@ -75,7 +75,7 @@ namespace zhashi.Content.Items.Potions
                 Main.NewText("能力：【水银化】(按C键) | 【借光隐藏】 | 【空间斩杀】", 255, 255, 255);
                 return true;
             }
-            else if (modPlayer.currentSequence > 4)
+            else if (modPlayer.baseSequence > 4)
             {
                 Main.NewText("你还未成为猎魔者。", 200, 50, 50);
                 return true;

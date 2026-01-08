@@ -48,7 +48,7 @@ namespace zhashi.Content.Items.Potions.Fool
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentFoolSequence = 1;
+                modPlayer.baseFoolSequence = 1;
 
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
                 Main.NewText("城镇在你的意志下起舞，诡秘的帷幕已然拉开...", 148, 0, 211);

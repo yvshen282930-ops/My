@@ -28,7 +28,7 @@ namespace zhashi.Content.Items.Potions.Moon
         public override bool CanUseItem(Player player)
         {
             // 必须是 序列7：吸血鬼
-            return player.GetModPlayer<LotMPlayer>().currentMoonSequence == 7;
+            return player.GetModPlayer<LotMPlayer>().baseMoonSequence == 7;
         }
 
         public override bool? UseItem(Player player)
@@ -36,7 +36,7 @@ namespace zhashi.Content.Items.Potions.Moon
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentMoonSequence = 6; // 晋升
+                modPlayer.baseMoonSequence = 6; // 晋升
 
                 CombatText.NewText(player.getRect(), Color.MediumPurple, "晋升：魔药教授", true);
                 Main.NewText("你洞悉了物质与灵性的转化规律...", 200, 100, 255);

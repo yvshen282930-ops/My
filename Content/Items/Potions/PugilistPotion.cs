@@ -27,9 +27,9 @@ namespace zhashi.Content.Items.Potions
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
             // 1. 检查是否为序列9
-            if (modPlayer.currentSequence == 9)
+            if (modPlayer.baseSequence == 9)
             {
-                modPlayer.currentSequence = 8;
+                modPlayer.baseSequence = 8;
                 // 播放一声吼叫，更有其实
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
@@ -37,7 +37,7 @@ namespace zhashi.Content.Items.Potions
                 return true;
             }
             // 2. 检查能不能喝
-            else if (modPlayer.currentSequence == 10)
+            else if (modPlayer.baseSequence == 10)
             {
                 Main.NewText("你的身体太孱弱了，先成为战士吧。", 200, 50, 50);
                 return true; // 消耗掉药水作为惩罚，或者 return false 不消耗

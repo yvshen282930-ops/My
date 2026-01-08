@@ -29,7 +29,7 @@ namespace zhashi.Content.Items.Potions.Sun
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
-                if (modPlayer.currentSunSequence == 2)
+                if (modPlayer.baseSunSequence == 2)
                 {
                     // === 仪式：百万信仰与神圣秩序 ===
 
@@ -46,7 +46,7 @@ namespace zhashi.Content.Items.Potions.Sun
 
                     if (isNoon && hasFollowers && hasSymbol)
                     {
-                        modPlayer.currentSunSequence = 1;
+                        modPlayer.baseSunSequence = 1;
                         Main.NewText("百万信徒的祈祷声汇聚成洪流...", 255, 255, 255);
                         Main.NewText("你化身为纯白的秩序，神圣之国降临人间！", 255, 255, 0);
                         Main.NewText("晋升天使之王！序列1：纯白天使。", 255, 255, 255);
@@ -94,6 +94,7 @@ namespace zhashi.Content.Items.Potions.Sun
                 .AddIngredient(ItemID.LihzahrdPowerCell, 5) // 能源核心
                 .AddIngredient(ItemID.SoulofLight, 50)      // 极致的光
                 .AddIngredient(ItemID.Ectoplasm, 30)        // 灵性
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .AddIngredient(ItemID.BottledWater, 1)
                 .AddTile(TileID.LunarCraftingStation)
                 .Register();

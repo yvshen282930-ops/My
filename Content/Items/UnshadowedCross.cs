@@ -33,37 +33,39 @@ namespace zhashi.Content.Items
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                bool loweredAny = false; // 标记是否有任何途径发生了降级
+                bool loweredAny = false;
                 string msg = "";
 
-                // 定义一个局部函数来处理降级逻辑
-                void DowngradePathway(ref int currentSeq, string pathwayName)
+                // 修改局部函数：操作 baseSeq 而不是 currentSeq
+                void DowngradePathway(ref int baseSeq, ref int currentSeq, string pathwayName)
                 {
                     // 如果不是凡人 (序列 < 10)
-                    if (currentSeq < 10)
+                    if (baseSeq < 10)
                     {
-                        currentSeq++; // 数字+1 即序列降低 (如 1 -> 2, 9 -> 10)
+                        baseSeq++; // 修改存档变量 (永久生效)
+                        currentSeq = baseSeq; // 同步修改当前变量 (让效果立刻显现)
                         loweredAny = true;
 
-                        if (currentSeq >= 10)
+                        if (baseSeq >= 10)
                         {
+                            baseSeq = 10;
                             currentSeq = 10;
                             msg += $"{pathwayName}途径特性已完全析出，回归平凡。\n";
                         }
                         else
                         {
-                            msg += $"{pathwayName}途径序列降低为：序列{currentSeq}。\n";
+                            msg += $"{pathwayName}途径序列降低为：序列{baseSeq}。\n";
                         }
                     }
                 }
 
-                // 检查并降低所有途径
-                DowngradePathway(ref modPlayer.currentSequence, "巨人");
-                DowngradePathway(ref modPlayer.currentHunterSequence, "猎人");
-                DowngradePathway(ref modPlayer.currentMoonSequence, "月亮");
-                DowngradePathway(ref modPlayer.currentFoolSequence, "愚者");
-                DowngradePathway(ref modPlayer.currentMarauderSequence, "错误");
-                DowngradePathway(ref modPlayer.currentSunSequence, "太阳");
+                // 检查并降低所有途径 (传入 base 和 current)
+                DowngradePathway(ref modPlayer.baseSequence, ref modPlayer.currentSequence, "巨人");
+                DowngradePathway(ref modPlayer.baseHunterSequence, ref modPlayer.currentHunterSequence, "猎人");
+                DowngradePathway(ref modPlayer.baseMoonSequence, ref modPlayer.currentMoonSequence, "月亮");
+                DowngradePathway(ref modPlayer.baseFoolSequence, ref modPlayer.currentFoolSequence, "愚者");
+                DowngradePathway(ref modPlayer.baseMarauderSequence, ref modPlayer.currentMarauderSequence, "错误");
+                DowngradePathway(ref modPlayer.baseSunSequence, ref modPlayer.currentSunSequence, "太阳");
 
                 // 如果有变化
                 if (loweredAny)
@@ -72,7 +74,7 @@ namespace zhashi.Content.Items
                     CombatText.NewText(player.getRect(), Color.Gold, "特性析出", true);
                     if (!string.IsNullOrEmpty(msg)) Main.NewText(msg.TrimEnd(), 255, 215, 0);
 
-                    // 播放神圣特效
+                    // 播放特效
                     for (int i = 0; i < 60; i++)
                     {
                         Vector2 speed = Main.rand.NextVector2Circular(3f, 3f);
@@ -80,10 +82,11 @@ namespace zhashi.Content.Items
                         d.noGravity = true;
                     }
 
-                    // 如果彻底变成了凡人（所有途径都回到10），重置灵性等杂项
+                    // 检查是否彻底变成凡人 (所有 base 都回到了 10)
+                    // 注意：IsBeyonder 通常是检查 current，这里可以直接检查 IsBeyonder，因为上面已经同步了 current
                     if (!modPlayer.IsBeyonder)
                     {
-                        modPlayer.spiritualityCurrent = 100;
+                        modPlayer.spiritualityCurrent = 100; // 重置灵性
                         Main.NewText("你已彻底洗净了非凡特性，变回了普通人。", 200, 200, 200);
                     }
                 }

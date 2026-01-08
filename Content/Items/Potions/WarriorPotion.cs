@@ -37,7 +37,7 @@ namespace zhashi.Content.Items.Potions
                 }
 
                 // 只有完全的凡人才能晋升
-                modPlayer.currentSequence = 9;
+                modPlayer.baseSequence = 9;
                 
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
                 Main.NewText("你服用了战士魔药，感觉身体充满了力量！", 255, 100, 100);

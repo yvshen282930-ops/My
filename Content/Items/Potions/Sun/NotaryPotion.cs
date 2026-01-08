@@ -37,9 +37,9 @@ namespace zhashi.Content.Items.Potions.Sun
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
-                if (modPlayer.currentSunSequence == 7)
+                if (modPlayer.baseSunSequence == 7)
                 {
-                    modPlayer.currentSunSequence = 6;
+                    modPlayer.baseSunSequence = 6;
                     Main.NewText("你服用了魔药，晋升为序列6：公证人。", 255, 215, 0);
                     Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29, player.position);
                     return true;
@@ -61,6 +61,7 @@ namespace zhashi.Content.Items.Potions.Sun
                 .AddIngredient(ItemID.PixieDust, 10)
                 .AddIngredient(ItemID.Sunflower, 2)
                 .AddIngredient(ItemID.BottledWater, 1)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .AddTile(TileID.Bottles)
                 .Register();
         }

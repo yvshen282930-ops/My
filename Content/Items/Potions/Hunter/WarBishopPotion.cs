@@ -20,7 +20,7 @@ namespace zhashi.Content.Items.Potions.Hunter
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             var modPlayer = Main.LocalPlayer.GetModPlayer<LotMPlayer>();
-            if (modPlayer.currentHunterSequence == 4)
+            if (modPlayer.baseHunterSequence == 4)
             {
                 string statusColor = NPC.downedAncientCultist ? "00FF00" : "FF0000";
                 tooltips.Add(new TooltipLine(Mod, "RitualDesc", "晋升仪式: 击败拜月教邪教徒，开启最终的战争。"));
@@ -31,7 +31,7 @@ namespace zhashi.Content.Items.Potions.Hunter
         public override bool CanUseItem(Player player)
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
-            if (modPlayer.currentHunterSequence == 4 && !NPC.downedAncientCultist)
+            if (modPlayer.baseHunterSequence == 4 && !NPC.downedAncientCultist)
             {
                 if (player.whoAmI == Main.myPlayer) Main.NewText("战争的序幕还未拉开...", 255, 50, 50);
                 return false;
@@ -42,16 +42,16 @@ namespace zhashi.Content.Items.Potions.Hunter
         public override bool? UseItem(Player player)
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
-            if (modPlayer.currentHunterSequence == 4)
+            if (modPlayer.baseHunterSequence == 4)
             {
-                modPlayer.currentHunterSequence = 3;
+                modPlayer.baseHunterSequence = 3;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
                 Main.NewText("你的意志连接了整个战场！", 255, 69, 0);
                 Main.NewText("晋升成功：序列3 战争主教 (圣者)！", 255, 69, 0);
                 Main.NewText("能力：【心灵网络】(属性共享) | 【战争兵器】(哨兵强化) | 【L键集众强化】", 255, 255, 255);
                 return true;
             }
-            else if (modPlayer.currentHunterSequence > 4) { Main.NewText("你还未成为铁血骑士。", 200, 50, 50); return true; }
+            else if (modPlayer.baseHunterSequence > 4) { Main.NewText("你还未成为铁血骑士。", 200, 50, 50); return true; }
             else { Main.NewText("你已是战争主教。", 200, 200, 200); return true; }
         }
 

@@ -37,13 +37,13 @@ namespace zhashi.Content.Items.Potions.Marauder
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            if (modPlayer.currentMarauderSequence == 6)
+            if (modPlayer.baseMarauderSequence == 6)
             {
-                modPlayer.currentMarauderSequence = 5;
+                modPlayer.baseMarauderSequence = 5;
                 Main.NewText("思维的边界开始模糊，你听到了周围无数梦境的低语...", 100, 100, 255);
                 return true;
             }
-            else if (modPlayer.currentMarauderSequence < 6)
+            else if (modPlayer.baseMarauderSequence < 6)
             {
                 Main.NewText("你已经是梦境的主宰，无需再次服用。", 150, 150, 150);
                 return false;

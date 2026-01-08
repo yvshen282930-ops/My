@@ -30,7 +30,7 @@ namespace zhashi.Content.Items.Potions.Fool
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentFoolSequence = 7; // 晋升序列7
+                modPlayer.baseFoolSequence = 7; // 晋升序列7
 
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
                 Main.NewText("你感觉双手变得异常灵巧，火焰在你的掌心欢呼...", 255, 100, 0);

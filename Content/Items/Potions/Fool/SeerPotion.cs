@@ -48,7 +48,7 @@ namespace zhashi.Content.Items.Potions.Fool
                 }
 
                 // 晋升逻辑
-                modPlayer.currentFoolSequence = 9;
+                modPlayer.baseFoolSequence = 9;
 
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
                 Main.NewText("你感觉到灵感在脑海中迸发，眼前的世界多了许多虚幻的丝线...", 100, 100, 255);

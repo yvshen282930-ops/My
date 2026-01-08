@@ -33,7 +33,7 @@ namespace zhashi.Content.Items.Potions.Moon
         public override bool CanUseItem(Player player)
         {
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-            return modPlayer.currentMoonSequence == 9;
+            return modPlayer.baseMoonSequence == 9;
         }
 
         public override bool? UseItem(Player player)
@@ -41,7 +41,7 @@ namespace zhashi.Content.Items.Potions.Moon
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentMoonSequence = 8; // 晋升
+                modPlayer.baseMoonSequence = 8; // 晋升
 
                 CombatText.NewText(player.getRect(), Color.Orange, "晋升：驯兽师", true);
                 Main.NewText("你能听懂野兽的低语，力量充盈全身...", 255, 100, 100);

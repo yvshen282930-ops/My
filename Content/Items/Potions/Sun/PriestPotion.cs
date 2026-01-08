@@ -34,13 +34,13 @@ namespace zhashi.Content.Items.Potions.Sun
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
                 // 只有序列6才能喝
-                if (modPlayer.currentSunSequence == 6)
+                if (modPlayer.baseSunSequence == 6)
                 {
                     // === 【修改】仪式判定：净化 100 个不死生物 ===
                     // 读取你在 LotMPlayer 里写的变量
                     if (modPlayer.purificationProgress >= LotMPlayer.PURIFICATION_RITUAL_TARGET)
                     {
-                        modPlayer.currentSunSequence = 5;
+                        modPlayer.baseSunSequence = 5;
                         Main.NewText("你在无尽的战斗中领悟了光的真谛...", 255, 215, 0);
                         Main.NewText("晋升成功！序列5：光之祭司。", 255, 215, 0);
                         Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29, player.position);
@@ -78,6 +78,7 @@ namespace zhashi.Content.Items.Potions.Sun
                 .AddIngredient(ItemID.HallowedBar, 10)
                 .AddIngredient(ItemID.SoulofLight, 10)
                 .AddIngredient(ItemID.PixieDust, 20) // 修改：加点精灵尘更像光之祭司
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .AddIngredient(ItemID.BottledWater, 1)
                 .AddTile(TileID.Bottles)
                 .Register();

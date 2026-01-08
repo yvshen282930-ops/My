@@ -41,7 +41,7 @@ namespace zhashi.Content.Items.Potions.Fool
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentFoolSequence = 3; // 晋升序列3
+                modPlayer.baseFoolSequence = 3; // 晋升序列3
 
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
                 Main.NewText("你仿佛成为了历史的一部分，时间在你眼中不再是直线...", 0, 255, 255);

@@ -26,7 +26,7 @@ namespace zhashi.Content.Items.Potions.Moon
         public override bool CanUseItem(Player player)
         {
             // 必须是 序列2：创生者
-            if (player.GetModPlayer<LotMPlayer>().currentMoonSequence != 2) return false;
+            if (player.GetModPlayer<LotMPlayer>().baseMoonSequence != 2) return false;
 
             // 【仪式条件】：深埋地底 + 沉睡 (模拟棺材)
             // Player.sleeping.isSleeping 检查玩家是否在床上睡觉
@@ -44,7 +44,7 @@ namespace zhashi.Content.Items.Potions.Moon
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentMoonSequence = 1; // 晋升：美神
+                modPlayer.baseMoonSequence = 1; // 晋升：美神
 
                 // 强制转变为女性
                 player.Male = false;

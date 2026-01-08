@@ -29,7 +29,7 @@ namespace zhashi.Content.Items.Potions.Moon
         public override bool CanUseItem(Player player)
         {
             // 必须是 序列8：驯兽师
-            return player.GetModPlayer<LotMPlayer>().currentMoonSequence == 8;
+            return player.GetModPlayer<LotMPlayer>().baseMoonSequence == 8;
         }
 
         public override bool? UseItem(Player player)
@@ -37,7 +37,7 @@ namespace zhashi.Content.Items.Potions.Moon
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentMoonSequence = 7; // 晋升
+                modPlayer.baseMoonSequence = 7; // 晋升
 
                 CombatText.NewText(player.getRect(), Color.DarkRed, "晋升：吸血鬼", true);
                 Main.NewText("你感到心脏剧烈跳动，对鲜血产生了渴望...", 220, 20, 60);

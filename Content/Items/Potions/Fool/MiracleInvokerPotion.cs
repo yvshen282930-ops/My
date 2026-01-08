@@ -40,7 +40,7 @@ namespace zhashi.Content.Items.Potions.Fool
             if (player.whoAmI == Main.myPlayer)
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.currentFoolSequence = 2; // 晋升序列2
+                modPlayer.baseFoolSequence = 2; // 晋升序列2
 
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
                 Main.NewText("你向命运许愿，命运回应了你...", 255, 255, 0);

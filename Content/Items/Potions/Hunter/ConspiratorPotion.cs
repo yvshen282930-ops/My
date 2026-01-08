@@ -26,9 +26,9 @@ namespace zhashi.Content.Items.Potions.Hunter
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            if (modPlayer.currentHunterSequence == 7)
+            if (modPlayer.baseHunterSequence == 7)
             {
-                modPlayer.currentHunterSequence = 6;
+                modPlayer.baseHunterSequence = 6;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
                 Main.NewText("你的思维变得冰冷而清晰...", 255, 100, 0);
@@ -36,7 +36,7 @@ namespace zhashi.Content.Items.Potions.Hunter
                 Main.NewText("能力：【火焰闪现】(按V键) | 【洞察】(暴击提升)", 255, 255, 255);
                 return true;
             }
-            else if (modPlayer.currentHunterSequence > 7)
+            else if (modPlayer.baseHunterSequence > 7)
             {
                 Main.NewText("你还未掌握纵火的艺术。", 200, 50, 50);
                 return true;

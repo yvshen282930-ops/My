@@ -18,7 +18,7 @@ namespace zhashi.Content.Items.Potions
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            if (Main.LocalPlayer.GetModPlayer<LotMPlayer>().currentSequence == 3)
+            if (Main.LocalPlayer.GetModPlayer<LotMPlayer>().baseSequence == 3)
             {
                 string statusColor = NPC.downedMoonlord ? "00FF00" : "FF0000";
                 tooltips.Add(new TooltipLine(Mod, "RitualDesc", "晋升仪式: 猎杀一位天使或同等强大的生物 (月亮领主)。"));
@@ -29,7 +29,7 @@ namespace zhashi.Content.Items.Potions
         public override bool CanUseItem(Player player)
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
-            if (modPlayer.currentSequence == 3 && !NPC.downedMoonlord)
+            if (modPlayer.baseSequence == 3 && !NPC.downedMoonlord)
             {
                 if (player.whoAmI == Main.myPlayer) Main.NewText("你的战绩不足以承载神性的光辉...", 255, 50, 50);
                 return false;
@@ -40,16 +40,16 @@ namespace zhashi.Content.Items.Potions
         public override bool? UseItem(Player player)
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
-            if (modPlayer.currentSequence == 3)
+            if (modPlayer.baseSequence == 3)
             {
-                modPlayer.currentSequence = 2;
+                modPlayer.baseSequence = 2;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
                 Main.NewText("黄昏的余晖在你身上凝固，你即是荣耀！", 255, 100, 0);
                 Main.NewText("晋升成功：序列2 荣耀者 (天使)！", 255, 100, 0);
                 Main.NewText("获得权柄：【黄昏重生】(抵挡一次死亡) | 【黄昏之笼】", 255, 255, 255);
                 return true;
             }
-            else if (modPlayer.currentSequence > 3) { Main.NewText("你还未成为银骑士。", 200, 50, 50); return true; }
+            else if (modPlayer.baseSequence > 3) { Main.NewText("你还未成为银骑士。", 200, 50, 50); return true; }
             else { Main.NewText("你已是荣耀者。", 200, 200, 200); return true; }
         }
 

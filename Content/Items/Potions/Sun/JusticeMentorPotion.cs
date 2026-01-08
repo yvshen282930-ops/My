@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -24,8 +25,44 @@ namespace zhashi.Content.Items.Potions.Sun
             Item.UseSound = SoundID.Item3;
             Item.maxStack = 30;
             Item.consumable = true;
-            Item.rare = ItemRarityID.Cyan; // 青色 (序列3 圣者)
+            Item.rare = ItemRarityID.Cyan; // 序列3 圣者
             Item.value = Item.sellPrice(platinum: 1);
+        }
+
+        // 【新增】显示仪式条件和进度
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            Player player = Main.LocalPlayer;
+            LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
+
+            // 1. 序列检测
+            bool seqReady = modPlayer.baseSunSequence == 4;
+            string seqColor = seqReady ? "00FF00" : "FF0000";
+            tooltips.Add(new TooltipLine(Mod, "SeqReq", $"[c/{seqColor}:条件1: 需序列4 无暗者]"));
+
+            // 2. 杀敌仪式检测 (对应 LotMPlayer 里的计数器)
+            bool killReady = modPlayer.judgmentProgress >= LotMPlayer.JUDGMENT_RITUAL_TARGET;
+            string killColor = killReady ? "00FF00" : "FF0000";
+            tooltips.Add(new TooltipLine(Mod, "KillReq", $"[c/{killColor}:条件2: 审判强敌 ({modPlayer.judgmentProgress}/{LotMPlayer.JUDGMENT_RITUAL_TARGET})]"));
+
+            // 3. 环境与物品检测
+            bool isDay = Main.dayTime;
+            bool hasEmblem = player.HasItem(ItemID.AvengerEmblem);
+            bool isClean = !player.HasBuff(BuffID.Bleeding) && !player.HasBuff(BuffID.Poisoned);
+
+            string condColor = (isDay && hasEmblem && isClean) ? "00FF00" : "FF0000";
+            string dayText = isDay ? "白天" : "需白天";
+            string itemText = hasEmblem ? "徽章" : "缺复仇者徽章";
+            string cleanText = isClean ? "纯净" : "有污秽Debuff";
+
+            tooltips.Add(new TooltipLine(Mod, "CondReq", $"[c/{condColor}:条件3: {dayText} + {itemText} + {cleanText}]"));
+        }
+
+        public override bool CanUseItem(Player player)
+        {
+            LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
+            // 只有序列4才能喝
+            return modPlayer.baseSunSequence == 4;
         }
 
         public override bool? UseItem(Player player)
@@ -34,20 +71,27 @@ namespace zhashi.Content.Items.Potions.Sun
             {
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
-                if (modPlayer.currentSunSequence == 4)
+                if (modPlayer.baseSunSequence == 4)
                 {
-                    // === 仪式判定 ===
-                    // 1. 必须在白天 (正义属于阳光)
-                    // 2. 必须持有“正义的证明” (这里用 复仇者徽章 AvengerEmblem 代表践行正义的决心)
-                    // 3. 身上不能有邪恶 Debuff
+                    // === 1. 检查击杀仪式 ===
+                    if (modPlayer.judgmentProgress < LotMPlayer.JUDGMENT_RITUAL_TARGET)
+                    {
+                        Main.NewText($"仪式未完成：你需要审判更多的罪恶 ({modPlayer.judgmentProgress}/{LotMPlayer.JUDGMENT_RITUAL_TARGET})。", 255, 50, 50);
+                        return false; // 不消耗物品
+                    }
 
+                    // === 2. 检查环境仪式 ===
                     bool isDay = Main.dayTime;
                     bool hasEmblem = player.HasItem(ItemID.AvengerEmblem);
                     bool isClean = !player.HasBuff(BuffID.Bleeding) && !player.HasBuff(BuffID.Poisoned);
 
                     if (isDay && hasEmblem && isClean)
                     {
-                        modPlayer.currentSunSequence = 3;
+                        // 晋升成功
+                        modPlayer.baseSunSequence = 3;
+                        // 可选：如果不等下一帧自动同步，可以手动设置 current，让效果立刻显现
+                        // modPlayer.currentSunSequence = 3; 
+
                         Main.NewText("你确立了自己的秩序，与世界签订了契约...", 255, 215, 0);
                         Main.NewText("晋升圣者！序列3：正义导师。", 255, 215, 0);
                         Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29, player.position);
@@ -63,15 +107,16 @@ namespace zhashi.Content.Items.Potions.Sun
                     }
                     else
                     {
+                        // 失败提示
                         if (!isDay) Main.NewText("仪式失败：正义需要在阳光下见证。", 150, 150, 150);
                         else if (!hasEmblem) Main.NewText("仪式失败：你缺少践行正义的证明 (需持有复仇者徽章)。", 150, 150, 150);
-                        else Main.NewText("仪式失败：你的身体不够纯净。", 150, 150, 150);
+                        else Main.NewText("仪式失败：你的身体不够纯净 (请清除流血/中毒等状态)。", 150, 150, 150);
                         return false;
                     }
                 }
                 else
                 {
-                    Main.NewText("你的灵性不足以容纳这份权柄。", 150, 150, 150);
+                    Main.NewText("你的灵性不足以容纳这份权柄 (需序列4)。", 150, 150, 150);
                     return false;
                 }
             }
@@ -81,14 +126,13 @@ namespace zhashi.Content.Items.Potions.Sun
         public override void AddRecipes()
         {
             CreateRecipe()
-                // 主材料：炽光巨人/太阳神鸟 -> 日耀碎片 + 异能物质(Ectoplasm)
                 .AddIngredient(ItemID.FragmentSolar, 15)
                 .AddIngredient(ItemID.Ectoplasm, 10)
-                // 辅助材料：万物礼赞者 -> 生命果 + 世纪之花掉落物
                 .AddIngredient(ItemID.LifeFruit, 5)
-                .AddIngredient(ItemID.SporeSac, 1) // 孢子囊 (代表植物怪物)
-                .AddIngredient(ItemID.HallowedBar, 20) // 神圣锭
+                .AddIngredient(ItemID.SporeSac, 1)
+                .AddIngredient(ItemID.HallowedBar, 20)
                 .AddIngredient(ItemID.BottledWater, 1)
+                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
                 .AddTile(TileID.Bottles)
                 .Register();
         }

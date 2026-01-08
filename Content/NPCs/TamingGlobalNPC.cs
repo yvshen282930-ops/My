@@ -1,8 +1,10 @@
 ﻿using System;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO; 
 using zhashi.Content.Buffs;
 using zhashi.Content;
 
@@ -14,6 +16,7 @@ namespace zhashi.Content.NPCs
 
         public int attackCooldown = 0;
         public int originalDamage = -1;
+        public int ownerIndex = -1;
 
         public override void ResetEffects(NPC npc)
         {
@@ -35,61 +38,79 @@ namespace zhashi.Content.NPCs
         {
             if (npc.HasBuff(ModContent.BuffType<TamedBuff>()))
             {
-                // --- 1. 永久存在逻辑 ---
-                Player player = Main.LocalPlayer;
-                if (player.active && !player.dead)
+                // 【核心逻辑修复】
+                // 1. 如果没有主人索引，或者索引不合法，暂时按默认逻辑处理或解除Buff
+                if (ownerIndex < 0 || ownerIndex >= Main.maxPlayers)
                 {
-                    var modPlayer = player.GetModPlayer<LotMPlayer>();
-                    // 吸血鬼及以上：血仆永久
-                    if (modPlayer.currentMoonSequence <= 7)
-                    {
-                        int buffIndex = npc.FindBuffIndex(ModContent.BuffType<TamedBuff>());
-                        if (buffIndex != -1) npc.buffTime[buffIndex] = 30000;
-                    }
+                    // 尝试寻找最近的玩家作为临时主人，或者直接返回
+                    // 这里简单处理：如果丢失主人，Buff可能就失效了，或者直接return true让它按原版AI走
+                    // 但为了防吞怪，我们先让它呆着
+                    npc.velocity *= 0.9f;
+                    return false;
                 }
+
+                Player owner = Main.player[ownerIndex];
+
+                // 2. 检查主人是否在线/存活
+                if (!owner.active || owner.dead)
+                {
+                    // 主人没了，解除驯服，或者让怪消失
+                    npc.DelBuff(npc.FindBuffIndex(ModContent.BuffType<TamedBuff>()));
+                    return true; // 恢复原版AI
+                }
+
+                // 3. 只有服务器和主人客户端需要执行“永久存在”逻辑
+                // 其他客户端只需要负责渲染
+                var modPlayer = owner.GetModPlayer<LotMPlayer>();
+
+                // 血仆永久逻辑
+                if (modPlayer.currentMoonSequence <= 7)
+                {
+                    int buffIndex = npc.FindBuffIndex(ModContent.BuffType<TamedBuff>());
+                    if (buffIndex != -1) npc.buffTime[buffIndex] = 30000;
+                }
+
+                // 4. 防止被系统刷没 (Despawn)
+                npc.timeLeft = 2; // 只要Buff还在，就强行续命
 
                 if (originalDamage == -1) originalDamage = npc.damage;
 
-                // --- 2. 属性修正 ---
+                // 属性修正
                 npc.friendly = true;
                 npc.dontTakeDamageFromHostiles = false;
+                npc.target = -1; // 清除针对玩家的仇恨
 
-                // 【核心修复2】强制清除仇恨
-                // 每一帧都告诉它：你没有攻击目标（针对玩家）
-                npc.target = -1;
-
-                // 序列7加成：伤害提升
+                // 伤害加成
                 float damageMult = 1.0f;
-                if (player.GetModPlayer<LotMPlayer>().currentMoonSequence <= 7) damageMult = 1.5f;
+                if (modPlayer.currentMoonSequence <= 7) damageMult = 1.5f;
 
                 if (npc.damage < npc.defDamage * damageMult) npc.damage = (int)(npc.defDamage * damageMult);
                 if (npc.damage < 10) npc.damage = 10;
 
-                // --- 3. 索敌与AI接管 ---
-                NPC target = FindClosestEnemy(npc);
+                // --- AI 逻辑 ---
+                NPC target = FindClosestEnemy(npc, owner); // 传入 owner 以辅助判断
 
                 if (target != null)
                 {
                     // 战斗模式
-                    // 欺骗原版AI，让它以为敌怪是它的攻击目标（有助于触发某些怪的远程攻击）
                     npc.target = target.whoAmI;
-
                     MoveTowards(npc, target.Center, 6f, 15f);
                     CheckCollisionDamage(npc, target);
                 }
                 else
                 {
-                    // 跟随模式
-                    // 再次清除目标，防止它闲着没事想打玩家
+                    // 跟随模式 (跟随 owner，而不是 Main.LocalPlayer)
                     npc.target = -1;
 
-                    Player owner = Main.LocalPlayer;
                     float dist = npc.Distance(owner.Center);
 
+                    // 距离过远传送逻辑
                     if (dist > 1500f)
                     {
                         npc.Center = owner.Center;
                         npc.velocity = Vector2.Zero;
+                        // 传送后需要同步位置，防止客户端看到的还在远处
+                        npc.netUpdate = true;
                     }
                     else if (dist > 200f)
                     {
@@ -106,15 +127,30 @@ namespace zhashi.Content.NPCs
                     }
                 }
 
-                // --- 4. 屏蔽原版 AI ---
-                // 屏蔽常见 AI，防止乱跑
+                // 屏蔽原版 AI
                 if (npc.aiStyle == 3 || npc.aiStyle == 1 || npc.aiStyle == 26 || npc.aiStyle == 14 || npc.aiStyle == 2)
                 {
                     return false;
                 }
             }
+            else
+            {
+                // 如果没有Buff，重置主人（可选）
+                ownerIndex = -1;
+            }
             return true;
         }
+        public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
+        {
+            binaryWriter.Write(ownerIndex);
+        }
+
+        public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
+        {
+            ownerIndex = binaryReader.ReadInt32();
+        }
+
+
 
         private void MoveTowards(NPC npc, Vector2 targetPos, float speedBase, float inertia)
         {
@@ -154,13 +190,16 @@ namespace zhashi.Content.NPCs
                 int hitDirection = (target.Center.X > me.Center.X) ? 1 : -1;
                 target.SimpleStrikeNPC(damage, hitDirection, false, 0f, DamageClass.Generic, false, 0f, true);
 
-                if (Main.LocalPlayer.GetModPlayer<LotMPlayer>().currentMoonSequence <= 7)
+                if (ownerIndex != -1 && Main.player[ownerIndex].active)
                 {
-                    int heal = damage / 10;
-                    if (heal < 1) heal = 1;
-                    me.life += heal;
-                    if (me.life > me.lifeMax) me.life = me.lifeMax;
-                    if (Main.rand.NextBool(3)) me.HealEffect(heal);
+                    if (Main.player[ownerIndex].GetModPlayer<LotMPlayer>().currentMoonSequence <= 7)
+                    {
+                        int heal = damage / 10;
+                        if (heal < 1) heal = 1;
+                        me.life += heal;
+                        if (me.life > me.lifeMax) me.life = me.lifeMax;
+                        if (Main.rand.NextBool(3)) me.HealEffect(heal);
+                    }
                 }
 
                 me.velocity.X *= -0.5f;
@@ -191,15 +230,17 @@ namespace zhashi.Content.NPCs
             }
         }
 
-        private NPC FindClosestEnemy(NPC me)
+        private NPC FindClosestEnemy(NPC me, Player owner)
         {
             NPC closest = null;
             float minDist = 1000f;
             for (int i = 0; i < Main.maxNPCs; i++)
             {
                 NPC other = Main.npc[i];
+                // 确保不攻击主人、友方、自己、以及其他被驯服的怪
                 if (other.active && !other.friendly && other.whoAmI != me.whoAmI && other.lifeMax > 5 && !other.dontTakeDamage && !other.HasBuff(ModContent.BuffType<TamedBuff>()))
                 {
+                    // 优先攻击离怪物自己近的
                     float dist = Vector2.Distance(me.Center, other.Center);
                     if (dist < minDist) { minDist = dist; closest = other; }
                 }

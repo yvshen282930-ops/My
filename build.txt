@@ -1,3 +1,4 @@
 displayName = 诡秘之主 （ Lord of the Mysteries)
 author = zhou
-version = 0.4.4.5
+version = 0.4.4.83
+buildIgnore = .git\*, .vs\*, .vscode\*, bin\*, obj\*, *.csproj.user, *.gitattributes, *.gitignore

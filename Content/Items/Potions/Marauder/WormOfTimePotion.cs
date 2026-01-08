@@ -26,7 +26,7 @@ namespace zhashi.Content.Items.Potions.Marauder
         {
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            if (modPlayer.currentMarauderSequence != 2) return false;
+            if (modPlayer.baseMarauderSequence != 2) return false;
 
             // 检查仪式：在城镇中维持混乱7分钟 (25200帧)
             if (modPlayer.wormRitualTimer < LotMPlayer.WORM_RITUAL_TARGET)
@@ -43,7 +43,7 @@ namespace zhashi.Content.Items.Potions.Marauder
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
             if (player.itemAnimation > 0 && player.itemTime == 0)
             {
-                modPlayer.currentMarauderSequence = 1;
+                modPlayer.baseMarauderSequence = 1;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
                 Main.NewText("你看见了斑驳的石壁，听见了古老的钟声，你成为了时间的寄生者...", 0, 255, 255);
