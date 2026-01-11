@@ -284,75 +284,87 @@ namespace zhashi.Content.UI
             else if (p.currentSequence <= 9)
             {
                 text += $"[c/C0C0C0:巨人途径 序列{p.currentSequence}]\n";
-                if (p.currentSequence <= 9) // 战士
+
+                // --- 序列9: 战士 ---
+                if (p.currentSequence <= 9)
                 {
                     text += $"序列九: [c/D3D3D3:战士]\n";
                     text += "- [被动] 基础防御+8 / 近战伤害+12%\n";
                     text += "- [被动] 生命上限+100 / 近战暴击+5%\n";
-                    text += "- [能力] 武器大师：熟练使用各类近战武器\n";
+                    text += "- [能力] 战斗精通：熟练使用各类近战武器\n";
                 }
-                if (p.currentSequence <= 8) // 格斗学者
+
+                // --- 序列8: 格斗学者 ---
+                if (p.currentSequence <= 8)
                 {
                     text += $"序列八: [c/A9A9A9:格斗学者]\n";
                     text += "- [被动] 近战攻速+15% / 伤害减免+5%\n";
                     text += "- [被动] 钢铁意志：免疫击退\n";
                 }
-                if (p.currentSequence <= 7) // 武器大师
+
+                // --- 序列7: 武器大师 ---
+                if (p.currentSequence <= 7)
                 {
                     text += $"序列七: [c/808080:武器大师]\n";
                     text += "- [被动] 全伤害+10% / 全暴击+5%\n";
                     text += "- [被动] 弱点洞悉：护甲穿透+10\n";
                 }
-                if (p.currentSequence <= 6) // 黎明骑士
+
+                // --- 序列6: 黎明骑士 ---
+                if (p.currentSequence <= 6)
                 {
                     text += $"序列六: [c/FFFFE0:黎明骑士]\n";
 
-                    // 显示铠甲状态
+                    // 铠甲状态显示
                     string armorStatus;
                     if (p.dawnArmorBroken)
-                        armorStatus = $" [c/FF0000:(破碎: {p.dawnArmorCooldownTimer / 60}s)]";
+                        armorStatus = $" [c/FF0000:(破碎: {p.dawnArmorCooldownTimer / 60 + 1}s)]";
                     else if (p.dawnArmorActive)
-                        armorStatus = $" [c/00FF00:(护盾: {p.dawnArmorCurrentHP}/{p.MaxDawnArmorHP})]";
+                        armorStatus = $" [c/00FF00:(护盾: {(int)p.dawnArmorCurrentHP}/{(int)p.MaxDawnArmorHP})]";
                     else
                         armorStatus = " [关闭]";
 
                     text += $"- [技能] 晨曦之铠 (按键切换){armorStatus}: \n";
-                    text += "    > 召唤圣光铠甲，提供额外防御与独立护盾值\n";
+                    text += "  > 召唤圣光铠甲，提供额外防御与独立护盾值\n";
                     text += "- [被动] 自带圣洁光照 / 生命回复+3\n";
-
                     if (p.currentSequence == 6)
                     {
-                        int target = LotMPlayer.GUARDIAN_RITUAL_TARGET; // 1000
+                        int target = LotMPlayer.GUARDIAN_RITUAL_TARGET;
                         int current = p.guardianRitualProgress;
-                        string status = current >= target ? "[已完成]" : $"[{current}/{target}]";
+                        if (current > target) current = target;
+
+                        string statusText = current >= target ? "[已完成]" : $"[{current}/{target}]";
                         string colorHex = current >= target ? "00FF00" : "FFA500";
 
-                        text += $"[c/{colorHex}:[晋升仪式] 守护之心: {status}]\n";
+                        text += $"[c/{colorHex}:[晋升仪式] 守护之心: {statusText}]\n";
                         text += "  (提示: 在城镇NPC附近承受伤害)\n";
                     }
                 }
-                if (p.currentSequence <= 5) // 守护者
+
+                // --- 序列5: 守护者 ---
+                if (p.currentSequence <= 5)
                 {
                     text += $"序列五: [c/708090:守护者]\n";
-
                     string guardStatus = p.isGuardianStance ? " [c/00FF00:(坚守中)]" : "";
 
                     text += $"- [技能] 守护姿态 (按住按键){guardStatus}: \n";
                     text += "    > 牺牲移动能力，换取防御+80与30%免伤\n";
                     text += "- [被动] 基础防御+20 / 免疫混乱\n";
                 }
-                if (p.currentSequence <= 4) // 猎魔人
+
+                // --- 序列4: 猎魔人 ---
+                if (p.currentSequence <= 4)
                 {
                     text += $"序列四: [c/696969:猎魔人]\n";
-
                     text += "- [半神] 猎魔体质：生命+500 / 全伤害+20%\n";
                     text += "- [被动] 超凡感官：获得夜视与生物探测\n";
                     text += "- [被动] 诅咒抗性：免疫咒火与暗影焰\n";
                 }
-                if (p.currentSequence <= 3) // 银骑士
+
+                // --- 序列3: 银骑士 ---
+                if (p.currentSequence <= 3)
                 {
                     text += $"序列三: [c/C0C0C0:银骑士]\n";
-
                     string mercuryStatus = p.isMercuryForm ? " [c/00FF00:(化身中)]" : "";
 
                     text += $"- [技能] 水银化 (按键切换){mercuryStatus}: \n";
@@ -360,26 +372,30 @@ namespace zhashi.Content.UI
                     text += "- [被动] 银白闪避：获得黑带闪避效果\n";
                     text += "- [强化] 近战攻速+20% / 生命回复+5\n";
                 }
-                if (p.currentSequence <= 2) // 荣耀战神
+
+                // --- 序列2: 荣耀战神 ---
+                if (p.currentSequence <= 2)
                 {
                     text += $"序列二: [c/FFD700:荣耀战神]\n";
-
-                    string cdRevive = p.twilightResurrectionCooldown > 0 ? $" [c/FF0000:({p.twilightResurrectionCooldown / 60}s)]" : " [c/00FF00:(就绪)]";
+                    string cdRevive = p.twilightResurrectionCooldown > 0
+                        ? $" [c/FF0000:({p.twilightResurrectionCooldown / 60}s)]"
+                        : " [c/00FF00:(就绪)]";
 
                     text += $"- [神性] 黄昏复活{cdRevive}: \n";
                     text += "    > 受到致命伤时免疫死亡并瞬间回满生命\n";
                     text += "- [被动] 巨人神躯：生命+2000 / 防御+50 / 免伤+15%\n";
                 }
-                if (p.currentSequence <= 1) // 神明之手
+                if (p.currentSequence <= 1)
                 {
                     text += $"序列一: [c/FF4500:神明之手]\n";
                     text += "- [位格] 黄昏神躯：生命上限+5000 / 基础防御+100\n";
                     text += "- [被动] 衰败权柄：伤害减免+20% / 生命回复+20\n";
                     text += "- [升华] 技能神性化：\n";
-                    text += "    > 守护姿态：额外获得10%免伤与强力荆棘反伤\n";}
+                    text += "    > 守护姿态：额外获得10%免伤与强力荆棘反伤\n";
                     text += "    > 晨曦之铠：激活时额外提供50点防御力\n";
                     text += "- [特效] 神性显化：周身散发黄昏光辉\n";
-                }
+                } 
+            }
             else if (p.currentMoonSequence <= 9)
             {
                 text += $"[c/EE82EE:月亮途径 序列{p.currentMoonSequence}]\n";
@@ -513,7 +529,7 @@ namespace zhashi.Content.UI
                     text += $"- [被动] 伤害转移{cdTransfer}: 受到致命伤时由纸人替死\n";
                     text += "- [被动] 水下呼吸 & 免疫束缚/石化\n";
                     text += "- [技能] 空气弹: 获得专属魔法武器\n";
-                    text += "- [能力] 纸人替身: 消耗纸人道具免疫伤害(25%几率)\n";
+                    text += "- [能力] 纸人替身: 消耗纸人道具免疫伤害\n";
                 }
                 if (p.currentFoolSequence <= 6) // 无面人
                 {
@@ -621,7 +637,7 @@ namespace zhashi.Content.UI
                 {
                     text += $"序列九: [c/E6E6FA:偷盗者]\n";
                     text += "- 卓越观察: 常驻探宝药水效果\n";
-                    text += "- 窃取: 拾取范围扩大，攻击几率偷钱\n";
+                    text += "- [主动]窃取: 拾取范围扩大，攻击几率偷钱\n";
                     text += "- 敏捷之手: 挖掘/放置速度提升\n";
                     text += "- 短兵精通: 短剑类武器大幅增强\n";
                 }
@@ -642,7 +658,7 @@ namespace zhashi.Content.UI
                 {
                     text += $"序列六: [c/BA55D3:盗火人]\n";
 
-                    text += "- [被动] 窃取: 攻击概率直接获得怪物掉落物\n";
+                    text += "- [主动] 窃取: 攻击概率直接获得怪物掉落物\n";
                     text += "- [被动] 窃取能力: 攻击吸取生命与魔力\n";
                     text += "- [被动] 精神抗性: 免疫大部分精神干扰Debuff\n";
                 }

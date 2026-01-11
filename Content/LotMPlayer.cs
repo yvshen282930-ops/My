@@ -54,13 +54,20 @@ namespace zhashi.Content
         public int currentMarauderSequence = 10; // 错误途径 (9-1)
         public int currentSunSequence = 10;    // 太阳途径 (9-1)
 
+        //亵渎之牌
+        public bool isFoolCardEquipped = false;
+        public bool isStrengthCardEquipped = false;
+        public bool isAntiDivinationActive = false; // 反占卜状态
+        public int blasphemyCardEquippedCount = 0;
+        public bool isLoversCardEquipped = false; 
+
 
         public bool IsBeyonder => currentSequence < 10 || currentHunterSequence < 10 || currentMoonSequence < 10 || currentFoolSequence < 10 || currentMarauderSequence < 10 || currentSunSequence < 10;
 
         // 灵性系统
         public float spiritualityCurrent = 100;
         public int spiritualityMax = 100;
-        private int spiritualityRegenTimer = 0;
+        public int spiritualityRegenTimer = 0; // 改为 public 供外部访问
 
         // --- 巨人途径技能状态 ---
         public bool dawnArmorActive = false;
@@ -144,6 +151,7 @@ namespace zhashi.Content
         public int wishCastTimer = 0;             // 按键长按计时
 
         // --- 错误途径技能状态 ---
+        public bool isPassiveStealEnabled = true;
         public int dreamWalkCooldown = 0;      // 梦境穿行冷却
         public const int DREAM_WALK_MAX = 180; // 3秒冷却
         public bool isParasitizing = false;     // 是否正在寄生
@@ -237,14 +245,14 @@ namespace zhashi.Content
         {
 
 
-            tag["CurrentSequence"] = baseSequence;
+            tag["BaseSequence"] = baseSequence;          // 建议改个名区分，或者保持原样但心里要清楚存的是Base
             tag["HunterSequence"] = baseHunterSequence;
             tag["MoonSequence"] = baseMoonSequence;
             tag["FoolSequence"] = baseFoolSequence;
-            tag["MarauderSequence"] = baseMarauderSequence;
-            tag["SunSequence"] = baseSunSequence;
+            tag["MarauderSequence"] = baseMarauderSequence; // 只存这一行！
+            tag["SunSequence"] = baseSunSequence;           // 太阳途径存的是 Base，这是对的
 
-           
+
             tag["Spirituality"] = spiritualityCurrent;
             tag["GuardianRitual"] = guardianRitualProgress;
             tag["DemonHunterRitual"] = demonHunterRitualProgress;
@@ -253,7 +261,6 @@ namespace zhashi.Content
             tag["ConquerorRitual"] = conquerorRitualComplete;
             tag["ResurrectionCooldown"] = twilightResurrectionCooldown;
             tag["BorrowUses"] = borrowUsesDaily;
-            tag["MarauderSequence"] = currentMarauderSequence;
             tag["AttendantRitual"] = attendantRitualProgress;
             tag["AttendantRitualComplete"] = attendantRitualComplete;
 
@@ -281,18 +288,17 @@ namespace zhashi.Content
 
         public override void LoadData(TagCompound tag)
         {
-            if (tag.ContainsKey("CurrentSequence")) baseSequence = tag.GetInt("CurrentSequence");
+            if (tag.ContainsKey("BaseSequence")) baseSequence = tag.GetInt("BaseSequence");
+            // 兼容旧存档的键名 "CurrentSequence"
+            else if (tag.ContainsKey("CurrentSequence")) baseSequence = tag.GetInt("CurrentSequence");
+
             if (tag.ContainsKey("HunterSequence")) baseHunterSequence = tag.GetInt("HunterSequence");
             if (tag.ContainsKey("MoonSequence")) baseMoonSequence = tag.GetInt("MoonSequence");
             if (tag.ContainsKey("FoolSequence")) baseFoolSequence = tag.GetInt("FoolSequence");
             if (tag.ContainsKey("MarauderSequence")) baseMarauderSequence = tag.GetInt("MarauderSequence");
-            if (tag.ContainsKey("SunSequence")) baseSunSequence = tag.GetInt("SunSequence");
 
-            if (tag.ContainsKey("CurrentSequence")) currentSequence = tag.GetInt("CurrentSequence");
-            if (tag.ContainsKey("HunterSequence")) currentHunterSequence = tag.GetInt("HunterSequence");
-            if (tag.ContainsKey("MoonSequence")) currentMoonSequence = tag.GetInt("MoonSequence");
-            if (tag.ContainsKey("FoolSequence")) currentFoolSequence = tag.GetInt("FoolSequence");
-            if (tag.ContainsKey("SunSequence")) currentSunSequence = tag.GetInt("SunSequence");
+            // 【关键】太阳途径读取到 Base 变量里
+            if (tag.ContainsKey("SunSequence")) baseSunSequence = tag.GetInt("SunSequence");
 
             if (tag.ContainsKey("Spirituality")) spiritualityCurrent = tag.GetFloat("Spirituality");
             if (tag.ContainsKey("GuardianRitual")) guardianRitualProgress = tag.GetInt("GuardianRitual");
@@ -340,79 +346,87 @@ namespace zhashi.Content
         public override void SyncPlayer(int toWho, int fromWho, bool newPlayer)
         {
             ModPacket packet = Mod.GetPacket();
-
-            // 1. 写入消息头
-            // 使用我们在 zhashi.cs 里新定义的枚举
             packet.Write((byte)LotMNetMsg.PlayerSync);
-            packet.Write((byte)Player.whoAmI); // 写入由于是谁的数据
+            packet.Write((byte)Player.whoAmI);
 
-            // 2. 【关键】写入变量 (顺序必须和 zhashi.cs 读取时一致！)
-            packet.Write(currentSequence);          // Int32
-            packet.Write(currentMarauderSequence);  // Int32
-            packet.Write(currentFoolSequence);      // Int32
-            packet.Write(currentHunterSequence);    // Int32
-            packet.Write(currentMoonSequence);      // Int32
-            packet.Write(currentSunSequence);       // Int32
-            packet.Write(spiritualityCurrent);      // Float
+            packet.Write(baseSequence);          // 通用序列
+            packet.Write(baseMarauderSequence);  // 偷盗者基础
+            packet.Write(baseFoolSequence);      // 愚者基础
+            packet.Write(baseHunterSequence);    // 猎人基础
+            packet.Write(baseMoonSequence);      // 月亮基础
+            packet.Write(baseSunSequence);       // 太阳基础 (必须有这个！)
 
-            // 寄生数据
-            packet.Write(isParasitizing);           // Bool
-            packet.Write(parasiteTargetIndex);      // Int32
-            packet.Write(parasiteIsTownNPC);        // Bool
-            packet.Write(parasiteIsPlayer);         // Bool
-            packet.Write(purificationProgress); // Int32
-            packet.Write(judgmentProgress);     // Int32
+            // --- [1] 基础数值 (7个) ---
+            packet.Write(currentSequence);
+            packet.Write(currentMarauderSequence);
+            packet.Write(currentFoolSequence);
+            packet.Write(currentHunterSequence);
+            packet.Write(currentMoonSequence);
+            packet.Write(currentSunSequence);
+            packet.Write(spiritualityCurrent); // float
+
+            // --- [2] 寄生与仪式 (7个) ---
+            packet.Write(isParasitizing);
+            packet.Write(parasiteTargetIndex);
+            packet.Write(parasiteIsTownNPC);
+            packet.Write(parasiteIsPlayer);
+            packet.Write(purificationProgress);
+            packet.Write(judgmentProgress);
             packet.Write(ironBloodRitualProgress);
 
-            packet.Write(isSpiritVisionActive); // 愚者灵视
-            packet.Write(isTamingActive);       // 月亮驯兽
-            packet.Write(isDeceitDomainActive); // 欺瞒领域 
-            packet.Write(isTimeClockActive);    // 时之虫领域 
-            packet.Write(spiritWorms); // 【修复】必须同步灵之虫数量
+            // --- [3] 核心资源 (1个) ---
+            packet.Write(spiritWorms);
 
-            // --- 4. 持续性开关/状态 (如果不写，队友看不到特效或吃不到Buff) ---
-            // 愚者
-            packet.Write(isSpiritVisionActive);
-            packet.Write(isSpiritForm);         // 【修复】灵体化
-            packet.Write(graftingMode);         // 【修复】嫁接模式 (int)
-            packet.Write(spiritThreadTargetIndex); // 【修复】灵体之线目标 (int)
+            // --- [4] 愚者途径状态 (4个) ---
+            packet.Write(isSpiritVisionActive);    // 灵视
+            packet.Write(isSpiritForm);            // 灵体状态 (视觉+穿墙)
+            packet.Write(graftingMode);            // 嫁接模式 (int)
+            packet.Write(spiritThreadTargetIndex); // 灵体之线目标 (int)
 
-            // 月亮
-            packet.Write(isTamingActive);
-            packet.Write(isVampireWings);       // 【修复】翅膀
-            packet.Write(isBatSwarm);           // 【修复】蝙蝠化身
-            packet.Write(isMoonlightized);      // 【修复】月光化
-            packet.Write(isFullMoonActive);     // 【修复】满月
-            packet.Write(isCreationDomain);     // 【修复】创生领域
+            // --- [5] 错误途径状态 (2个) ---
+            // *此前可能就是这里错位导致特效乱飞*
+            packet.Write(isDeceitDomainActive);    // 欺诈领域 (视觉)
+            packet.Write(isTimeClockActive);       // 时之虫钟表 (视觉)
 
-            // 错误
-            packet.Write(isDeceitDomainActive);
-            packet.Write(isTimeClockActive);
+            // --- [6] 月亮途径状态 (6个) ---
+            packet.Write(isTamingActive);          // 驯兽
+            packet.Write(isVampireWings);          // 吸血鬼翅膀 (视觉+机动)
+            packet.Write(isBatSwarm);              // 蝙蝠化身 (视觉+无敌)
+            packet.Write(isMoonlightized);         // 月光化 (视觉)
+            packet.Write(isFullMoonActive);        // 满月 (视觉)
+            packet.Write(isCreationDomain);        // 创生领域 (视觉)
 
-            // 猎人
-            packet.Write(isFireForm);           // 【修复】火焰形态
-            packet.Write(isCalamityGiant);      // 【修复】灾祸巨人
-            packet.Write(isFlameCloakActive);   // 【修复】火焰披风
+            // --- [7] 猎人途径状态 (3个) ---
+            packet.Write(isFireForm);              // 火焰形态 (视觉+伤害)
+            packet.Write(isCalamityGiant);         // 灾祸巨人 (视觉+伤害)
+            packet.Write(isFlameCloakActive);      // 火焰披风 (视觉)
 
-            // 巨人
-            packet.Write(isGuardianStance);     // 【修复】守护姿态
-            packet.Write(isMercuryForm);        // 【修复】水银化
-            packet.Write(dawnArmorActive);      // 【修复】黎明铠甲
+            // --- [8] 巨人/战士途径状态 (3个) ---
+            packet.Write(isGuardianStance);        // 守护姿态 (减伤+仇恨)
+            packet.Write(isMercuryForm);           // 水银化 (视觉)
+            packet.Write(dawnArmorActive);         // 黎明铠甲 (视觉)
 
-            // 太阳
-            packet.Write(isSinging);            // 【修复】歌唱状态 (最重要！否则队友没Buff)
-            packet.Write(isSunMessenger);       // 【修复】太阳使者
+            // --- [9] 太阳途径状态 (2个) ---
+            packet.Write(isSinging);               // 歌颂 (Buff光环)
+            packet.Write(isSunMessenger);          // 太阳使者 (视觉)
 
-            packet.Send(toWho, fromWho);
+            packet.Write(isPassiveStealEnabled);
 
-            // 3. 发送
             packet.Send(toWho, fromWho);
         }
 
         public override void CopyClientState(ModPlayer targetCopy)
         {
             LotMPlayer clone = targetCopy as LotMPlayer;
-            // 必须把所有要同步的变量都复制一遍，用于比较
+
+            clone.baseSequence = baseSequence;
+            clone.baseMarauderSequence = baseMarauderSequence;
+            clone.baseFoolSequence = baseFoolSequence;
+            clone.baseHunterSequence = baseHunterSequence;
+            clone.baseMoonSequence = baseMoonSequence;
+            clone.baseSunSequence = baseSunSequence;
+
+            // [1] 基础
             clone.currentSequence = currentSequence;
             clone.currentMarauderSequence = currentMarauderSequence;
             clone.currentFoolSequence = currentFoolSequence;
@@ -421,6 +435,7 @@ namespace zhashi.Content
             clone.currentSunSequence = currentSunSequence;
             clone.spiritualityCurrent = spiritualityCurrent;
 
+            // [2] 寄生
             clone.isParasitizing = isParasitizing;
             clone.parasiteTargetIndex = parasiteTargetIndex;
             clone.parasiteIsTownNPC = parasiteIsTownNPC;
@@ -429,14 +444,20 @@ namespace zhashi.Content
             clone.judgmentProgress = judgmentProgress;
             clone.ironBloodRitualProgress = ironBloodRitualProgress;
 
+            // [3] 资源
             clone.spiritWorms = spiritWorms;
 
-            // 状态开关
+            // [4] 愚者
             clone.isSpiritVisionActive = isSpiritVisionActive;
             clone.isSpiritForm = isSpiritForm;
             clone.graftingMode = graftingMode;
             clone.spiritThreadTargetIndex = spiritThreadTargetIndex;
 
+            // [5] 错误
+            clone.isDeceitDomainActive = isDeceitDomainActive;
+            clone.isTimeClockActive = isTimeClockActive;
+
+            // [6] 月亮
             clone.isTamingActive = isTamingActive;
             clone.isVampireWings = isVampireWings;
             clone.isBatSwarm = isBatSwarm;
@@ -444,69 +465,91 @@ namespace zhashi.Content
             clone.isFullMoonActive = isFullMoonActive;
             clone.isCreationDomain = isCreationDomain;
 
-            clone.isDeceitDomainActive = isDeceitDomainActive;
-            clone.isTimeClockActive = isTimeClockActive;
-
+            // [7] 猎人
             clone.isFireForm = isFireForm;
             clone.isCalamityGiant = isCalamityGiant;
             clone.isFlameCloakActive = isFlameCloakActive;
 
+            // [8] 巨人
             clone.isGuardianStance = isGuardianStance;
             clone.isMercuryForm = isMercuryForm;
             clone.dawnArmorActive = dawnArmorActive;
 
+            // [9] 太阳
             clone.isSinging = isSinging;
             clone.isSunMessenger = isSunMessenger;
+
+            clone.isPassiveStealEnabled = isPassiveStealEnabled;
         }
 
         public override void SendClientChanges(ModPlayer clientPlayer)
         {
             LotMPlayer clone = clientPlayer as LotMPlayer;
 
-            // 检查是否有任何变量发生了变化
+            // 检查任何一个变量发生变化，就发送同步包
             bool changed =
+
+                clone.baseSequence != baseSequence ||
+        clone.baseMarauderSequence != baseMarauderSequence ||
+        clone.baseFoolSequence != baseFoolSequence ||
+        clone.baseHunterSequence != baseHunterSequence ||
+        clone.baseMoonSequence != baseMoonSequence ||
+        clone.baseSunSequence != baseSunSequence || // 关键！
+                                                    // [1]
                 clone.currentSequence != currentSequence ||
                 clone.currentMarauderSequence != currentMarauderSequence ||
                 clone.currentFoolSequence != currentFoolSequence ||
                 clone.currentHunterSequence != currentHunterSequence ||
                 clone.currentMoonSequence != currentMoonSequence ||
                 clone.currentSunSequence != currentSunSequence ||
-                clone.spiritualityCurrent != spiritualityCurrent ||
+                Math.Abs(clone.spiritualityCurrent - spiritualityCurrent) > 0.1f ||
+
+                // [2]
+                clone.isParasitizing != isParasitizing ||
+                clone.parasiteTargetIndex != parasiteTargetIndex ||
+                clone.parasiteIsTownNPC != parasiteIsTownNPC ||
+                clone.parasiteIsPlayer != parasiteIsPlayer ||
                 clone.purificationProgress != purificationProgress ||
                 clone.judgmentProgress != judgmentProgress ||
                 clone.ironBloodRitualProgress != ironBloodRitualProgress ||
-                
+
+                // [3]
                 clone.spiritWorms != spiritWorms ||
+
+                // [4]
                 clone.isSpiritVisionActive != isSpiritVisionActive ||
-        clone.isSpiritForm != isSpiritForm ||
-        clone.graftingMode != graftingMode ||
-        clone.spiritThreadTargetIndex != spiritThreadTargetIndex ||
+                clone.isSpiritForm != isSpiritForm ||
+                clone.graftingMode != graftingMode ||
+                clone.spiritThreadTargetIndex != spiritThreadTargetIndex ||
 
-        clone.isTamingActive != isTamingActive ||
-        clone.isVampireWings != isVampireWings ||
-        clone.isBatSwarm != isBatSwarm ||
-        clone.isMoonlightized != isMoonlightized ||
-        clone.isFullMoonActive != isFullMoonActive ||
-        clone.isCreationDomain != isCreationDomain ||
+                // [5]
+                clone.isDeceitDomainActive != isDeceitDomainActive ||
+                clone.isTimeClockActive != isTimeClockActive ||
 
-        clone.isDeceitDomainActive != isDeceitDomainActive ||
-        clone.isTimeClockActive != isTimeClockActive ||
+                // [6]
+                clone.isTamingActive != isTamingActive ||
+                clone.isVampireWings != isVampireWings ||
+                clone.isBatSwarm != isBatSwarm ||
+                clone.isMoonlightized != isMoonlightized ||
+                clone.isFullMoonActive != isFullMoonActive ||
+                clone.isCreationDomain != isCreationDomain ||
 
-        clone.isFireForm != isFireForm ||
-        clone.isCalamityGiant != isCalamityGiant ||
-        clone.isFlameCloakActive != isFlameCloakActive ||
+                // [7]
+                clone.isFireForm != isFireForm ||
+                clone.isCalamityGiant != isCalamityGiant ||
+                clone.isFlameCloakActive != isFlameCloakActive ||
 
-        clone.isGuardianStance != isGuardianStance ||
-        clone.isMercuryForm != isMercuryForm ||
-        clone.dawnArmorActive != dawnArmorActive ||
+                // [8]
+                clone.isGuardianStance != isGuardianStance ||
+                clone.isMercuryForm != isMercuryForm ||
+                clone.dawnArmorActive != dawnArmorActive ||
 
-        clone.isSinging != isSinging ||
-        clone.isSunMessenger != isSunMessenger;
+                // [9]
+                clone.isSinging != isSinging ||
 
+                clone.isPassiveStealEnabled != isPassiveStealEnabled ||
+                clone.isSunMessenger != isSunMessenger;
 
-
-
-            // 如果有变化，就发包
             if (changed)
             {
                 SyncPlayer(toWho: -1, fromWho: Main.myPlayer, newPlayer: false);
@@ -693,6 +736,14 @@ namespace zhashi.Content
 
         public override void ResetEffects()
         {
+            //亵渎之牌
+            isAntiDivinationActive = false;
+            blasphemyCardEquippedCount = 0;
+            isFoolCardEquipped = false;
+            isStrengthCardEquipped = false;//力量
+            isLoversCardEquipped = false;
+
+
             currentSequence = baseSequence;
             currentHunterSequence = baseHunterSequence;
             currentMoonSequence = baseMoonSequence;
@@ -848,10 +899,6 @@ namespace zhashi.Content
                     stealMode = false;
                 }
             }
-
-            // 【核心修复】自动关闭逻辑
-            // 只有当完全结束对话（talkNPC == -1）时才自动关闭。
-            // 这样允许你在对话界面开启模式，然后再点“商店”按钮。
             if (Player.talkNPC == -1)
             {
                 stealMode = false;
@@ -1491,62 +1538,95 @@ namespace zhashi.Content
             if (currentSequence <= 6 && dawnArmorActive && !dawnArmorBroken) { int dyeId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.BrightSilverDye); Player.cHead = dyeId; Player.cBody = dyeId; Player.cLegs = dyeId; }
             if (isVampireWings) { Player.wings = 12; int blackDyeId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.BlackDye); Player.cWings = blackDyeId; }
             if (isMoonlightized) { int redDyeId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.RedAcidDye); Player.cHead = redDyeId; Player.cBody = redDyeId; Player.cLegs = redDyeId; }
+
+            //亵渎之牌换肤
+            if (isFoolCardEquipped)
+            {
+
+                var godHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.NebulaHelmet];
+                var godBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.NebulaBreastplate];
+
+                var godLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.DjinnsCurse];
+
+                // 2. 强制覆盖外观
+                Player.head = godHead.headSlot;
+                Player.body = godBody.bodySlot;
+                Player.legs = godLegs.legSlot;
+
+                // 3. 注入“灰雾”神性染料
+                // MirageDye (幻象染料) 
+                int dyeId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.MirageDye);
+
+                Player.cHead = dyeId;
+                Player.cBody = dyeId;
+                Player.cLegs = dyeId;
+            }
+            if (isStrengthCardEquipped)
+            {
+                // 使用原版【日耀盔甲】(Solar Flare) 的外观，霸气十足
+                var head = Terraria.ID.ContentSamples.ItemsByType[ItemID.SolarFlareHelmet];
+                var body = Terraria.ID.ContentSamples.ItemsByType[ItemID.SolarFlareBreastplate];
+                var legs = Terraria.ID.ContentSamples.ItemsByType[ItemID.SolarFlareLeggings];
+
+                Player.head = head.headSlot;
+                Player.body = body.bodySlot;
+                Player.legs = legs.legSlot;
+
+                // 染成银色 (黄昏巨人风格)
+                int dyeId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.ReflectiveSilverDye);
+                Player.cHead = dyeId;
+                Player.cBody = dyeId;
+                Player.cLegs = dyeId;
+            }
+        }
+        public override void PostUpdateEquips()
+        {
+            // 这是一个好习惯，虽然目前 base 可能没做什么，但保留它是个保险
+            base.PostUpdateEquips();
+            if (blasphemyCardEquippedCount > 1)
+            {
+                Player.AddBuff(Terraria.ID.BuffID.OnFire3, 2);
+                var reason = Terraria.DataStructures.PlayerDeathReason.ByCustomReason(
+                    Terraria.Localization.NetworkText.FromLiteral(Player.name + " 无法承受复数亵渎之牌的力量，灵体崩溃了！")
+                );
+                Player.KillMe(reason, 999999, 0);
+            }
         }
 
         public override void DrawEffects(PlayerDrawSet drawInfo, ref float r, ref float g, ref float b, ref float a, ref bool fullBright)
         {
-            if (isSunMessenger)
+            if (isBatSwarm || isSunMessenger || isMercuryForm)
             {
-                a = 0f; // 透明度设为 0
-                drawInfo.drawPlayer.invis = true; // 标记为隐身状态
-
-                drawInfo.drawPlayer.head = -1;
-                drawInfo.drawPlayer.body = -1;
-                drawInfo.drawPlayer.legs = -1;
-                drawInfo.drawPlayer.handon = -1;
-                drawInfo.drawPlayer.handoff = -1;
-                drawInfo.drawPlayer.back = -1;
-                drawInfo.drawPlayer.front = -1;
-                drawInfo.drawPlayer.shoe = -1;
-                drawInfo.drawPlayer.waist = -1;
-                drawInfo.drawPlayer.shield = -1;
-                drawInfo.drawPlayer.neck = -1;
-                drawInfo.drawPlayer.face = -1;
-                drawInfo.drawPlayer.balloon = -1;
-                drawInfo.drawPlayer.wings = -1; // 移除翅膀
-
-                drawInfo.heldItem = null;
-
+                // 步骤A: 告诉游戏引擎“隐藏玩家整体”
                 drawInfo.hideEntirePlayer = true;
-                return;
-            }
 
-            if (isBatSwarm)
-            {
+                // 步骤B: 将透明度设为 0 (双重保险)
                 a = 0f;
-                drawInfo.drawPlayer.invis = true;
 
-                drawInfo.drawPlayer.head = -1;
-                drawInfo.drawPlayer.body = -1;
-                drawInfo.drawPlayer.legs = -1;
+                // 步骤C: 【防崩溃关键】将所有装备栏位的视觉ID设为 0 (空)
+                // 警告：绝对不要设为 -1，否则会导致 System.IndexOutOfRangeException 崩溃
+                drawInfo.drawPlayer.head = 0;
+                drawInfo.drawPlayer.body = 0;
+                drawInfo.drawPlayer.legs = 0;
 
-                drawInfo.drawPlayer.handon = -1;  // 手套 (前)
-                drawInfo.drawPlayer.handoff = -1; // 手套 (后)
-                drawInfo.drawPlayer.back = -1;    // 背部
-                drawInfo.drawPlayer.front = -1;   // 胸前
-                drawInfo.drawPlayer.shoe = -1;    // 鞋子
-                drawInfo.drawPlayer.waist = -1;   // 腰带
-                drawInfo.drawPlayer.shield = -1;  // 盾牌
-                drawInfo.drawPlayer.neck = -1;    // 脖子
-                drawInfo.drawPlayer.face = -1;    // 脸部饰品
-                drawInfo.drawPlayer.balloon = -1; // 气球
-                drawInfo.drawPlayer.wings = -1;   // 【重要】隐藏翅膀
+                // 隐藏所有饰品栏位 (解决翅膀/背饰依然显示的问题)
+                drawInfo.drawPlayer.wings = 0;
+                drawInfo.drawPlayer.back = 0;
+                drawInfo.drawPlayer.front = 0;
+                drawInfo.drawPlayer.shoe = 0;
+                drawInfo.drawPlayer.waist = 0;
+                drawInfo.drawPlayer.shield = 0;
+                drawInfo.drawPlayer.neck = 0;
+                drawInfo.drawPlayer.face = 0;
+                drawInfo.drawPlayer.handon = 0;
+                drawInfo.drawPlayer.handoff = 0;
+                drawInfo.drawPlayer.beard = 0; // 胡子也要隐藏
 
+                // 步骤D: 移除手持物品的数据引用
                 drawInfo.heldItem = null;
-            }
-            if (isBatSwarm)
-            {
-                Player.noItems = true;
+
+                // 既然已经完全隐身，后续的颜色计算就不需要了，直接返回
+                return;
             }
             if (graftingMode != 0)
             {
@@ -1574,6 +1654,19 @@ namespace zhashi.Content
 
             if (currentMoonSequence <= 1) { Lighting.AddLight(Player.Center, 0.8f, 0.4f, 0.6f); if (Main.rand.NextBool(10)) Dust.NewDustDirect(Player.position, Player.width, Player.height, DustID.PinkTorch, 0, 0, 100, default, 1.0f).noGravity = true; }
 
+        }
+        public override void HideDrawLayers(PlayerDrawSet drawInfo)
+        {
+            // 只判断你要求的三个状态：蝙蝠化、太阳使者、水银化
+            if (isBatSwarm || isSunMessenger || isMercuryForm)
+            {
+                foreach (var layer in Terraria.ModLoader.PlayerDrawLayerLoader.Layers)
+                {
+                    layer.Hide();
+                }
+
+                Terraria.DataStructures.PlayerDrawLayers.HeldItem.Hide();
+            }
         }
 
         public override void PostUpdateMiscEffects()
@@ -1830,7 +1923,7 @@ namespace zhashi.Content
                             if (!npc.friendly && !npc.dontTakeDamage && npc.Distance(Player.Center) < range)
                             {
                                 int dmg = (int)(500 * GetSequenceMultiplier(currentSunSequence));
-                                bool isEvil = NPCID.Sets.Zombies[npc.type] || NPCID.Sets.Skeletons[npc.type] || npc.boss || npc.aiStyle == 22;
+                                bool isEvil = IsUndeadCreature(npc) || npc.boss;
                                 if (isEvil) dmg *= 2;
                                 Player.ApplyDamageToNPC(npc, dmg, 0f, 0, false);
                                 npc.AddBuff(BuffID.Daybreak, 60);
@@ -2107,7 +2200,7 @@ namespace zhashi.Content
                     SoundEngine.PlaySound(SoundID.Roar, Player.position);
                     Main.NewText("灵性彻底枯竭！你失控了！", 255, 50, 50);
                     int backlashDmg = (int)(Player.statLifeMax2 * 0.4f);
-                    Player.Hurt(PlayerDeathReason.ByCustomReason(Player.name + " 因灵性枯竭而失控畸变"), backlashDmg, 0);
+                    Player.Hurt(PlayerDeathReason.ByCustomReason(NetworkText.FromLiteral(Player.name + " 因灵性枯竭而失控畸变")), backlashDmg, 0);
 
                     Player.AddBuff(BuffID.Blackout, 180);
                     Player.AddBuff(BuffID.Obstructed, 180);
@@ -2217,104 +2310,105 @@ namespace zhashi.Content
         // 6. 攻击
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            ApplyHitEffects(target); CheckRitualKill(target); CheckExecution(target); if (currentMarauderSequence <= 9)
+            ApplyHitEffects(target); CheckRitualKill(target); CheckExecution(target); if (isPassiveStealEnabled)
             {
-                if (Main.rand.NextBool(5)) // 20% 几率
+                if (currentMarauderSequence <= 9)
                 {
-                    target.value *= 1.2f; // 增加掉落钱币价值
-                    // 制造一点金币特效
-                    Dust.NewDust(target.position, target.width, target.height, DustID.GoldCoin, 0, 0, 0, default, 0.8f);
-                }
-                if (currentMarauderSequence <= 6)
-                {
-                    float baseChance = target.boss ? 0.002f : 0.02f;
-                    float multiplier = 1f + (6 - currentMarauderSequence) * 0.3f;
-                    float finalChance = baseChance * multiplier;
-
-                    // [平衡性限制] 设置硬上限，防止概率溢出太离谱
-                    // 普通怪上限 10%, Boss上限 1%
-                    if (!target.boss && finalChance > 0.1f) finalChance = 0.1f;
-                    if (target.boss && finalChance > 0.01f) finalChance = 0.01f;
-
-                    // 2. 触发判定
-                    int stealAttempts = (currentMarauderSequence <= 2) ? 6 : (currentMarauderSequence <= 3 ? 3 : 1);
-
-                    // 这里的变量名改成了 n
-                    for (int n = 0; n < stealAttempts; n++)
+                    if (Main.rand.NextBool(5)) // 20% 几率
                     {
-                        if (Main.rand.NextFloat() < finalChance && target.life > 0)
+                        target.value *= 1.2f; // 增加掉落钱币价值
+                                              // 制造一点金币特效
+                        Dust.NewDust(target.position, target.width, target.height, DustID.GoldCoin, 0, 0, 0, default, 0.8f);
+                    }
+                    if (currentMarauderSequence <= 6)
+                    {
+                        float baseChance = target.boss ? 0.002f : 0.02f;
+                        float multiplier = 1f + (6 - currentMarauderSequence) * 0.3f;
+                        float finalChance = baseChance * multiplier;
+
+                        if (!target.boss && finalChance > 0.1f) finalChance = 0.1f;
+                        if (target.boss && finalChance > 0.01f) finalChance = 0.01f;
+
+                        // 2. 触发判定
+                        int stealAttempts = (currentMarauderSequence <= 2) ? 6 : (currentMarauderSequence <= 3 ? 3 : 1);
+
+                        // 这里的变量名改成了 n
+                        for (int n = 0; n < stealAttempts; n++)
                         {
-                            var dropInfo = new Terraria.GameContent.ItemDropRules.DropAttemptInfo
+                            if (Main.rand.NextFloat() < finalChance && target.life > 0)
                             {
-                                player = Player,
-                                npc = target,
-                                IsExpertMode = Main.expertMode,
-                                IsMasterMode = Main.masterMode,
-                                IsInSimulation = false,
-                                rng = Main.rand
-                            };
-                            Main.ItemDropSolver.TryDropping(dropInfo);
+                                var dropInfo = new Terraria.GameContent.ItemDropRules.DropAttemptInfo
+                                {
+                                    player = Player,
+                                    npc = target,
+                                    IsExpertMode = Main.expertMode,
+                                    IsMasterMode = Main.masterMode,
+                                    IsInSimulation = false,
+                                    rng = Main.rand
+                                };
+                                Main.ItemDropSolver.TryDropping(dropInfo);
 
-                            // 只在第一次循环显示文字
-                            if (n == 0)
-                            {
-                                string text = "窃取!";
-                                if (currentMarauderSequence <= 2) text = "命运窃取 (x6)!"; // 序列 2/1 提示
-                                else if (currentMarauderSequence <= 3) text = "三重窃取!";   // 序列 3 提示
+                                // 只在第一次循环显示文字
+                                if (n == 0)
+                                {
+                                    string text = "窃取!";
+                                    if (currentMarauderSequence <= 2) text = "命运窃取 (x6)!"; // 序列 2/1 提示
+                                    else if (currentMarauderSequence <= 3) text = "三重窃取!";   // 序列 3 提示
 
-                                CombatText.NewText(target.getRect(), new Color(255, 165, 0), text, true);
+                                    CombatText.NewText(target.getRect(), new Color(255, 165, 0), text, true);
+                                }
+
+                                // 窃取成功时的金光特效 (这里可能用的是 i，没关系)
+                                for (int i = 0; i < 5; i++)
+                                    Dust.NewDust(target.position, target.width, target.height, DustID.GoldFlame, 0, 0, 0, default, 1.0f);
+
+                                // --- 仪式逻辑 (这里面可能原本包含了一个 int k 的循环) ---
+                                if (currentMarauderSequence == 5 && parasiteRitualProgress < PARASITE_RITUAL_TARGET)
+                                {
+                                    parasiteRitualProgress++;
+                                    if (parasiteRitualProgress >= PARASITE_RITUAL_TARGET)
+                                    {
+                                        Main.NewText("仪式完成：命运的馈赠已集齐... (9/9)", 220, 20, 60);
+                                        SoundEngine.PlaySound(SoundID.Roar, Player.position);
+
+                                        // 【这里就是冲突的根源】原来的代码里有 int k
+                                        // 现在外层改成了 n，这里就可以安全地使用 k 了
+                                        for (int k = 0; k < 20; k++)
+                                        {
+                                            Dust.NewDust(Player.position, Player.width, Player.height, DustID.PurpleCrystalShard, 0, 0, 0, default, 1.5f);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Main.NewText($"从目标处获得了‘供养’... ({parasiteRitualProgress}/{PARASITE_RITUAL_TARGET})", 150, 150, 150);
+                                    }
+                                }
+                                for (int i = 0; i < 5; i++)
+                                    Dust.NewDust(target.position, target.width, target.height, DustID.GoldFlame, 0, 0, 0, default, 1.0f);
                             }
 
-                            // 窃取成功时的金光特效 (这里可能用的是 i，没关系)
-                            for (int i = 0; i < 5; i++)
-                                Dust.NewDust(target.position, target.width, target.height, DustID.GoldFlame, 0, 0, 0, default, 1.0f);
-
-                            // --- 仪式逻辑 (这里面可能原本包含了一个 int k 的循环) ---
-                            if (currentMarauderSequence == 5 && parasiteRitualProgress < PARASITE_RITUAL_TARGET)
+                            // 2. 窃取能力 (模拟：吸取生命/魔力/Buff)
+                            // 每次攻击有概率回复生命或魔力，模拟“偷走了对方的力量”
+                            if (Main.rand.NextBool(10))
                             {
-                                parasiteRitualProgress++;
-                                if (parasiteRitualProgress >= PARASITE_RITUAL_TARGET)
-                                {
-                                    Main.NewText("仪式完成：命运的馈赠已集齐... (9/9)", 220, 20, 60);
-                                    SoundEngine.PlaySound(SoundID.Roar, Player.position);
+                                int stealAmount = (int)(damageDone * 0.1f); // 偷取 10% 伤害值的生命/蓝
+                                if (stealAmount < 1) stealAmount = 1;
+                                if (stealAmount > 20) stealAmount = 20;
 
-                                    // 【这里就是冲突的根源】原来的代码里有 int k
-                                    // 现在外层改成了 n，这里就可以安全地使用 k 了
-                                    for (int k = 0; k < 20; k++)
-                                    {
-                                        Dust.NewDust(Player.position, Player.width, Player.height, DustID.PurpleCrystalShard, 0, 0, 0, default, 1.5f);
-                                    }
+                                if (Main.rand.NextBool())
+                                {
+                                    Player.statLife += stealAmount;
+                                    Player.HealEffect(stealAmount);
                                 }
                                 else
                                 {
-                                    Main.NewText($"从目标处获得了‘供养’... ({parasiteRitualProgress}/{PARASITE_RITUAL_TARGET})", 150, 150, 150);
+                                    Player.statMana += stealAmount;
+                                    Player.ManaEffect(stealAmount);
                                 }
                             }
-                    for (int i = 0; i < 5; i++)
-                                Dust.NewDust(target.position, target.width, target.height, DustID.GoldFlame, 0, 0, 0, default, 1.0f);
                         }
 
-                        // 2. 窃取能力 (模拟：吸取生命/魔力/Buff)
-                        // 每次攻击有概率回复生命或魔力，模拟“偷走了对方的力量”
-                        if (Main.rand.NextBool(10))
-                        {
-                            int stealAmount = (int)(damageDone * 0.1f); // 偷取 10% 伤害值的生命/蓝
-                            if (stealAmount < 1) stealAmount = 1;
-                            if (stealAmount > 20) stealAmount = 20;
-
-                            if (Main.rand.NextBool())
-                            {
-                                Player.statLife += stealAmount;
-                                Player.HealEffect(stealAmount);
-                            }
-                            else
-                            {
-                                Player.statMana += stealAmount;
-                                Player.ManaEffect(stealAmount);
-                            }
-                        }
                     }
-
                 }
             }
             if (currentMarauderSequence <= 5)
@@ -2355,6 +2449,25 @@ namespace zhashi.Content
                     CombatText.NewText(target.getRect(), new Color(147, 112, 219), "记忆窃取!", true);
                 }
             }
+            if (isStrengthCardEquipped && hit.DamageType.CountsAsClass(DamageClass.Melee))
+            {
+                target.AddBuff(BuffID.BrokenArmor, 600); // 破甲 10秒
+                target.AddBuff(BuffID.Ichor, 300);       // 灵液 5秒 (降低20防御)
+
+                // 2. 震荡波特效 (视觉效果)
+                if (Main.rand.NextBool(3))
+                {
+                    SoundEngine.PlaySound(SoundID.Item14, target.Center); // 爆炸音效
+
+                    for (int i = 0; i < 15; i++)
+                    {
+                        Vector2 speed = Main.rand.NextVector2Circular(6f, 6f);
+                        Dust d = Dust.NewDustPerfect(target.Center, DustID.Smoke, speed, 100, default, 1.5f);
+                        d.noGravity = true;
+                    }
+                }
+            }
+            base.OnHitNPC(target, hit, damageDone);
         }
         public override void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
@@ -2425,12 +2538,11 @@ namespace zhashi.Content
         private void ApplyHitEffects(NPC target) { if (currentSequence <= 4) target.AddBuff(BuffID.Ichor, 300); if (currentHunterSequence <= 7) target.AddBuff(BuffID.OnFire, 300); if (isCalamityGiant) target.AddBuff(BuffID.Electrified, 300); if (currentHunterSequence <= 1) target.AddBuff(ModContent.BuffType<ConquerorWill>(), 600); if (currentMoonSequence <= 7 && (Player.HeldItem.DamageType == DamageClass.Melee || Player.HeldItem.DamageType == DamageClass.SummonMeleeSpeed || Player.HeldItem.DamageType == DamageClass.Summon)) { target.AddBuff(BuffID.Ichor, 300); if (Main.rand.NextBool(3)) target.AddBuff(BuffID.Poisoned, 300); } }
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            if (currentHunterSequence <= 5) modifiers.CritDamage += 0.5f; base.ModifyHitNPC(target, ref modifiers); // 保持基类逻辑
+            if (currentHunterSequence <= 5)
+            {
+                modifiers.CritDamage += 0.5f;
+            }
 
-            // 处理猎人途径的暴击伤害加成 (原有逻辑)
-            if (currentHunterSequence <= 5) modifiers.CritDamage += 0.5f;
-
-            // 处理序列1 嫁接模式2 (攻击嫁接)
             if (currentFoolSequence <= 1 && graftingMode == 2)
             {
                 bool nerf = ModContent.GetInstance<LotMConfig>().NerfDivineAbilities;
@@ -2438,13 +2550,10 @@ namespace zhashi.Content
                 if (nerf)
                 {
                     float worldMult = Systems.BalanceSystem.GetWorldTierMultiplier();
-
-                    // 伤害上限计算：开局500 -> 终灾25000
                     int damageCap = (int)(5000 * worldMult);
 
                     // 基础附加：Boss 1%, 小怪 10%
                     int bonusDamage = target.lifeMax / (target.boss ? 100 : 10);
-
                     if (bonusDamage > damageCap) bonusDamage = damageCap;
 
                     modifiers.FinalDamage.Flat += bonusDamage;
@@ -2458,20 +2567,34 @@ namespace zhashi.Content
                     modifiers.ArmorPenetration += 9999;
                 }
             }
+
+            // 3. 处理净化斩 (需警惕联机同步问题)
             if (isCleansingSlash)
             {
-                bool isUndead = NPCID.Sets.Zombies[target.type] || NPCID.Sets.Skeletons[target.type] || target.aiStyle == 22 || target.coldDamage;
+                // 判定亡灵生物
+                bool isUndead = NPCID.Sets.Zombies[target.type] ||
+                                NPCID.Sets.Skeletons[target.type] ||
+                                target.aiStyle == 22 ||
+                                target.coldDamage; // 冷知识：冷伤害怪通常被视作亡灵相关
+
                 if (isUndead)
                 {
                     modifiers.FinalDamage *= 1.5f; // 额外50%伤害
                     modifiers.SetCrit(); // 必暴
 
-                    // 视觉效果
-                    for (int i = 0; i < 5; i++) Dust.NewDust(target.position, target.width, target.height, DustID.GoldFlame, 0, 0, 0, default, 1f);
+                    if (Main.netMode != NetmodeID.Server)
+                    {
+                        for (int i = 0; i < 5; i++)
+                            Dust.NewDust(target.position, target.width, target.height, DustID.GoldFlame, 0, 0, 0, default, 1f);
+                    }
                 }
-                // 对所有敌人附加一点火焰伤害
+
+                // 基础附加伤害
                 modifiers.FlatBonusDamage += 10;
             }
+
+            // 保持基类逻辑 (通常放在最后)
+            base.ModifyHitNPC(target, ref modifiers);
         }
         public override void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers) { if (currentHunterSequence <= 5) modifiers.CritDamage += 0.5f; }
         private void CheckExecution(NPC target) { if (currentHunterSequence <= 5 && !target.boss && target.life < target.lifeMax * 0.2f) target.SimpleStrikeNPC(9999, 0); }
@@ -2494,7 +2617,7 @@ namespace zhashi.Content
             }
             if (currentSunSequence == 6 && purificationProgress < PURIFICATION_RITUAL_TARGET)
             {
-                bool isUndead = NPCID.Sets.Zombies[target.type] || NPCID.Sets.Skeletons[target.type] || target.aiStyle == 22;
+                bool isUndead = IsUndeadCreature(target);
                 if (isUndead)
                 {
                     purificationProgress++;
@@ -2794,11 +2917,8 @@ namespace zhashi.Content
 
             if (currentFoolSequence <= 7)
             {
-                bool hasPaper = false;
-                // 定义纸人道具的类型 ID
                 int paperItemType = ModContent.ItemType<Content.Items.Consumables.PaperFigurine>();
 
-                // 检查背包里是否有纸人 (全背包搜索，包含虚空袋)
                 if (Player.CountItem(paperItemType) > 0)
                 {
                     Player.ConsumeItem(paperItemType);
@@ -2820,15 +2940,20 @@ namespace zhashi.Content
 
             float dodgeChance = info.PvP ? 0.05f : 0.15f;
 
-            if (currentFoolSequence <= 6 && Main.rand.NextFloat() < dodgeChance)
+            // B. 愚者牌特权计算：如果是愚者途径且有牌，概率提升50%
+            if (currentFoolSequence <= 9 && isFoolCardEquipped)
+            {
+                dodgeChance *= 1.5f;
+            }
+
+            // C. 执行判定：(序列6以上 或 开启反占卜) 且 随机数小于概率
+            if ((currentFoolSequence <= 6 || isAntiDivinationActive) && Main.rand.NextFloat() < dodgeChance)
             {
                 Player.SetImmuneTimeForAllTypes(60); // 1秒无敌
 
-                // 2. 核心削弱：PVP 模式下【禁止】清除负面状态
-                // 只有非 PVP 模式才执行清除逻辑
+                // 非 PVP 模式下清除负面状态
                 if (!info.PvP)
                 {
-                    // 反占卜核心：清除负面状态
                     for (int i = 0; i < Player.MaxBuffs; i++)
                     {
                         if (Player.buffType[i] > 0 && Main.debuff[Player.buffType[i]])
@@ -2838,22 +2963,21 @@ namespace zhashi.Content
                         }
                     }
                 }
-                else
-                {
-                    // (可选) PVP触发提示，让对手知道发生了什么
-                    CombatText.NewText(Player.getRect(), Color.Gray, "直觉闪避!", true);
-                    return true;
-                }
 
-                // 视觉特效：神秘的灰色符文/烟雾
+                // 视觉特效
                 for (int i = 0; i < 15; i++)
                 {
                     Dust d = Dust.NewDustPerfect(Player.Center, DustID.DungeonSpirit, Main.rand.NextVector2Circular(3f, 3f), 150, default, 1.2f);
                     d.noGravity = true;
                 }
 
-                CombatText.NewText(Player.getRect(), Color.Gray, "反占卜!", true);
-                return true; // 闪避成功
+                // 提示文本：有牌且是愚者途径显示紫色，否则显示灰色
+                if (isFoolCardEquipped && currentFoolSequence <= 9)
+                    CombatText.NewText(Player.getRect(), new Color(186, 85, 211), "命运隐匿!", true);
+                else
+                    CombatText.NewText(Player.getRect(), Color.Gray, "反占卜!", true);
+
+                return true; // 成功闪避
             }
 
             // 3. 直觉闪避 (序列8 小丑) - 低保被动
@@ -2930,7 +3054,20 @@ namespace zhashi.Content
             if (currentMoonSequence > 8) isTamingActive = false;
 
             if (LotMKeybinds.RP_Transformation.JustPressed) { if (currentHunterSequence <= 2) { isCalamityGiant = !isCalamityGiant; if (isCalamityGiant) Main.NewText("灾祸巨人形态", 0, 255, 255); } else if (currentHunterSequence <= 4) { isFireForm = !isFireForm; if (isFireForm) Main.NewText("火焰形态", 255, 100, 0); } }
-            if (LotMKeybinds.RP_Flash.JustPressed && currentHunterSequence <= 6) { if (fireTeleportCooldown <= 0 && TryConsumeSpirituality(100)) { Vector2 targetPos = Main.MouseWorld; if (Player.Distance(targetPos) < 600f && Collision.CanHit(Player.position, Player.width, Player.height, targetPos, Player.width, Player.height)) { SoundEngine.PlaySound(SoundID.Item14, Player.position); for (int i = 0; i < 20; i++) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Torch, 0, 0, 0, default, 2f); Player.Teleport(targetPos, 1); fireTeleportCooldown = 60; } } }
+            if (LotMKeybinds.RP_Flash.JustPressed && currentHunterSequence <= 6)
+            {
+                if (fireTeleportCooldown <= 0 && TryConsumeSpirituality(100))
+                {
+                    Vector2 flashPos = Main.MouseWorld;
+                    if (Player.Distance(flashPos) < 600f && Collision.CanHit(Player.position, Player.width, Player.height, flashPos, Player.width, Player.height))
+                    {
+                        SoundEngine.PlaySound(SoundID.Item14, Player.position);
+                        for (int i = 0; i < 20; i++) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Torch, 0, 0, 0, default, 2f);
+                        Player.Teleport(flashPos, 1);
+                        fireTeleportCooldown = 60;
+                    }
+                }
+            }
             if (LotMKeybinds.RP_Bomb.JustPressed && currentHunterSequence <= 7) { if (TryConsumeSpirituality(50)) { int dmg = (int)(100 * hunterMult); Vector2 dir = (Main.MouseWorld - Player.Center).SafeNormalize(Vector2.Zero) * 10f; Projectile.NewProjectile(Player.GetSource_FromThis(), Player.Center, dir, ModContent.ProjectileType<PyromaniacBomb>(), dmg, 5f, Player.whoAmI); } }
             if (LotMKeybinds.RP_Cloak.JustPressed && currentHunterSequence <= 7) { isFlameCloakActive = !isFlameCloakActive; if (isFlameCloakActive) Main.NewText("火焰披风开启", 255, 100, 0); }
             if (LotMKeybinds.RP_Slash.JustPressed && currentHunterSequence <= 5) { if (!isFireForm && TryConsumeSpirituality(100)) { int dmg = (int)(200 * hunterMult); Projectile.NewProjectile(Player.GetSource_FromThis(), Player.Center, Vector2.Zero, ModContent.ProjectileType<ReaperSlashProjectile>(), dmg, 10f, Player.whoAmI); } }
@@ -3312,18 +3449,49 @@ namespace zhashi.Content
                 isSpiritVisionActive = !isSpiritVisionActive;
                 Main.NewText(isSpiritVisionActive ? "灵视开启" : "灵视关闭", 200, 200, 255);
             }
-
-            // F: 火焰跳跃 (序列7)
             // F: 火焰跳跃 (序列7) - 增强版：万火皆可跃
             if (LotMKeybinds.Fool_FlameJump.JustPressed && currentFoolSequence <= 7)
             {
                 if (flameJumpCooldown <= 0)
                 {
-                    Vector2 targetPos = Vector2.Zero;
+                    bool hasCardUpgrade = isFoolCardEquipped && currentFoolSequence < 10;
+
+                    if (hasCardUpgrade)
+                    {
+                        if (TryConsumeSpirituality(50)) // 稍微降低一点消耗奖励玩家
+                        {
+                            // 【修复】改名为 upgradePos，防止与外部变量冲突
+                            Vector2 upgradePos = Main.MouseWorld;
+                            Player.Teleport(upgradePos, 1); // Style 1 是普通的传送
+
+                            // 特效
+                            SoundEngine.PlaySound(SoundID.Item115, Player.position); // 比较迷幻的声音
+                            for (int i = 0; i < 30; i++)
+                            {
+                                Dust.NewDust(Player.position, Player.width, Player.height, DustID.DungeonSpirit, 0, 0, 0, default, 2f);
+                            }
+
+                            flameJumpCooldown = 30; // 冷却大幅降低！
+                            Main.NewText("愚者权柄：空间跨越", 148, 0, 211);
+                        }
+                        else
+                        {
+                            Main.NewText("灵性不足 (需50点)", 255, 50, 50);
+                        }
+                        return; // 升级版执行完毕后直接返回，不走下面的判定
+                    }
+
+
+                    // ===================================================
+                    // 2. 普通版：寻找附近的火焰进行跳跃
+                    // ===================================================
+
+                    // 【修复】改名为 jumpTargetPos，防止与外部变量冲突
+                    Vector2 jumpTargetPos = Vector2.Zero;
                     bool foundFire = false;
                     float searchRange = 100f; // 鼠标周围 100 像素范围
 
-                    // 1. 检测物块 (Tile)
+                    // A. 检测物块 (Tile)
                     Point mouseTile = Main.MouseWorld.ToTileCoordinates();
                     int tileRange = 6;
 
@@ -3348,18 +3516,18 @@ namespace zhashi.Content
                             {
                                 foundFire = true;
                                 if (tile.TileType == TileID.Chandeliers || tile.TileType == TileID.HangingLanterns || tile.TileType == TileID.ChineseLanterns)
-                                    targetPos = new Vector2(x * 16 + 8 - Player.width / 2, y * 16 + 16);
+                                    jumpTargetPos = new Vector2(x * 16 + 8 - Player.width / 2, y * 16 + 16);
                                 else if (Main.tileSolid[tile.TileType] && !Main.tileSolidTop[tile.TileType])
-                                    targetPos = new Vector2(x * 16 + 8 - Player.width / 2, y * 16 - Player.height);
+                                    jumpTargetPos = new Vector2(x * 16 + 8 - Player.width / 2, y * 16 - Player.height);
                                 else
-                                    targetPos = new Vector2(x * 16 + 8 - Player.width / 2, y * 16 - Player.height / 2);
+                                    jumpTargetPos = new Vector2(x * 16 + 8 - Player.width / 2, y * 16 - Player.height / 2);
                                 break;
                             }
                         }
                         if (foundFire) break;
                     }
 
-                    // 2. 检测弹幕 (Projectile)
+                    // B. 检测弹幕 (Projectile)
                     if (!foundFire)
                     {
                         foreach (Projectile p in Main.projectile)
@@ -3372,21 +3540,20 @@ namespace zhashi.Content
                                     name.Contains("magma") || name.Contains("solar") || name.Contains("napalm") ||
                                     p.type == ProjectileID.MolotovFire || p.type == ProjectileID.GreekFire1 ||
                                     p.type == ProjectileID.GreekFire2 || p.type == ProjectileID.GreekFire3 ||
-                                    // 【核心修复】直接使用类名，去掉 zhashi.Content... 前缀
                                     p.type == ModContent.ProjectileType<PyromaniacFireball>() ||
                                     p.type == ModContent.ProjectileType<PyromaniacBomb>();
 
                                 if (isFireProjectile)
                                 {
                                     foundFire = true;
-                                    targetPos = p.Center - new Vector2(0, Player.height / 2);
+                                    jumpTargetPos = p.Center - new Vector2(0, Player.height / 2);
                                     break;
                                 }
                             }
                         }
                     }
 
-                    // 3. 检测 NPC
+                    // C. 检测 NPC
                     if (!foundFire)
                     {
                         foreach (NPC npc in Main.npc)
@@ -3406,20 +3573,21 @@ namespace zhashi.Content
                                 if (isBurning || isFireMob)
                                 {
                                     foundFire = true;
-                                    targetPos = npc.Center - new Vector2(0, Player.height);
+                                    jumpTargetPos = npc.Center - new Vector2(0, Player.height);
                                     break;
                                 }
                             }
                         }
                     }
 
-                    // 执行传送
+                    // D. 执行传送
                     if (foundFire)
                     {
                         if (TryConsumeSpirituality(100))
                         {
                             Vector2 oldPos = Player.Center;
-                            Player.Teleport(targetPos, 1);
+                            // 使用新的变量名 jumpTargetPos
+                            Player.Teleport(jumpTargetPos, 1);
 
                             SoundEngine.PlaySound(SoundID.Item45, Player.position);
                             SoundEngine.PlaySound(SoundID.Item20, Player.position);
@@ -3639,6 +3807,24 @@ namespace zhashi.Content
             // ------------------------------------------------------------------
             // 2. O 键逻辑 (窃取 / 偷盗)
             // ------------------------------------------------------------------
+            if (LotMKeybinds.Marauder_StealToggle.JustPressed && currentMarauderSequence <= 9)
+            {
+                // 切换状态 (开变关，关变开)
+                isPassiveStealEnabled = !isPassiveStealEnabled;
+
+                // 播放音效提示
+                Terraria.Audio.SoundEngine.PlaySound(SoundID.MenuTick);
+
+                // 文字提示
+                if (isPassiveStealEnabled)
+                {
+                    Main.NewText("窃取被动：已开启", 100, 255, 100); // 绿色
+                }
+                else
+                {
+                    Main.NewText("窃取被动：已关闭", 200, 200, 200); // 灰色
+                }
+            }
             if (LotMKeybinds.MarauderSteal.JustPressed)
             {
                 if (isShiftDown)
@@ -4573,7 +4759,7 @@ namespace zhashi.Content
                         float distanceFactor = 1f - (distance / maxRadius);
                         if (distanceFactor < 0.2f) distanceFactor = 0.2f;
                         damage = (int)(damage * distanceFactor);
-                        bool isUndead = NPCID.Sets.Zombies[npc.type] || NPCID.Sets.Skeletons[npc.type] || npc.aiStyle == 22 || npc.coldDamage;
+                        bool isUndead = IsUndeadCreature(npc);
                         if (isUndead)
                         {
                             damage *= 4;
@@ -4874,6 +5060,62 @@ namespace zhashi.Content
 
                 Main.NewText(currentSunSequence <= 4 ? "污秽消散！" : "公证完成！", 255, 215, 0);
             }
+        }
+        // 判断是否为不死/邪恶/克制生物的通用方法
+        public bool IsUndeadCreature(NPC npc)
+        {
+            // 1. 基础集合检查 (原版判定的部分)
+            if (NPCID.Sets.Zombies[npc.type] || NPCID.Sets.Skeletons[npc.type]) return true;
+
+            // 2. AI 特征 (鬼魂/漂浮类/诅咒头颅类)
+            if (npc.aiStyle == 22 || npc.aiStyle == 23) return true;
+
+            // 3. 属性特征 (冷系生物通常也被视为阴冷之物)
+            if (npc.coldDamage) return true;
+
+            // 4. 【新】声音特征判定 (绝大多数骷髅受击时都有独特的声音 HitSound 2)
+            // 这条能囊括几乎所有地牢装甲骷髅、骷髅李、蒂姆等
+            if (npc.HitSound == SoundID.NPCHit2) return true;
+
+            // 5. 【新】手动补全漏网之鱼
+            // 这里填入你发现没生效的怪物 ID
+            int[] extraUndead = {
+        // --- 僵尸变种 ---
+        NPCID.BloodZombie,       // 血腥僵尸
+        NPCID.ZombieMerman,      // 僵尸鱼人
+        NPCID.ZombieElf,         // 僵尸精灵
+        NPCID.ZombieElfBeard,
+        NPCID.ZombieElfGirl,
+        NPCID.UndeadMiner,       // 不死矿工
+        NPCID.UndeadViking,      // 不死维京人
+        NPCID.Nymph,             // 宁芙 (迷失女孩) - 可选
+
+        // --- 骷髅/地牢变种 ---
+        NPCID.BoneLee,           // 骷髅李
+        NPCID.AngryBones,        // 愤怒骷髅
+        NPCID.AngryBonesBig,
+        NPCID.AngryBonesBigHelmet,
+        NPCID.AngryBonesBigMuscle,
+        
+        // 装甲骷髅家族
+        NPCID.BlueArmoredBones, NPCID.BlueArmoredBonesMace, NPCID.BlueArmoredBonesNoPants, NPCID.BlueArmoredBonesSword,
+        NPCID.HellArmoredBones, NPCID.HellArmoredBonesMace, NPCID.HellArmoredBonesSpikeShield, NPCID.HellArmoredBonesSword,
+        NPCID.RustyArmoredBonesFlail, NPCID.RustyArmoredBonesAxe, NPCID.RustyArmoredBonesSword,
+        
+        // 法师类
+        NPCID.DarkCaster,        //哪怕是暗黑法师
+        NPCID.DiabolistRed,      // 魔教徒 (可能是你说的撒旦骷髅?)
+        NPCID.DiabolistWhite,
+        NPCID.RaggedCaster,      // 褴褛法师
+        NPCID.RaggedCasterOpenCoat,
+        NPCID.RedDevil,          // 红魔鬼 (虽然是恶魔，但绝对邪恶)
+        NPCID.Vampire,           // 吸血鬼
+        NPCID.Mothron            // 蛾怪 (日食)
+    };
+
+            if (extraUndead.Contains(npc.type)) return true;
+
+            return false;
         }
         public class ApothecaryCrafting : Terraria.ModLoader.GlobalItem { public override void OnCreated(Terraria.Item item, ItemCreationContext context) { if (context is RecipeItemCreationContext) { Player p = Main.LocalPlayer; if (p != null && p.active && p.GetModPlayer<LotMPlayer>().currentMoonSequence <= 9) { bool isP = item.consumable && (item.buffType > 0 || item.healLife > 0 || item.healMana > 0); if (isP) p.QuickSpawnItem(item.GetSource_FromThis(), item.type, item.stack); } } } }
     }

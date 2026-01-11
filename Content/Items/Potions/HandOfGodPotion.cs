@@ -2,11 +2,17 @@
 using Terraria.ID;
 using Terraria.ModLoader;
 using zhashi.Content.Items.Materials;
+using zhashi.Content.Items.Accessories; // 【新增】引用力量牌
 
 namespace zhashi.Content.Items.Potions
 {
-    public class HandOfGodPotion : ModItem
+    // 1. 改为继承 LotMItem
+    public class HandOfGodPotion : LotMItem
     {
+        // 2. 设定途径属性 (巨人途径，需要序列2才能晋升)
+        public override string Pathway => "Giant";
+        public override int RequiredSequence => 2;
+
         public override void SetDefaults()
         {
             Item.width = 32;
@@ -23,18 +29,24 @@ namespace zhashi.Content.Items.Potions
 
         public override bool CanUseItem(Player player)
         {
-            // 必须是序列2 荣耀战神 才能服用
+            // 先调用基类检查
+            if (!base.CanUseItem(player)) return false;
+
+            // 严格检查：必须是序列2 荣耀战神 才能晋升序列1
             return player.GetModPlayer<LotMPlayer>().baseSequence == 2;
         }
 
         public override bool? UseItem(Player player)
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
+
+            // 确保是喝下去的瞬间触发
             if (player.itemAnimation > 0 && player.itemTime == 0)
             {
                 // 1. 晋升逻辑
                 modPlayer.baseSequence = 1;
 
+                // 2. 给予序列1 武器
                 player.QuickSpawnItem(player.GetSource_ItemUse(Item), ModContent.ItemType<Weapons.HandOfGod>());
 
                 // 3. 文本与特效
@@ -47,17 +59,20 @@ namespace zhashi.Content.Items.Potions
             return false;
         }
 
+        // ==========================================
+        // 配方升级：支持力量牌免石板
+        // ==========================================
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ModContent.ItemType<HandOfGodCharacteristic>(), 1)
-                .AddIngredient(ItemID.BottledWater, 9)
-                .AddIngredient(ItemID.LifeFruit, 5)
-                .AddIngredient(ItemID.Ectoplasm, 20)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .AddTile(TileID.DemonAltar)
-                .AddCondition(Condition.InGraveyard)
-                .Register();
+            CreateDualRecipe(
+                ModContent.ItemType<StrengthCard>(), // 力量牌
+
+                // 材料列表
+                (ModContent.ItemType<HandOfGodCharacteristic>(), 1), // 非凡特性
+                (ItemID.BottledWater, 9),
+                (ItemID.LifeFruit, 5),
+                (ItemID.Ectoplasm, 20)
+            );
         }
     }
 }

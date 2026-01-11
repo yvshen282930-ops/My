@@ -1,14 +1,16 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using zhashi.Content;
+using System.Collections.Generic;
+using zhashi.Content.Items.Accessories; // 引用愚者牌
 
 namespace zhashi.Content.Items.Potions.Fool
 {
     public class MarionettistPotion : LotMItem
     {
+        // 设定途径和前置序列 (需要序列6 无面人)
         public override string Pathway => "Fool";
-        public override int RequiredSequence => 6; // 必须是无面人
+        public override int RequiredSequence => 6;
 
         public override void SetDefaults()
         {
@@ -25,14 +27,34 @@ namespace zhashi.Content.Items.Potions.Fool
             Item.value = Item.sellPrice(gold: 20);
         }
 
+        // 【核心检查】
         public override bool CanUseItem(Player player)
         {
-            // 仪式检查：必须在海洋 (模拟美人鱼歌声)
+            // 1. 先检查序列要求
+            if (!base.CanUseItem(player)) return false;
+
+            // 2. 仪式检查：必须在海洋 (模拟美人鱼歌声)
             if (!player.ZoneBeach)
             {
-                return false; // 不在海边不能喝
+                if (player.whoAmI == Main.myPlayer)
+                {
+                    Main.NewText("仪式未满足：需在海洋环境服食...", 255, 50, 50);
+                }
+                return false;
             }
-            return base.CanUseItem(player);
+            return true;
+        }
+
+        // 【UI提示】
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            base.ModifyTooltips(tooltips);
+
+            Player p = Main.LocalPlayer;
+            string color = p.ZoneBeach ? "00FF00" : "FF0000";
+            string status = p.ZoneBeach ? "满足" : "未满足";
+
+            tooltips.Add(new TooltipLine(Mod, "Ritual", $"[c/{color}:仪式要求：在海洋环境服食 ({status})]"));
         }
 
         public override bool? UseItem(Player player)
@@ -49,28 +71,19 @@ namespace zhashi.Content.Items.Potions.Fool
             return true;
         }
 
-        // 添加条件提示
-        public override void ModifyTooltips(System.Collections.Generic.List<TooltipLine> tooltips)
-        {
-            base.ModifyTooltips(tooltips);
-            Player p = Main.LocalPlayer;
-            string color = p.ZoneBeach ? "00FF00" : "FF0000";
-            string status = p.ZoneBeach ? "满足" : "未满足";
-            tooltips.Add(new TooltipLine(Mod, "Ritual", $"[c/{color}:仪式要求：在海洋环境服食 ({status})]"));
-        }
-
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.SoulofFlight, 5)  // 古老怨灵粉尘
-                .AddIngredient(ItemID.HallowedBar, 5)  // 石像鬼核心
-                .AddIngredient(ItemID.RichMahogany, 5) // 龙纹树皮
-                .AddIngredient(ItemID.Bone, 10)        // 怨灵残余
-                .AddIngredient(ItemID.Lens, 2)         // 石像鬼眼睛
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            // 使用智能配方生成器
+            CreateDualRecipe(
+                ModContent.ItemType<FoolCard>(), // 愚者牌
+
+                (ItemID.BottledWater, 1),
+                (ItemID.SoulofFlight, 5),   // 古老怨灵粉尘 (飞翔之魂)
+                (ItemID.HallowedBar, 5),    // 石像鬼核心 (神圣锭)
+                (ItemID.RichMahogany, 5),   // 龙纹树皮 (红毛桦)
+                (ItemID.Bone, 10),          // 怨灵残余 (骨头)
+                (ItemID.Lens, 2)            // 石像鬼眼睛 (晶状体)
+            );
         }
     }
 }

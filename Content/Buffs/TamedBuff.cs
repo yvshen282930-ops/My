@@ -7,11 +7,11 @@ namespace zhashi.Content.Buffs
     {
         public override void SetStaticDefaults()
         {
-            Main.debuff[Type] = true;
+
+            Main.debuff[Type] = false;
+
             Main.pvpBuff[Type] = true;
-            Main.buffNoSave[Type] = true; // 退出重进后失效
-            // 这一行决定了怪物头顶会不会显示Buff图标，设为false可以让界面更清爽
-            // 但调试时可以设为 true
+            Main.buffNoSave[Type] = true;
         }
 
         public override void Update(NPC npc, ref int buffIndex)

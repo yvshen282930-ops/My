@@ -4,11 +4,17 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用力量牌命名空间
 
 namespace zhashi.Content.Items.Potions
 {
-    public class GloryPotion : ModItem
+    // 1. 改为继承 LotMItem 以使用智能配方功能
+    public class GloryPotion : LotMItem
     {
+        // 设定途径信息
+        public override string Pathway => "Giant";
+        public override int RequiredSequence => 3;
+
         public override void SetDefaults()
         {
             Item.width = 20; Item.height = 30; Item.useStyle = ItemUseStyleID.DrinkLiquid; Item.UseSound = SoundID.Item3;
@@ -18,17 +24,24 @@ namespace zhashi.Content.Items.Potions
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
+            // 保留你原有的月亮领主击杀检查提示
             if (Main.LocalPlayer.GetModPlayer<LotMPlayer>().baseSequence == 3)
             {
                 string statusColor = NPC.downedMoonlord ? "00FF00" : "FF0000";
                 tooltips.Add(new TooltipLine(Mod, "RitualDesc", "晋升仪式: 猎杀一位天使或同等强大的生物 (月亮领主)。"));
                 tooltips.Add(new TooltipLine(Mod, "RitualProgress", $"[c/{statusColor}:目标状态: {(NPC.downedMoonlord ? "已陨落" : "存活")}]"));
             }
+            // 基类的 ModifyTooltips 会自动添加序列要求提示，这里不需要额外写
+            base.ModifyTooltips(tooltips);
         }
 
         public override bool CanUseItem(Player player)
         {
+            // 先让基类检查是否满足序列3
+            if (!base.CanUseItem(player)) return false;
+
             var modPlayer = player.GetModPlayer<LotMPlayer>();
+            // 额外检查是否击杀了月亮领主
             if (modPlayer.baseSequence == 3 && !NPC.downedMoonlord)
             {
                 if (player.whoAmI == Main.myPlayer) Main.NewText("你的战绩不足以承载神性的光辉...", 255, 50, 50);
@@ -53,17 +66,19 @@ namespace zhashi.Content.Items.Potions
             else { Main.NewText("你已是荣耀者。", 200, 200, 200); return true; }
         }
 
+        // ==========================================
+        // 配方升级：支持力量牌免石板
+        // ==========================================
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                // 【关键修复】这里必须用 LunarBar，不能用 LuminiteBar
-                .AddIngredient(ItemID.LunarBar, 10)
-                .AddIngredient(ItemID.FragmentSolar, 10)
-                .AddIngredient(ItemID.FragmentNebula, 5)
-                .AddTile(TileID.LunarCraftingStation)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            CreateDualRecipe(
+                ModContent.ItemType<StrengthCard>(), // 力量牌 ID
+
+                (ItemID.BottledWater, 1),
+                (ItemID.LunarBar, 10),      // 夜明锭
+                (ItemID.FragmentSolar, 10), // 日耀碎片
+                (ItemID.FragmentNebula, 5)  // 星云碎片
+            );
         }
     }
 }

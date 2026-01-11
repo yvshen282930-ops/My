@@ -1,12 +1,18 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using zhashi.Content;
+// 【修复2】引用力量牌所在的命名空间，解决找不到 StrengthCard 的问题
+using zhashi.Content.Items.Accessories;
 
 namespace zhashi.Content.Items.Potions
 {
-    public class DawnKnightPotion : ModItem
+    // 【修复1】必须继承 LotMItem，而不是 ModItem，否则无法使用 CreateDualRecipe
+    public class DawnKnightPotion : LotMItem
     {
+        // 设定途径和前置序列 (父类 LotMItem 的功能)
+        public override string Pathway => "Giant";
+        public override int RequiredSequence => 7;
+
         public override void SetDefaults()
         {
             Item.width = 20;
@@ -18,7 +24,7 @@ namespace zhashi.Content.Items.Potions
             Item.useTurn = true;
             Item.maxStack = 99;
             Item.consumable = true;
-            Item.rare = ItemRarityID.Pink; // 粉色稀有度
+            Item.rare = ItemRarityID.Pink;
             Item.value = Item.buyPrice(gold: 10);
         }
 
@@ -49,14 +55,15 @@ namespace zhashi.Content.Items.Potions
 
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.HallowedBar, 5)   // 神圣锭
-                .AddIngredient(ItemID.SoulofLight, 10) // 【修复】这里改成了单数的 SoulofLight
-                .AddIngredient(ItemID.Daybloom, 5)      // 太阳花
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            // 这里调用父类的方法
+            CreateDualRecipe(
+                ModContent.ItemType<StrengthCard>(),
+
+                (ItemID.BottledWater, 1),
+                (ItemID.HallowedBar, 5),
+                (ItemID.SoulofLight, 10),
+                (ItemID.Daybloom, 5)
+            );
         }
     }
 }

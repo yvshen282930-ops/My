@@ -1,14 +1,16 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using zhashi.Content;
+using System.Collections.Generic;
+using zhashi.Content.Items.Accessories; // 引用愚者牌
 
 namespace zhashi.Content.Items.Potions.Fool
 {
     public class ScholarOfYorePotion : LotMItem
     {
+        // 设定途径和前置序列 (需要序列4 诡法师)
         public override string Pathway => "Fool";
-        public override int RequiredSequence => 4; // 必须是诡法师
+        public override int RequiredSequence => 4;
 
         public override void SetDefaults()
         {
@@ -25,15 +27,34 @@ namespace zhashi.Content.Items.Potions.Fool
             Item.value = Item.sellPrice(platinum: 5);
         }
 
+        // 【核心检查】
         public override bool CanUseItem(Player player)
         {
-            // 仪式：脱离现实 (处于太空层 Space)
-            // 泰拉瑞亚太空层一般是 Y < 200 (小地图) 或更低，ZoneSkyHeight 判断比较准
+            // 1. 先检查序列要求
+            if (!base.CanUseItem(player)) return false;
+
+            // 2. 仪式：脱离现实 (处于太空层 Space)
             if (!player.ZoneSkyHeight)
             {
+                if (player.whoAmI == Main.myPlayer)
+                {
+                    Main.NewText("仪式未满足：需在脱离现实的高度(太空层)服食...", 255, 50, 50);
+                }
                 return false;
             }
-            return base.CanUseItem(player);
+            return true;
+        }
+
+        // 【UI提示】
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            base.ModifyTooltips(tooltips);
+
+            bool inSpace = Main.LocalPlayer.ZoneSkyHeight;
+            string c = inSpace ? "00FF00" : "FF0000";
+            string status = inSpace ? "满足" : "未满足";
+
+            tooltips.Add(new TooltipLine(Mod, "Ritual", $"[c/{c}:仪式要求：脱离现实 (在太空层服食) ({status})]"));
         }
 
         public override bool? UseItem(Player player)
@@ -50,26 +71,19 @@ namespace zhashi.Content.Items.Potions.Fool
             return true;
         }
 
-        public override void ModifyTooltips(System.Collections.Generic.List<TooltipLine> tooltips)
-        {
-            base.ModifyTooltips(tooltips);
-            bool inSpace = Main.LocalPlayer.ZoneSkyHeight;
-            string c = inSpace ? "00FF00" : "FF0000";
-            tooltips.Add(new TooltipLine(Mod, "Ritual", $"[c/{c}:仪式要求：脱离现实 (在太空层服食)]"));
-        }
-
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.FragmentSolar, 10)  // 福根之犬
-                .AddIngredient(ItemID.FragmentNebula, 10) // 雾之魔狼
-                .AddIngredient(ItemID.FrostCore, 3)       // 白霜结晶
-                .AddIngredient(ItemID.Ectoplasm, 10)      // 历史记录
-                .AddIngredient(ItemID.Book, 5)            // 历史书
-                .AddTile(TileID.LunarCraftingStation)     // 远古操纵机
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            // 使用智能配方生成器
+            CreateDualRecipe(
+                ModContent.ItemType<FoolCard>(), // 愚者牌
+
+                (ItemID.BottledWater, 1),
+                (ItemID.FragmentSolar, 10),  // 福根之犬 (日耀碎片)
+                (ItemID.FragmentNebula, 10), // 雾之魔狼 (星云碎片)
+                (ItemID.FrostCore, 3),       // 白霜结晶 (寒霜核)
+                (ItemID.Ectoplasm, 10),      // 历史记录 (灵气)
+                (ItemID.Book, 5)             // 历史书 (书)
+            );
         }
     }
 }

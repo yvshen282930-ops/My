@@ -1,14 +1,15 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用愚者牌
 
 namespace zhashi.Content.Items.Potions.Fool
 {
     public class ClownPotion : LotMItem
     {
+        // 设定途径和前置序列 (需要序列9 占卜家)
         public override string Pathway => "Fool";
-        public override int RequiredSequence => 9; // 必须是序列9才能喝
+        public override int RequiredSequence => 9;
 
         public override void SetStaticDefaults()
         {
@@ -34,8 +35,13 @@ namespace zhashi.Content.Items.Potions.Fool
 
         public override bool CanUseItem(Player player)
         {
+            // 1. 调用基类以获取基础检查和Tooltip逻辑
+            if (!base.CanUseItem(player)) return false;
+
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-            // 只有当前是序列9（占卜家）才能晋升
+
+            // 2. 严格检查：只有当前是序列9（占卜家）才能晋升序列8
+            // 防止已经是小丑或更高序列的人误服
             return modPlayer.baseFoolSequence == 9;
         }
 
@@ -55,17 +61,18 @@ namespace zhashi.Content.Items.Potions.Fool
 
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)   // 纯水
-                .AddIngredient(ItemID.Stinger, 1)        // 灰山羊独角结晶 (替代：毒刺)
-                .AddIngredient(ItemID.JungleRose, 1)     // 人脸玫瑰 (替代：丛林玫瑰)
-                .AddIngredient(ItemID.Blinkroot, 1)      // 曼陀罗 (替代：闪耀根)
-                .AddIngredient(ItemID.Sunflower, 1)      // 太阳花粉 (替代：向日葵)
-                .AddIngredient(ItemID.Moonglow, 1)       // 金斗篷草 (替代：月光草)
-                .AddIngredient(ItemID.Deathweed, 1)      // 毒堇汁 (替代：死亡草)
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            // 使用智能配方生成器
+            CreateDualRecipe(
+                ModContent.ItemType<FoolCard>(), // 愚者牌
+
+                (ItemID.BottledWater, 1),
+                (ItemID.Stinger, 1),     // 毒刺
+                (ItemID.JungleRose, 1),  // 丛林玫瑰
+                (ItemID.Blinkroot, 1),   // 闪耀根
+                (ItemID.Sunflower, 1),   // 向日葵
+                (ItemID.Moonglow, 1),    // 月光草
+                (ItemID.Deathweed, 1)    // 死亡草
+            );
         }
     }
 }

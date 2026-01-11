@@ -4,11 +4,16 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用力量牌
 
 namespace zhashi.Content.Items.Potions
 {
-    public class SilverKnightPotion : ModItem
+    public class SilverKnightPotion : LotMItem
     {
+        // 设定途径和前置序列 (序列4 猎魔者)
+        public override string Pathway => "Giant";
+        public override int RequiredSequence => 4;
+
         public override void SetDefaults()
         {
             Item.width = 20;
@@ -24,12 +29,17 @@ namespace zhashi.Content.Items.Potions
             Item.value = Item.buyPrice(platinum: 1);
         }
 
+        // 1. 动态提示：显示霜月和南瓜月的击杀进度
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
+            // 先显示基础序列要求
+            base.ModifyTooltips(tooltips);
+
             var modPlayer = Main.LocalPlayer.GetModPlayer<LotMPlayer>();
+
+            // 只有序列4才显示详细仪式进度
             if (modPlayer.baseSequence == 4)
             {
-                // 【关键修复】使用 1.4.4 新版变量名
                 bool frostMoonDone = NPC.downedChristmasTree && NPC.downedChristmasSantank && NPC.downedChristmasIceQueen;
                 bool pumpkinMoonDone = NPC.downedHalloweenTree && NPC.downedHalloweenKing;
 
@@ -42,12 +52,15 @@ namespace zhashi.Content.Items.Potions
             }
         }
 
+        // 2. 核心检查：能否使用
         public override bool CanUseItem(Player player)
         {
+            // 基础检查
+            if (!base.CanUseItem(player)) return false;
+
             var modPlayer = player.GetModPlayer<LotMPlayer>();
             if (modPlayer.baseSequence == 4)
             {
-                // 【关键修复】使用 1.4.4 新版变量名
                 bool frostMoonDone = NPC.downedChristmasTree && NPC.downedChristmasSantank && NPC.downedChristmasIceQueen;
                 bool pumpkinMoonDone = NPC.downedHalloweenTree && NPC.downedHalloweenKing;
 
@@ -61,6 +74,7 @@ namespace zhashi.Content.Items.Potions
             return true;
         }
 
+        // 3. 晋升效果
         public override bool? UseItem(Player player)
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
@@ -75,31 +89,26 @@ namespace zhashi.Content.Items.Potions
                 Main.NewText("能力：【水银化】(按C键) | 【借光隐藏】 | 【空间斩杀】", 255, 255, 255);
                 return true;
             }
-            else if (modPlayer.baseSequence > 4)
-            {
-                Main.NewText("你还未成为猎魔者。", 200, 50, 50);
-                return true;
-            }
-            else
-            {
-                Main.NewText("你已是银骑士。", 200, 200, 200);
-                return true;
-            }
+
+            return true;
         }
 
+        // ==========================================
+        // 配方升级：支持力量牌免石板
+        // ==========================================
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.EverscreamTrophy, 1)
-                .AddIngredient(ItemID.SantaNK1Trophy, 1)
-                .AddIngredient(ItemID.IceQueenTrophy, 1)
-                .AddIngredient(ItemID.MourningWoodTrophy, 1)
-                .AddIngredient(ItemID.PumpkingTrophy, 1)
-                .AddIngredient(ItemID.SpookyWood, 50)
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            CreateDualRecipe(
+                ModContent.ItemType<StrengthCard>(), // 力量牌
+
+                (ItemID.BottledWater, 1),
+                (ItemID.EverscreamTrophy, 1),   // 常青树纪念章
+                (ItemID.SantaNK1Trophy, 1),      // 坦克纪念章
+                (ItemID.IceQueenTrophy, 1),      // 冰女纪念章
+                (ItemID.MourningWoodTrophy, 1),  // 哀木纪念章
+                (ItemID.PumpkingTrophy, 1),      // 南瓜王纪念章
+                (ItemID.SpookyWood, 50)          // 阴森木
+            );
         }
     }
 }

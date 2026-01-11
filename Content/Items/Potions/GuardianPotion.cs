@@ -4,11 +4,16 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用力量牌
 
 namespace zhashi.Content.Items.Potions
 {
-    public class GuardianPotion : ModItem
+    public class GuardianPotion : LotMItem
     {
+        // 设定途径和前置序列 (序列6 黎明骑士)
+        public override string Pathway => "Giant";
+        public override int RequiredSequence => 6;
+
         public override void SetDefaults()
         {
             Item.width = 20;
@@ -24,15 +29,17 @@ namespace zhashi.Content.Items.Potions
             Item.value = Item.buyPrice(gold: 15);
         }
 
-        // 1. 动态修改物品说明：实时显示你的仪式进度
+        // 1. 动态修改物品说明：实时显示仪式进度
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
+            // 先调用基类逻辑 (显示"需要序列6"的红绿字)
+            base.ModifyTooltips(tooltips);
+
             var modPlayer = Main.LocalPlayer.GetModPlayer<LotMPlayer>();
 
-            // 只有当玩家是序列6时，才显示仪式进度
+            // 只有当玩家是序列6时，才额外显示守护者仪式进度
             if (modPlayer.baseSequence == 6)
             {
-                // 计算颜色：完成显示绿色，未完成显示红色
                 string statusColor = (modPlayer.guardianRitualProgress >= LotMPlayer.GUARDIAN_RITUAL_TARGET) ? "00FF00" : "FF0000";
                 string progressText = $"[c/{statusColor}:仪式进度: {modPlayer.guardianRitualProgress} / {LotMPlayer.GUARDIAN_RITUAL_TARGET}]";
 
@@ -42,28 +49,26 @@ namespace zhashi.Content.Items.Potions
         }
 
         // 2. 核心判断：能否使用物品？
-        // 如果这里返回 false，你连左键动作都做不出来，药水也不会消耗
         public override bool CanUseItem(Player player)
         {
+            // 先调用基类检查是否满足序列6
+            if (!base.CanUseItem(player)) return false;
+
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            // 如果是序列6，必须检查仪式进度
+            // 额外检查仪式进度
             if (modPlayer.baseSequence == 6)
             {
                 if (modPlayer.guardianRitualProgress < LotMPlayer.GUARDIAN_RITUAL_TARGET)
                 {
-                    // 仪式未完成，禁止使用，并弹出提示
-                    // 只有玩家自己能看到这个提示
                     if (player.whoAmI == Main.myPlayer)
                     {
                         Main.NewText($"你还未理解守护的重量... (进度: {modPlayer.guardianRitualProgress}/{LotMPlayer.GUARDIAN_RITUAL_TARGET})", 255, 50, 50);
                         Main.NewText("提示：请在任何城镇NPC附近承受伤害来增加进度。", 200, 200, 200);
                     }
-                    return false; // 禁止使用！
+                    return false; // 禁止使用
                 }
             }
-
-            // 其他情况（比如不是序列6，或者是更高序列）交给 UseItem 去处理文本提示
             return true;
         }
 
@@ -74,7 +79,6 @@ namespace zhashi.Content.Items.Potions
 
             if (modPlayer.baseSequence == 6)
             {
-                // 因为 CanUseItem 已经检查过进度了，能进到这里说明进度一定达标了
                 modPlayer.baseSequence = 5;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
@@ -84,28 +88,23 @@ namespace zhashi.Content.Items.Potions
                 Main.NewText("被动能力：免疫幻觉，攻击无视大量防御，并在受到攻击时保护队友。", 200, 200, 200);
                 return true;
             }
-            else if (modPlayer.baseSequence > 6)
-            {
-                Main.NewText("你的晨曦之力还不够纯粹，无法承担守护的重任。", 200, 50, 50);
-                return true; // 消耗掉药水作为惩罚
-            }
-            else
-            {
-                Main.NewText("你早已知晓守护的真谛。", 200, 200, 200);
-                return true; // 消耗掉
-            }
+
+            return true;
         }
 
+        // ==========================================
+        // 配方升级：支持力量牌免石板
+        // ==========================================
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.ChlorophyteBar, 5)
-                .AddIngredient(ItemID.LifeFruit, 3)
-                .AddIngredient(ItemID.IronskinPotion, 5)
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            CreateDualRecipe(
+                ModContent.ItemType<StrengthCard>(), // 力量牌
+
+                (ItemID.BottledWater, 1),
+                (ItemID.ChlorophyteBar, 5),  // 叶绿锭
+                (ItemID.LifeFruit, 3),       // 生命果
+                (ItemID.IronskinPotion, 5)   // 铁皮药水
+            );
         }
     }
 }

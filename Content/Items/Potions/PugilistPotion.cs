@@ -1,12 +1,17 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用力量牌
 
 namespace zhashi.Content.Items.Potions
 {
-    public class PugilistPotion : ModItem
+    // 1. 继承 LotMItem
+    public class PugilistPotion : LotMItem
     {
+        // 2. 设定途径和前置序列 (需要序列9 战士)
+        public override string Pathway => "Giant";
+        public override int RequiredSequence => 9;
+
         public override void SetDefaults()
         {
             Item.width = 20;
@@ -30,17 +35,16 @@ namespace zhashi.Content.Items.Potions
             if (modPlayer.baseSequence == 9)
             {
                 modPlayer.baseSequence = 8;
-                // 播放一声吼叫，更有其实
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
                 Main.NewText("你服用了格斗家魔药，肌肉与骨骼发出了爆鸣声... 晋升成功：序列8 格斗家！", 255, 150, 50);
                 return true;
             }
-            // 2. 检查能不能喝
-            else if (modPlayer.baseSequence == 10)
+            // 2. 检查是不是还没入门
+            else if (modPlayer.baseSequence > 9)
             {
                 Main.NewText("你的身体太孱弱了，先成为战士吧。", 200, 50, 50);
-                return true; // 消耗掉药水作为惩罚，或者 return false 不消耗
+                return true;
             }
             else
             {
@@ -49,26 +53,30 @@ namespace zhashi.Content.Items.Potions
             }
         }
 
+        // ==========================================
+        // 配方升级：支持力量牌免石板 (兼容腐化/猩红)
+        // ==========================================
         public override void AddRecipes()
         {
-            // === 配方 1：对应腐化世界 (魔矿) ===
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.DemoniteBar, 5) // 魔矿锭 (克苏鲁之眼掉落矿石烧制)
-                .AddIngredient(ItemID.Gel, 50)        // 50个凝胶 (象征史莱姆王)
-                .AddIngredient(ItemID.JungleSpores, 3)// 丛林孢子
-                .AddTile(TileID.Bottles)
-                .Register();
+            // 方案 A：腐化世界 (魔矿锭)
+            CreateDualRecipe(
+                ModContent.ItemType<StrengthCard>(), // 力量牌
 
-            // === 配方 2：对应猩红世界 (猩红矿) ===
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.CrimtaneBar, 5) // 猩红矿锭 (克苏鲁之眼掉落矿石烧制)
-                .AddIngredient(ItemID.Gel, 50)
-                .AddIngredient(ItemID.JungleSpores, 3)
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+                (ItemID.BottledWater, 1),
+                (ItemID.DemoniteBar, 5), // 魔矿锭
+                (ItemID.Gel, 50),        // 凝胶
+                (ItemID.JungleSpores, 3) // 丛林孢子
+            );
+
+            // 方案 B：猩红世界 (猩红矿锭)
+            CreateDualRecipe(
+                ModContent.ItemType<StrengthCard>(), // 力量牌
+
+                (ItemID.BottledWater, 1),
+                (ItemID.CrimtaneBar, 5), // 猩红矿锭
+                (ItemID.Gel, 50),
+                (ItemID.JungleSpores, 3)
+            );
         }
     }
 }

@@ -1,14 +1,15 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用愚者牌
 
 namespace zhashi.Content.Items.Potions.Fool
 {
     public class FacelessPotion : LotMItem
     {
+        // 设定途径和前置序列 (需要序列7 魔术师)
         public override string Pathway => "Fool";
-        public override int RequiredSequence => 7; // 必须是魔术师
+        public override int RequiredSequence => 7;
 
         public override void SetDefaults()
         {
@@ -41,28 +42,29 @@ namespace zhashi.Content.Items.Potions.Fool
 
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.RottenChunk, 5) // 异变脑垂体 (腐肉)
-                .AddIngredient(ItemID.Bone, 10)       // 人皮幽影特性 (骨头，方便肉山前/后获取)
-                .AddIngredient(ItemID.Deathweed, 1)   // 黑色曼陀罗
-                .AddIngredient(ItemID.JungleSpores, 3)// 龙牙草
-                .AddIngredient(ItemID.SharkFin, 1)    // 深海娜迦头发
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            // 配方 A: 腐化世界 (腐肉 RottenChunk)
+            CreateDualRecipe(
+                ModContent.ItemType<FoolCard>(), // 愚者牌
 
-            // 猩红版本配方
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.Vertebrae, 5)   // 异变脑垂体 (脊椎)
-                .AddIngredient(ItemID.Bone, 10)
-                .AddIngredient(ItemID.Deathweed, 1)
-                .AddIngredient(ItemID.JungleSpores, 3)
-                .AddIngredient(ItemID.SharkFin, 1)
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+                (ItemID.BottledWater, 1),
+                (ItemID.RottenChunk, 5),  // 腐肉
+                (ItemID.Bone, 10),        // 骨头
+                (ItemID.Deathweed, 1),    // 死亡草
+                (ItemID.JungleSpores, 3), // 丛林孢子
+                (ItemID.SharkFin, 1)      // 鲨鱼鳍
+            );
+
+            // 配方 B: 猩红世界 (脊椎 Vertebrae)
+            CreateDualRecipe(
+                ModContent.ItemType<FoolCard>(), // 愚者牌
+
+                (ItemID.BottledWater, 1),
+                (ItemID.Vertebrae, 5),    // 脊椎
+                (ItemID.Bone, 10),
+                (ItemID.Deathweed, 1),
+                (ItemID.JungleSpores, 3),
+                (ItemID.SharkFin, 1)
+            );
         }
     }
 }

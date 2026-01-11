@@ -26,9 +26,6 @@ namespace zhashi.Content.Projectiles
 
         public override void AI()
         {
-            // 强制图片旋转，对准飞行方向
-            // 如果你的贴图是水平向右的，去掉 "+ MathHelper.PiOver4"
-            // 如果你的贴图是右上角(45度)的，保留它
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
 
             // 特效

@@ -19,7 +19,6 @@ namespace zhashi.Content.UI
             mainPanel = new UIPanel();
             mainPanel.SetPadding(0);
 
-            // 【位置调整】距离左边 20 像素，距离顶部 260 像素（大概在爱心下面）
             mainPanel.Left.Set(20f, 0f);
             mainPanel.Top.Set(260f, 0f);
 
@@ -28,8 +27,6 @@ namespace zhashi.Content.UI
             mainPanel.BackgroundColor = new Color(0, 0, 0, 0); // 透明背景
             mainPanel.BorderColor = new Color(0, 0, 0, 0);     // 透明边框
 
-            // 【核心修复】尝试加载你的图标，如果失败，加载原版魔力水晶图标
-            // 这样保证UI绝对不会消失
             Texture2D texture = null;
             if (ModContent.RequestIfExists<Texture2D>("zhashi/Content/Items/Materials/ExtraordinaryBlood", out var asset))
             {
@@ -37,7 +34,6 @@ namespace zhashi.Content.UI
             }
             else
             {
-                // 备用方案：原版魔力水晶
                 texture = Main.Assets.Request<Texture2D>("Images/Item_" + ItemID.ManaCrystal).Value;
             }
 
@@ -54,7 +50,6 @@ namespace zhashi.Content.UI
         {
             base.Draw(spriteBatch);
 
-            // 鼠标悬停检测
             if (mainPanel.IsMouseHovering)
             {
                 Player player = Main.LocalPlayer;
@@ -66,7 +61,6 @@ namespace zhashi.Content.UI
             }
         }
 
-        // 获取显示的文字内容
         private string GetSequenceText(Content.LotMPlayer modPlayer)
         {
             if (modPlayer.currentHunterSequence < 10)

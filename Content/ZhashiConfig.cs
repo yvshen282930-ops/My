@@ -20,7 +20,6 @@ namespace zhashi.Content.Configs
         [Slider]
         public float BarScale { get; set; }
 
-        // 【关键修复】就是缺了下面这段，导致报错
         [Label("位置坐标")]
         [DefaultValue(typeof(Vector2), "500, 20")]
         public Vector2 BarPosition { get; set; }

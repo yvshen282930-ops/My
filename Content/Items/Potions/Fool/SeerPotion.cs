@@ -3,14 +3,16 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
 using zhashi.Content; // 引用核心 Player 类
+using zhashi.Content.Items.Accessories; // 引用愚者牌
 
 namespace zhashi.Content.Items.Potions.Fool
 {
     public class SeerPotion : LotMItem
     {
         // 设定途径为 "Fool" (愚者)
+        // RequiredSequence = 10 代表需要是普通人才能服用
         public override string Pathway => "Fool";
-        public override int RequiredSequence => 10; // 序列9通常没有前置要求，或者要求是普通人(10)
+        public override int RequiredSequence => 10;
 
         public override void SetStaticDefaults()
         {
@@ -41,13 +43,14 @@ namespace zhashi.Content.Items.Potions.Fool
                 LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
                 // 【核心逻辑】检查是否已是非凡者
+                // 如果已经是巨人途径或其他途径的非凡者，禁止开启愚者途径
                 if (modPlayer.IsBeyonder)
                 {
                     Main.NewText("你的灵性已定型，无法开启第二条途径，强行服用只会导致失控！", 255, 50, 50);
                     return true; // 消耗掉作为惩罚
                 }
 
-                // 晋升逻辑
+                // 晋升逻辑：成为序列9 占卜家
                 modPlayer.baseFoolSequence = 9;
 
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
@@ -59,16 +62,18 @@ namespace zhashi.Content.Items.Potions.Fool
 
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1) // 纯水
-                .AddIngredient(ItemID.BlackInk, 1)     // 拉瓦章鱼血液 (替代品：黑墨水)
-                .AddIngredient(ItemID.FallenStar, 1)   // 星水晶 (替代品：坠落之星)
-                .AddIngredient(ItemID.Daybloom, 1)     // 夜香草 (替代品：太阳花)
-                .AddIngredient(ItemID.Blinkroot, 1)    // 金薄荷 (替代品：闪耀根)
-                .AddIngredient(ItemID.Deathweed, 1)    // 龙血草 (替代品：死亡草)
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            // 使用智能配方生成器
+            // 只要持有【愚者牌】，就不需要消耗【亵渎石板】
+            CreateDualRecipe(
+                ModContent.ItemType<FoolCard>(), // 愚者牌
+
+                (ItemID.BottledWater, 1), // 纯水
+                (ItemID.BlackInk, 1),     // 拉瓦章鱼血液 (黑墨水)
+                (ItemID.FallenStar, 1),   // 星水晶 (坠落之星)
+                (ItemID.Daybloom, 1),     // 夜香草 (太阳花)
+                (ItemID.Blinkroot, 1),    // 金薄荷 (闪耀根)
+                (ItemID.Deathweed, 1)     // 龙血草 (死亡草)
+            );
         }
     }
 }

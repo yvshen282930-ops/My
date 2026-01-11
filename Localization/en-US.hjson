@@ -692,6 +692,26 @@ Mods: {
 				Tooltip: ""
 				DisplayName: Hand Of God Characteristic
 			}
+
+			TrueLoveHeart: {
+				DisplayName: True Love Heart
+				Tooltip: ""
+			}
+
+			ArrodesItem: {
+				DisplayName: Arrodes Item
+				Tooltip: ""
+			}
+
+			FoolCard: {
+				DisplayName: Fool Card
+				Tooltip: ""
+			}
+
+			StrengthCard: {
+				Tooltip: ""
+				DisplayName: Strength Card
+			}
 		}
 
 		# ==========================================
@@ -920,6 +940,7 @@ Mods: {
 			太阳：光明之火.DisplayName: 太阳：光明之火
 			太阳：公证.DisplayName: 太阳：公证
 			"太阳: 太阳使者.DisplayName": 太阳: 太阳使者
+			"错误: 窃取被动开关.DisplayName": 错误: 窃取被动开关
 		}
 
 		# ==========================================

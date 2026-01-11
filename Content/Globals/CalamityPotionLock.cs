@@ -27,9 +27,6 @@ namespace zhashi.Content.Globals
             {
                 int sequenceToCheck = -1;
 
-                // === 自动判断序列等级 ===
-                // 为了方便，这里还是用笨办法判断。
-                // 建议：后续在你的 ModItem 基类里加一个 "public int SequenceLevel" 字段，这样就不用写下面这一长串了。
 
                 // 序列 9
                 if (item.type == ModContent.ItemType<BardPotion>() || item.type == ModContent.ItemType<SeerPotion>() ||
@@ -109,8 +106,6 @@ namespace zhashi.Content.Globals
                             break;
 
                         case 4: // 半神 (原版毕业 -> 灾厄起步)
-                            // 【关键改动】必须击败月球领主才能晋升半神！
-                            // 这样保证你用原版职业打完原版，半神之力只用于对付灾厄BOSS
                             if (!NPC.downedMoonlord) missingBoss = "月球领主";
                             break;
 

@@ -1,14 +1,15 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用愚者牌
 
 namespace zhashi.Content.Items.Potions.Fool
 {
     public class MagicianPotion : LotMItem
     {
+        // 设定途径和前置序列 (需要序列8 小丑)
         public override string Pathway => "Fool";
-        public override int RequiredSequence => 8; // 必须是序列8小丑
+        public override int RequiredSequence => 8;
 
         public override void SetDefaults()
         {
@@ -44,15 +45,16 @@ namespace zhashi.Content.Items.Potions.Fool
 
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.Wood, 100)       // 树人根茎
-                .AddIngredient(ItemID.BlackInk, 10)    // 黑豹脊髓
-                .AddIngredient(ItemID.Sapphire, 20)    // 水形宝石
-                .AddIngredient(ItemID.Deathweed, 10)   // 迷幻草
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            // 使用智能配方生成器
+            CreateDualRecipe(
+                ModContent.ItemType<FoolCard>(), // 愚者牌
+
+                (ItemID.BottledWater, 1),
+                (ItemID.Wood, 100),       // 树人根茎 (替代：木材)
+                (ItemID.BlackInk, 10),    // 黑豹脊髓 (替代：黑墨水)
+                (ItemID.Sapphire, 20),    // 水形宝石 (替代：蓝宝石)
+                (ItemID.Deathweed, 10)    // 迷幻草 (替代：死亡草)
+            );
         }
     }
 }

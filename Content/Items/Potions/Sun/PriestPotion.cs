@@ -63,7 +63,7 @@ namespace zhashi.Content.Items.Potions.Sun
                 }
                 else
                 {
-                    Main.NewText("你的灵性不足以容纳这份特性 (需序列6)。", 150, 150, 150);
+                    Main.NewText("您的序列不符合要求。", 150, 150, 150);
                     return false;
                 }
             }

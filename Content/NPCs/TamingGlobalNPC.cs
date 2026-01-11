@@ -4,7 +4,8 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria.ModLoader.IO; 
+using Terraria.ModLoader.IO;
+using Terraria.DataStructures;
 using zhashi.Content.Buffs;
 using zhashi.Content;
 
@@ -20,11 +21,33 @@ namespace zhashi.Content.NPCs
 
         public override void ResetEffects(NPC npc)
         {
-            // 移除此处的逻辑，统一在 PreAI 处理
+            // 留空
         }
 
-        // 【核心修复1】强制禁止接触伤害
-        // 只要有驯服 Buff，无论它想不想打你，系统都判定为打不到
+        // ==========================================================
+        // 1. 【子代继承修复】 自动驯服 Boss 召唤出来的子代
+        // ==========================================================
+        public override void OnSpawn(NPC npc, IEntitySource source)
+        {
+            if (source is EntitySource_Parent parentSource && parentSource.Entity is NPC parentNPC)
+            {
+                // 如果“爸爸”有驯服 Buff，儿子也自动继承
+                if (parentNPC.HasBuff(ModContent.BuffType<TamedBuff>()))
+                {
+                    npc.AddBuff(ModContent.BuffType<TamedBuff>(), 36000);
+                    if (parentNPC.TryGetGlobalNPC(out TamingGlobalNPC parentGlobal))
+                    {
+                        this.ownerIndex = parentGlobal.ownerIndex;
+                    }
+                    npc.friendly = true;
+                    npc.dontTakeDamageFromHostiles = false;
+                }
+            }
+        }
+
+        // ==========================================================
+        // 2. 【防伤人修复】 禁止伤害玩家
+        // ==========================================================
         public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)
         {
             if (npc.HasBuff(ModContent.BuffType<TamedBuff>()))
@@ -36,110 +59,152 @@ namespace zhashi.Content.NPCs
 
         public override bool PreAI(NPC npc)
         {
-            if (npc.HasBuff(ModContent.BuffType<TamedBuff>()))
+            // ==========================================================
+            // 3. 【崩溃修复】 状态清理逻辑 (核心修复点)
+            // ==========================================================
+            // 如果怪物不再拥有驯服 Buff (过期或被清除)，必须立刻重置状态！
+            // 否则原版 AI 会因为 friendly=true 或 target=-1 而崩溃 (IndexOutOfRangeException)
+            if (!npc.HasBuff(ModContent.BuffType<TamedBuff>()))
             {
-                // 【核心逻辑修复】
-                // 1. 如果没有主人索引，或者索引不合法，暂时按默认逻辑处理或解除Buff
-                if (ownerIndex < 0 || ownerIndex >= Main.maxPlayers)
+                // 如果 ownerIndex != -1 说明它之前是被驯服的
+                if (ownerIndex != -1)
                 {
-                    // 尝试寻找最近的玩家作为临时主人，或者直接返回
-                    // 这里简单处理：如果丢失主人，Buff可能就失效了，或者直接return true让它按原版AI走
-                    // 但为了防吞怪，我们先让它呆着
-                    npc.velocity *= 0.9f;
-                    return false;
+                    ownerIndex = -1; // 清除主人标记
+
+                    // 如果不是城镇NPC，强制改回敌对
+                    if (!npc.townNPC && !NPCID.Sets.ActsLikeTownNPC[npc.type])
+                    {
+                        npc.friendly = false;
+                        npc.dontTakeDamageFromHostiles = true;
+
+                        // 【关键】重置 Target 为 255 (无效但安全)，迫使原版 AI 重新索敌
+                        // 防止原版 AI 使用残留的 -1 去读取 Main.player 数组导致崩溃
+                        npc.target = 255;
+                    }
                 }
+                return true; // 安全返回，执行原版 AI
+            }
 
-                Player owner = Main.player[ownerIndex];
+            // ==========================================================
+            // 以下为驯服状态下的逻辑
+            // ==========================================================
 
-                // 2. 检查主人是否在线/存活
-                if (!owner.active || owner.dead)
+            // 1. 主人检查
+            if (ownerIndex < 0 || ownerIndex >= Main.maxPlayers)
+            {
+                npc.velocity.X *= 0.9f;
+                return false;
+            }
+
+            Player owner = Main.player[ownerIndex];
+            if (!owner.active || owner.dead)
+            {
+                npc.DelBuff(npc.FindBuffIndex(ModContent.BuffType<TamedBuff>()));
+                return true;
+            }
+
+            // 2. 强力续命 (防止消失)
+            npc.timeLeft = 1000;
+
+            // 3. 属性增强与续杯
+            var modPlayer = owner.GetModPlayer<LotMPlayer>();
+            if (modPlayer.currentMoonSequence <= 7)
+            {
+                int buffIndex = npc.FindBuffIndex(ModContent.BuffType<TamedBuff>());
+                if (buffIndex != -1) npc.buffTime[buffIndex] = 30000;
+            }
+
+            if (originalDamage == -1) originalDamage = npc.damage;
+
+            // 4. 强制阵营修正
+            npc.friendly = true;
+            npc.dontTakeDamageFromHostiles = false;
+            npc.target = -1; // 移除对玩家仇恨
+
+            // 伤害加成
+            float damageMult = 1.0f;
+            if (modPlayer.currentMoonSequence <= 7) damageMult = 1.5f;
+            if (npc.damage < npc.defDamage * damageMult) npc.damage = (int)(npc.defDamage * damageMult);
+            if (npc.damage < 10) npc.damage = 10;
+
+            // --- 5. 移动控制逻辑 ---
+            float distToOwner = npc.Distance(owner.Center);
+
+            // [防丢传送] 距离太远直接拉回来
+            if (distToOwner > 2000f)
+            {
+                npc.Center = owner.Center;
+                npc.velocity = Vector2.Zero;
+                npc.netUpdate = true;
+            }
+
+            // 寻找敌人
+            NPC targetEnemy = FindClosestEnemy(npc, owner);
+            if (targetEnemy != null)
+            {
+                npc.target = targetEnemy.whoAmI;
+            }
+
+            // --- 6. AI 接管判定 ---
+            // 包含 3 (Fighter) 和 26 (Unicorn)，这是之前报错的根源
+            int[] overrideStyles = { 3, 1, 26, 14, 2, 8, 5, 44, 10 };
+
+            bool shouldOverrideAI = false;
+            foreach (int style in overrideStyles)
+            {
+                if (npc.aiStyle == style) { shouldOverrideAI = true; break; }
+            }
+
+            if (shouldOverrideAI)
+            {
+                if (targetEnemy != null)
                 {
-                    // 主人没了，解除驯服，或者让怪消失
-                    npc.DelBuff(npc.FindBuffIndex(ModContent.BuffType<TamedBuff>()));
-                    return true; // 恢复原版AI
-                }
-
-                // 3. 只有服务器和主人客户端需要执行“永久存在”逻辑
-                // 其他客户端只需要负责渲染
-                var modPlayer = owner.GetModPlayer<LotMPlayer>();
-
-                // 血仆永久逻辑
-                if (modPlayer.currentMoonSequence <= 7)
-                {
-                    int buffIndex = npc.FindBuffIndex(ModContent.BuffType<TamedBuff>());
-                    if (buffIndex != -1) npc.buffTime[buffIndex] = 30000;
-                }
-
-                // 4. 防止被系统刷没 (Despawn)
-                npc.timeLeft = 2; // 只要Buff还在，就强行续命
-
-                if (originalDamage == -1) originalDamage = npc.damage;
-
-                // 属性修正
-                npc.friendly = true;
-                npc.dontTakeDamageFromHostiles = false;
-                npc.target = -1; // 清除针对玩家的仇恨
-
-                // 伤害加成
-                float damageMult = 1.0f;
-                if (modPlayer.currentMoonSequence <= 7) damageMult = 1.5f;
-
-                if (npc.damage < npc.defDamage * damageMult) npc.damage = (int)(npc.defDamage * damageMult);
-                if (npc.damage < 10) npc.damage = 10;
-
-                // --- AI 逻辑 ---
-                NPC target = FindClosestEnemy(npc, owner); // 传入 owner 以辅助判断
-
-                if (target != null)
-                {
-                    // 战斗模式
-                    npc.target = target.whoAmI;
-                    MoveTowards(npc, target.Center, 6f, 15f);
-                    CheckCollisionDamage(npc, target);
+                    MoveTowards(npc, targetEnemy.Center, 7f, 15f);
+                    CheckCollisionDamage(npc, targetEnemy);
                 }
                 else
                 {
-                    // 跟随模式 (跟随 owner，而不是 Main.LocalPlayer)
-                    npc.target = -1;
-
-                    float dist = npc.Distance(owner.Center);
-
-                    // 距离过远传送逻辑
-                    if (dist > 1500f)
-                    {
-                        npc.Center = owner.Center;
-                        npc.velocity = Vector2.Zero;
-                        // 传送后需要同步位置，防止客户端看到的还在远处
-                        npc.netUpdate = true;
-                    }
-                    else if (dist > 200f)
-                    {
-                        MoveTowards(npc, owner.Center, 5f, 20f);
-                    }
+                    // 回到主人身边
+                    if (distToOwner > 200f) MoveTowards(npc, owner.Center, 6f, 20f);
                     else
                     {
                         npc.velocity.X *= 0.9f;
-                        if (npc.velocity.Y == 0 && Math.Abs(npc.velocity.X) < 0.1f)
-                        {
-                            npc.velocity.X = 0;
+                        if (npc.noGravity) npc.velocity.Y *= 0.9f;
+
+                        if (Math.Abs(npc.Center.X - owner.Center.X) > 20)
                             npc.direction = npc.spriteDirection = (owner.Center.X > npc.Center.X) ? 1 : -1;
-                        }
                     }
                 }
+                return false; // 阻断原版 AI
+            }
 
-                // 屏蔽原版 AI
-                if (npc.aiStyle == 3 || npc.aiStyle == 1 || npc.aiStyle == 26 || npc.aiStyle == 14 || npc.aiStyle == 2)
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                // 如果没有Buff，重置主人（可选）
-                ownerIndex = -1;
-            }
+            // 对于 Boss (aiStyle 0 等)，我们允许原版 AI 运行，但在 PostAI 中强制修正阵营
             return true;
         }
+
+        // ==========================================================
+        // 4. 【下陷与Boss修复】 PostAI 强制修正
+        // ==========================================================
+        public override void PostAI(NPC npc)
+        {
+            if (npc.HasBuff(ModContent.BuffType<TamedBuff>()))
+            {
+                npc.friendly = true;
+
+                // 【核心修复：沉入地下问题】
+                // 只有当它是 Boss，或者原本就是飞行/穿墙单位时，才允许穿墙
+                if (npc.boss || npc.noGravity)
+                {
+                    npc.noTileCollide = true;
+                }
+                else
+                {
+                    // 地面单位必须检测碰撞，否则会掉出世界
+                    npc.noTileCollide = false;
+                }
+            }
+        }
+
         public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
         {
             binaryWriter.Write(ownerIndex);
@@ -150,34 +215,43 @@ namespace zhashi.Content.NPCs
             ownerIndex = binaryReader.ReadInt32();
         }
 
-
+        // --- 辅助方法 ---
 
         private void MoveTowards(NPC npc, Vector2 targetPos, float speedBase, float inertia)
         {
             float speed = speedBase;
-            if (npc.aiStyle == 3) speed += 2f;
+            if (npc.noGravity) speed *= 1.2f;
 
             Vector2 direction = targetPos - npc.Center;
-            direction.Normalize();
-            direction *= speed;
 
-            npc.velocity.X = (npc.velocity.X * (inertia - 1) + direction.X) / inertia;
-
-            bool isTargetAbove = targetPos.Y < npc.Center.Y - 50;
-            bool onGround = npc.velocity.Y == 0;
-            bool hitWall = npc.collideX;
-
-            if (onGround)
+            // [修复] 如果是地面单位，不要直接飞向目标，而是要在地面跑
+            if (!npc.noGravity)
             {
-                if (hitWall || isTargetAbove)
+                float xDir = (direction.X > 0) ? 1 : -1;
+                float xSpeedTarget = xDir * speed;
+                npc.velocity.X = (npc.velocity.X * (inertia - 1) + xSpeedTarget) / inertia;
+
+                // [简易跳跃逻辑]
+                bool blocked = npc.collideX;
+                bool targetAbove = targetPos.Y < npc.Center.Y - 32;
+                if (blocked && targetAbove && npc.velocity.Y == 0)
                 {
-                    npc.velocity.Y = -7.5f;
-                    npc.velocity.X += npc.direction * 1.5f;
+                    npc.velocity.Y = -7f;
+                }
+            }
+            else
+            {
+                // 飞行单位直接飞
+                if (direction != Vector2.Zero)
+                {
+                    direction.Normalize();
+                    direction *= speed;
+                    npc.velocity = (npc.velocity * (inertia - 1) + direction) / inertia;
                 }
             }
 
             if (npc.velocity.X != 0)
-                npc.direction = npc.spriteDirection = (targetPos.X > npc.Center.X) ? 1 : -1;
+                npc.direction = npc.spriteDirection = (npc.velocity.X > 0) ? 1 : -1;
         }
 
         private void CheckCollisionDamage(NPC me, NPC target)
@@ -187,22 +261,11 @@ namespace zhashi.Content.NPCs
             if (me.getRect().Intersects(target.getRect()))
             {
                 int damage = me.damage;
-                int hitDirection = (target.Center.X > me.Center.X) ? 1 : -1;
-                target.SimpleStrikeNPC(damage, hitDirection, false, 0f, DamageClass.Generic, false, 0f, true);
+                target.SimpleStrikeNPC(damage, 0, false, 0f, DamageClass.Generic, false, 0f, true);
 
-                if (ownerIndex != -1 && Main.player[ownerIndex].active)
-                {
-                    if (Main.player[ownerIndex].GetModPlayer<LotMPlayer>().currentMoonSequence <= 7)
-                    {
-                        int heal = damage / 10;
-                        if (heal < 1) heal = 1;
-                        me.life += heal;
-                        if (me.life > me.lifeMax) me.life = me.lifeMax;
-                        if (Main.rand.NextBool(3)) me.HealEffect(heal);
-                    }
-                }
+                if (me.noGravity) me.velocity *= -0.5f;
+                else me.velocity.X *= -0.5f;
 
-                me.velocity.X *= -0.5f;
                 attackCooldown = 30;
             }
         }
@@ -215,10 +278,10 @@ namespace zhashi.Content.NPCs
             }
         }
 
-        // 允许被驯服的怪物攻击其他敌人
         public override bool CanHitNPC(NPC npc, NPC target)
         {
-            if (npc.HasBuff(ModContent.BuffType<TamedBuff>()) && !target.friendly) return true;
+            if (npc.HasBuff(ModContent.BuffType<TamedBuff>()) && !target.friendly && !target.HasBuff(ModContent.BuffType<TamedBuff>()))
+                return true;
             return base.CanHitNPC(npc, target);
         }
 
@@ -226,21 +289,19 @@ namespace zhashi.Content.NPCs
         {
             if (npc.HasBuff(ModContent.BuffType<TamedBuff>()))
             {
-                modifiers.ArmorPenetration += 5;
+                modifiers.ArmorPenetration += 15;
             }
         }
 
         private NPC FindClosestEnemy(NPC me, Player owner)
         {
             NPC closest = null;
-            float minDist = 1000f;
+            float minDist = 1500f;
             for (int i = 0; i < Main.maxNPCs; i++)
             {
                 NPC other = Main.npc[i];
-                // 确保不攻击主人、友方、自己、以及其他被驯服的怪
                 if (other.active && !other.friendly && other.whoAmI != me.whoAmI && other.lifeMax > 5 && !other.dontTakeDamage && !other.HasBuff(ModContent.BuffType<TamedBuff>()))
                 {
-                    // 优先攻击离怪物自己近的
                     float dist = Vector2.Distance(me.Center, other.Center);
                     if (dist < minDist) { minDist = dist; closest = other; }
                 }

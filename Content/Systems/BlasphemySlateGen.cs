@@ -19,9 +19,6 @@ namespace zhashi.Content.Systems
                 {
                     Tile tile = Main.tile[chest.x, chest.y];
 
-                    // 【核心修复】同时检查 Containers (ID 21) 和 Containers2 (ID 467)
-                    // Containers 包含：木箱、金箱、以及大多数肉前宝箱
-                    // Containers2 包含：常春藤箱、水箱、蛛丝箱、丛林蜥蜴箱等
                     if (tile.TileType == TileID.Containers || tile.TileType == TileID.Containers2)
                     {
                         // 【核心修复】20% 概率 (1/5)

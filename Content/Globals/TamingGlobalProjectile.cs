@@ -18,22 +18,15 @@ namespace zhashi.Content.Globals
 
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            // 修改：增加一个判断条件，例如 modPlayer.isBatSwarm 或者你自定义的开关
-            // 假设你只想让它在特定条件下触发，可以在这里加 && 你的条件
             if (modPlayer.currentMoonSequence <= 8)
             {
-                // 如果你希望彻底移除被动，直接把这行删掉即可：
-                // TryTameNPC(target); 
+
             }
         }
 
         private void TryTameNPC(NPC target)
         {
-            // 判定条件：
-            // 1. 不是 Boss 
-            // 2. 必须是残血 (生命值 < 30%)
-            // 3. 没有被驯服过
-            // 4. 是敌对生物
+
             if (!target.boss && target.active && !target.friendly && target.lifeMax > 5 && target.life <= target.lifeMax * 0.3f && !target.HasBuff(ModContent.BuffType<TamedBuff>()))
             {
                 // 给予驯服 Buff (持续 3 分钟 = 10800 帧)

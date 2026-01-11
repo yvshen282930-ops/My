@@ -4,11 +4,17 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用力量牌
 
 namespace zhashi.Content.Items.Potions
 {
-    public class DemonHunterPotion : ModItem
+    // 1. 继承 LotMItem
+    public class DemonHunterPotion : LotMItem
     {
+        // 2. 设定途径和前置序列
+        public override string Pathway => "Giant";
+        public override int RequiredSequence => 5; // 需要是序列5守护者才能喝
+
         public override void SetDefaults()
         {
             Item.width = 20;
@@ -20,13 +26,19 @@ namespace zhashi.Content.Items.Potions
             Item.useTurn = true;
             Item.maxStack = 99;
             Item.consumable = true;
-            Item.rare = ItemRarityID.Yellow; // 黄色稀有度 (花后/石巨人)
+            Item.rare = ItemRarityID.Yellow; // 黄色稀有度
             Item.value = Item.buyPrice(gold: 50);
         }
 
+        // 3. 重写 ModifyTooltips：显示仪式进度
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
+            // 先调用基类的逻辑 (显示红色的"需要序列5")
+            base.ModifyTooltips(tooltips);
+
             var modPlayer = Main.LocalPlayer.GetModPlayer<LotMPlayer>();
+
+            // 只有当玩家是序列5时，才显示仪式进度，避免干扰其他玩家
             if (modPlayer.baseSequence == 5)
             {
                 string statusColor = (modPlayer.demonHunterRitualProgress >= LotMPlayer.DEMON_HUNTER_RITUAL_TARGET) ? "00FF00" : "FF0000";
@@ -37,9 +49,15 @@ namespace zhashi.Content.Items.Potions
             }
         }
 
+        // 4. 重写 CanUseItem：增加仪式未完成的拦截
         public override bool CanUseItem(Player player)
         {
+            // 先让基类检查是否是序列5 (代码复用！)
+            if (!base.CanUseItem(player)) return false;
+
             var modPlayer = player.GetModPlayer<LotMPlayer>();
+
+            // 额外检查仪式进度
             if (modPlayer.baseSequence == 5)
             {
                 if (modPlayer.demonHunterRitualProgress < LotMPlayer.DEMON_HUNTER_RITUAL_TARGET)
@@ -63,34 +81,29 @@ namespace zhashi.Content.Items.Potions
                 modPlayer.baseSequence = 4;
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
-                Main.NewText("你的双眼看穿了万物的弱点，你已不再是凡人...", 255, 0, 255); // 紫色文字
+                Main.NewText("你的双眼看穿了万物的弱点，你已不再是凡人...", 255, 0, 255);
                 Main.NewText("晋升成功：序列4 猎魔者 (半神)！", 255, 0, 255);
                 Main.NewText("获得能力：【猎魔之眼】(永久显示敌人，暴击大幅提升)", 255, 255, 255);
                 Main.NewText("获得能力：【弱点看破】(攻击削弱敌人防御)", 255, 255, 255);
                 return true;
             }
-            else if (modPlayer.baseSequence > 5)
-            {
-                Main.NewText("你还未成为守护者，无法承受半神之力。", 200, 50, 50);
-                return true;
-            }
-            else
-            {
-                Main.NewText("你已经是半神了。", 200, 200, 200);
-                return true;
-            }
+            // 不需要再写 else if (baseSequence > 5) 了，因为 CanUseItem 已经拦住了
+            return true;
         }
 
+        // =========================================================
+        // 【重点修改】使用智能配方生成器
+        // =========================================================
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.BeetleHusk, 5) // 甲虫壳 (石巨人掉落，代表坚硬材料)
-                .AddIngredient(ItemID.Ectoplasm, 10) // 灵气 (地牢幽灵掉落，代表灵性)
-                .AddIngredient(ItemID.SoulofNight, 15) // 暗影之魂
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            CreateDualRecipe(
+                ModContent.ItemType<StrengthCard>(),
+
+                (ItemID.BottledWater, 1),
+                (ItemID.BeetleHusk, 5),  // 甲虫壳
+                (ItemID.Ectoplasm, 10),  // 灵气
+                (ItemID.SoulofNight, 15) // 暗影之魂
+            );
         }
     }
 }
