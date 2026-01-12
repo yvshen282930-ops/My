@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
-using Terraria.DataStructures; // 必须引用
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using zhashi.Content;
@@ -40,9 +40,28 @@ namespace zhashi.Content.Systems
 
             bool isBought = context is BuyItemCreationContext;
 
+            // 只有是购买行为，且开启了窃取模式时才判定
             if (isBought && modPlayer.stealMode)
             {
-                // 计算概率
+                // === [新增逻辑] 恋人牌判定：必定成功 ===
+                if (modPlayer.isLoversCardEquipped)
+                {
+                    // 1. 视觉反馈：星旋粒子 (象征扭曲规则/Bug)
+                    for (int i = 0; i < 15; i++)
+                    {
+                        Dust d = Dust.NewDustPerfect(player.Center, DustID.Vortex, Main.rand.NextVector2Circular(2f, 2f), 0, default, 1.5f);
+                        d.noGravity = true;
+                    }
+
+                    // 2. 文字提示 (紫色)
+                    CombatText.NewText(player.getRect(), new Color(178, 102, 255), "命运欺诈!", true);
+
+                    // 3. 直接返回，跳过后续的失败判定
+                    return;
+                }
+                // ========================================
+
+                // 原有的概率计算
                 float catchChance = 0.5f - (9 - modPlayer.currentMarauderSequence) * 0.05f;
                 if (catchChance < 0.05f) catchChance = 0.05f;
 
@@ -54,9 +73,9 @@ namespace zhashi.Content.Systems
                     modPlayer.stealAggroTimer = 3600;
                     modPlayer.stealMode = false;
 
-                    // 【核心修复】使用 SetTalkNPC 方法停止对话
+                    // 停止对话并关闭界面
                     player.SetTalkNPC(-1);
-                    Main.playerInventory = false; // 关闭背包/商店界面
+                    Main.playerInventory = false;
 
                     player.Hurt(PlayerDeathReason.ByCustomReason(player.name + " 被愤怒的店主当场抓获！"), 50, 0);
                     SoundEngine.PlaySound(SoundID.Roar, player.position);

@@ -1,21 +1,21 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Microsoft.Xna.Framework;
-using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用红祭司牌
 
-namespace zhashi.Content.Items.Potions.Hunter // 建议加上 .Hunter 区分命名空间，或者保持 zhashi.Content.Items.Potions 也可以
+namespace zhashi.Content.Items.Potions.Hunter
 {
-    // 【核心修复】类名必须是 HunterPotion，不能是 WarriorPotion
     public class HunterPotion : LotMItem
     {
-        public override string Pathway => "Hunter"; // 设定途径
-        public override int RequiredSequence => 10;
+        // 1. 定义途径
+        public override string Pathway => "Hunter";
+
+        // 序列要求：0 代表无序列门槛 (凡人可服)
+        public override int RequiredSequence => 0;
 
         public override void SetStaticDefaults()
         {
             // DisplayName.SetDefault("猎人魔药");
-            // Tooltip.SetDefault("序列9：猎人\n获得敏锐的感官与卓越的身体素质");
         }
 
         public override void SetDefaults()
@@ -29,7 +29,7 @@ namespace zhashi.Content.Items.Potions.Hunter // 建议加上 .Hunter 区分命�
             Item.UseSound = SoundID.Item3;
             Item.maxStack = 30;
             Item.consumable = true;
-            Item.rare = ItemRarityID.Blue;
+            Item.rare = ItemRarityID.Blue; // 序列9 蓝色
             Item.value = Item.sellPrice(silver: 50);
             Item.buffType = BuffID.WellFed;
             Item.buffTime = 300;
@@ -48,11 +48,11 @@ namespace zhashi.Content.Items.Potions.Hunter // 建议加上 .Hunter 区分命�
                     return true; // 消耗掉作为惩罚
                 }
 
-                // 晋升逻辑：猎人途径
+                // 晋升逻辑
                 modPlayer.baseHunterSequence = 9;
 
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
-                Main.NewText("你的感官瞬间变得敏锐，仿佛能嗅到空气中猎物的气息...", 200, 100, 50);
+                Main.NewText("你的感官瞬间变得敏锐，仿佛能嗅到空气中猎物的气息...", 200, 100, 50); // 猎人风格的土黄色/橙色
                 Main.NewText("晋升成功！序列9：猎人！", 255, 100, 0);
             }
             return true;
@@ -60,15 +60,14 @@ namespace zhashi.Content.Items.Potions.Hunter // 建议加上 .Hunter 区分命�
 
         public override void AddRecipes()
         {
-            // 猎人配方：水瓶 + 麦芽酒 + 太阳花 + 凝胶(5)
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.Ale, 1)          // 麦芽酒
-                .AddIngredient(ItemID.Daybloom, 1)     // 太阳花
-                .AddIngredient(ItemID.Gel, 5)          // 凝胶
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            // 使用双配方：支持 石板 或 红祭司牌
+            CreateDualRecipe(
+                ModContent.ItemType<RedPriestCard>(), // 核心：红祭司牌
+                (ItemID.BottledWater, 1),
+                (ItemID.Ale, 1),       // 麦芽酒 (酒精/猎人)
+                (ItemID.Daybloom, 1),  // 太阳花
+                (ItemID.Gel, 5)        // 凝胶 (粘性/陷阱材料)
+            );
         }
     }
 }

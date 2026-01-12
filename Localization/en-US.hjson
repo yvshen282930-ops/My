@@ -712,6 +712,26 @@ Mods: {
 				Tooltip: ""
 				DisplayName: Strength Card
 			}
+
+			LoversCard: {
+				Tooltip: ""
+				DisplayName: Lovers Card
+			}
+
+			RedPriestCard: {
+				Tooltip: ""
+				DisplayName: Red Priest Card
+			}
+
+			SunCard: {
+				Tooltip: ""
+				DisplayName: Sun Card
+			}
+
+			MoonCard: {
+				Tooltip: ""
+				DisplayName: Moon Card
+			}
 		}
 
 		# ==========================================
@@ -865,6 +885,9 @@ Mods: {
 			IsSequence6: Requires Sequence 6: Dawn Knight
 			DogNotOwned: Not summoned
 			IsLightSupplicant: Mods.zhashi.Conditions.IsLightSupplicant
+			HasBlasphemySlate: 需消耗亵渎石板
+			NoCard: 未持有对应亵渎之牌
+			HasBottledWater: 需消耗水瓶
 		}
 
 		# ==========================================

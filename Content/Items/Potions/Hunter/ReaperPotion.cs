@@ -1,12 +1,16 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用红祭司牌
 
 namespace zhashi.Content.Items.Potions.Hunter
 {
-    public class ReaperPotion : ModItem
+    public class ReaperPotion : LotMItem
     {
+        // 1. 定义途径和前置序列
+        public override string Pathway => "Hunter";
+        public override int RequiredSequence => 6; // 需要序列6 (阴谋家)
+
         public override void SetDefaults()
         {
             Item.width = 20;
@@ -18,47 +22,39 @@ namespace zhashi.Content.Items.Potions.Hunter
             Item.useTurn = true;
             Item.maxStack = 99;
             Item.consumable = true;
-            Item.rare = ItemRarityID.Pink; // 粉色 (机械三王后)
+            Item.rare = ItemRarityID.Pink; // 序列5 粉色 (机械三王后)
             Item.value = Item.buyPrice(gold: 15);
         }
 
+        // 2. 晋升逻辑
         public override bool? UseItem(Player player)
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            if (modPlayer.baseHunterSequence == 6)
-            {
-                modPlayer.baseHunterSequence = 5;
-                Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
+            // LotMItem 基类已确保玩家是序列6
+            modPlayer.baseHunterSequence = 5;
 
-                Main.NewText("你看到了万物的死线...", 255, 50, 50);
-                Main.NewText("晋升成功：序列5 收割者！", 255, 50, 50);
-                Main.NewText("能力：【弱点攻击】(暴击伤害提升) | 【致命攻击】(斩杀低血量) | 【屠杀】(按J键)", 255, 255, 255);
-                return true;
-            }
-            else if (modPlayer.baseHunterSequence > 6)
-            {
-                Main.NewText("你还未成为阴谋家。", 200, 50, 50);
-                return true;
-            }
-            else
-            {
-                Main.NewText("你早已掌握了收割的技艺。", 200, 200, 200);
-                return true;
-            }
+            // 音效与文本
+            Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
+
+            Main.NewText("你看到了万物的死线...", 255, 50, 50); // 血红色
+            Main.NewText("晋升成功：序列5 收割者！", 255, 50, 50);
+            Main.NewText("能力：【弱点攻击】(暴击伤害提升) | 【致命攻击】(斩杀低血量) | 【屠杀】(按J键)", 255, 255, 255);
+
+            return true;
         }
 
+        // 3. 双配方支持
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.HallowedBar, 10)   // 神圣锭
-                .AddIngredient(ItemID.SoulofFright, 5)   // 恐惧之魂
-                .AddIngredient(ItemID.SoulofNight, 10)   // 暗影之魂
-                .AddIngredient(ItemID.SharkFin, 5)       // 鲨鱼鳍 (猎杀象征)
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            CreateDualRecipe(
+                ModContent.ItemType<RedPriestCard>(), // 核心：红祭司牌
+                (ItemID.BottledWater, 1),
+                (ItemID.HallowedBar, 10),   // 神圣锭 (圣者/神性)
+                (ItemID.SoulofFright, 5),   // 恐惧之魂 (杀戮/恐惧)
+                (ItemID.SoulofNight, 10),   // 暗影之魂
+                (ItemID.SharkFin, 5)        // 鲨鱼鳍 (猎杀者/血腥)
+            );
         }
     }
 }

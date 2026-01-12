@@ -1,12 +1,16 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用红祭司牌
 
 namespace zhashi.Content.Items.Potions.Hunter
 {
-    public class ConspiratorPotion : ModItem
+    public class ConspiratorPotion : LotMItem
     {
+        // 1. 定义途径和前置序列
+        public override string Pathway => "Hunter";
+        public override int RequiredSequence => 7; // 需要序列7 (纵火家)
+
         public override void SetDefaults()
         {
             Item.width = 20;
@@ -22,43 +26,35 @@ namespace zhashi.Content.Items.Potions.Hunter
             Item.value = Item.buyPrice(gold: 10);
         }
 
+        // 2. 晋升逻辑
         public override bool? UseItem(Player player)
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            if (modPlayer.baseHunterSequence == 7)
-            {
-                modPlayer.baseHunterSequence = 6;
-                Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
+            // LotMItem 基类已确保玩家是序列7
+            modPlayer.baseHunterSequence = 6;
 
-                Main.NewText("你的思维变得冰冷而清晰...", 255, 100, 0);
-                Main.NewText("晋升成功：序列6 阴谋家！", 255, 100, 0);
-                Main.NewText("能力：【火焰闪现】(按V键) | 【洞察】(暴击提升)", 255, 255, 255);
-                return true;
-            }
-            else if (modPlayer.baseHunterSequence > 7)
-            {
-                Main.NewText("你还未掌握纵火的艺术。", 200, 50, 50);
-                return true;
-            }
-            else
-            {
-                Main.NewText("你已是阴谋家。", 200, 200, 200);
-                return true;
-            }
+            // 音效与文本
+            Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
+
+            Main.NewText("你的思维变得冰冷而清晰...", 255, 100, 0); // 橙色
+            Main.NewText("晋升成功：序列6 阴谋家！", 255, 100, 0);
+            Main.NewText("能力：【火焰闪现】(按V键) | 【洞察】(暴击提升)", 255, 255, 255);
+
+            return true;
         }
 
+        // 3. 双配方支持
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.SpiderFang, 5)      // 蜘蛛材料
-                .AddIngredient(ItemID.AntlionMandible, 5) // 狮子类材料
-                .AddIngredient(ItemID.Amber, 3)           // 琥珀
-                .AddIngredient(ItemID.Acorn, 5)           // 橡果
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            CreateDualRecipe(
+                ModContent.ItemType<RedPriestCard>(), // 核心：红祭司牌
+                (ItemID.BottledWater, 1),
+                (ItemID.SpiderFang, 5),       // 蜘蛛牙 (编织阴谋)
+                (ItemID.AntlionMandible, 5),  // 蚁狮上颚 (陷阱)
+                (ItemID.Amber, 3),            // 琥珀 (保存/隐藏)
+                (ItemID.Acorn, 5)             // 橡果 (森林/猎人)
+            );
         }
     }
 }

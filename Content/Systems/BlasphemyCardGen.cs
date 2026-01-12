@@ -18,10 +18,16 @@ namespace zhashi.Content.Systems
             List<int> cardsToSpawn = new List<int>();
 
             cardsToSpawn.Add(ModContent.ItemType<FoolCard>());
-)
+
             cardsToSpawn.Add(ModContent.ItemType<StrengthCard>());
 
             cardsToSpawn.Add(ModContent.ItemType<LoversCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<RedPriestCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<SunCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<MoonCard>());
 
             // === 未来有新牌直接在这里继续 Add ===
             // cardsToSpawn.Add(ModContent.ItemType<HangedManCard>());

@@ -1,20 +1,14 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用恋人牌
 
 namespace zhashi.Content.Items.Potions.Marauder
 {
-    public class MarauderPotion : ModItem
+    public class MarauderPotion : LotMItem
     {
-        public override void SetStaticDefaults()
-        {
-            // DisplayName.SetDefault("魔药：偷盗者");
-            // Tooltip.SetDefault("序列9 偷盗者\n" +
-            //                  "赋予使用者敏捷的身手与卓越的观察力。\n" +
-            //                  "开启错误途径的起始。\n" +
-            //                  "“窃取他人的命运，或者被命运窃取。”");
-        }
+        public override string Pathway => "Marauder";
+        public override int RequiredSequence => 0; // 0 代表无序列限制（凡人可服）
 
         public override void SetDefaults()
         {
@@ -37,31 +31,31 @@ namespace zhashi.Content.Items.Potions.Marauder
         {
             var modPlayer = player.GetModPlayer<LotMPlayer>();
 
-            // 【核心修复】
-            // 使用 IsBeyonder 检查玩家是否已经是任何途径的非凡者
-            // 如果 IsBeyonder 为 true，说明已经是某条途径的序列9或更高了，必须禁止服用
+            // 序列9 特有逻辑：检查是否已经是其他途径的非凡者
             if (modPlayer.IsBeyonder)
             {
                 Main.NewText("你的灵性已定型，无法开启第二条途径，强行服用只会导致失控！", 255, 50, 50);
                 return true; // 消耗物品但无效
             }
 
-            // 只有当玩家完全是凡人时，才允许晋升
+            // 晋升逻辑
             modPlayer.baseMarauderSequence = 9;
             Main.NewText("你的手指变得灵活，眼中闪烁着奇异的光芒... 你成为了[偷盗者]！", 50, 50, 200);
+            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
+
             return true;
         }
 
+        // 修正后的配方逻辑：使用基类的 CreateDualRecipe
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.Stinger, 1)      // 毒刺
-                .AddIngredient(ItemID.PinkGel, 1)      // 粉凝胶
-                .AddIngredient(ItemID.Sapphire, 1)     // 蓝宝石
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            CreateDualRecipe(
+                ModContent.ItemType<LoversCard>(), // 对应的高阶媒介 (恋人牌)
+                (ItemID.BottledWater, 1),
+                (ItemID.Stinger, 1),      // 毒刺
+                (ItemID.PinkGel, 1),      // 粉凝胶
+                (ItemID.Sapphire, 1)      // 蓝宝石
+            );
         }
     }
 }

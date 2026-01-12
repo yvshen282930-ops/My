@@ -2,16 +2,19 @@
 using Terraria.ID;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
-using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用月亮牌
 
 namespace zhashi.Content.Items.Potions.Moon
 {
     public class BeastTamerPotion : LotMItem
     {
+        // 1. 定义途径和前置序列
+        public override string Pathway => "Moon";
+        public override int RequiredSequence => 9; // 需要序列9 (药师)
+
         public override void SetStaticDefaults()
         {
-            // DisplayName.SetDefault("驯兽师魔药");
-            // Tooltip.SetDefault("服用后晋升为 序列8：驯兽师\n获得动物感官，体质大幅提升");
+            // 名字和描述在 HJSON 中
         }
 
         public override void SetDefaults()
@@ -25,44 +28,43 @@ namespace zhashi.Content.Items.Potions.Moon
             Item.UseSound = SoundID.Item3;
             Item.maxStack = 30;
             Item.consumable = true;
-            Item.rare = ItemRarityID.Green;
+            Item.rare = ItemRarityID.Green; // 序列8 绿色
             Item.value = Item.sellPrice(gold: 1);
         }
 
-        // 使用条件：必须已经是 序列9：药师
-        public override bool CanUseItem(Player player)
-        {
-            LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-            return modPlayer.baseMoonSequence == 9;
-        }
-
+        // 2. 晋升逻辑
         public override bool? UseItem(Player player)
         {
             if (player.whoAmI == Main.myPlayer)
             {
-                LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-                modPlayer.baseMoonSequence = 8; // 晋升
+                var modPlayer = player.GetModPlayer<LotMPlayer>();
 
+                // 晋升
+                modPlayer.baseMoonSequence = 8;
+                // modPlayer.currentMoonSequence = 8; // 可选：手动同步
+
+                // 视觉与音效
                 CombatText.NewText(player.getRect(), Color.Orange, "晋升：驯兽师", true);
-                Main.NewText("你能听懂野兽的低语，力量充盈全身...", 255, 100, 100);
+                Main.NewText("你能听懂野兽的低语，力量充盈全身...", 255, 140, 0); // 兽性橙
 
-                Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position); // 播放一声咆哮
+                // 播放咆哮音效，符合驯兽师特征
+                Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
             }
             return true;
         }
 
+        // 3. 双配方支持
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.Sapphire, 1)       // 精灵之泉结晶
-                .AddIngredient(ItemID.JungleSpores, 3)   // 大王剑花
-                .AddIngredient(ItemID.Daybloom, 1)       // 花
-                .AddIngredient(ItemID.LesserHealingPotion, 1) // 汁液
-                .AddRecipeGroup("IronBar", 1)            // 简单替代尸油或其他
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            CreateDualRecipe(
+                ModContent.ItemType<MoonCard>(), // 核心：月亮牌
+                (ItemID.BottledWater, 1),
+                (ItemID.Sapphire, 1),            // 蓝宝石 (灵性)
+                (ItemID.JungleSpores, 3),        // 丛林孢子 (自然/野性)
+                (ItemID.Daybloom, 1),            // 太阳花
+                (ItemID.LesserHealingPotion, 1), // 弱效治疗药水 (生命力)
+                (ItemID.IronBar, 1)              // 铁锭 (驯化工具)
+            );
         }
     }
 }

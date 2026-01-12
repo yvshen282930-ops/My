@@ -30,7 +30,7 @@ namespace zhashi.Content.Items.Accessories
             player.statManaMax2 += 100;
 
             // 只有愚者途径玩家才能享受的高级加成
-            if (mp.currentFoolSequence <= 5)
+            if (mp.currentFoolSequence <= 9)
             {
                 // 比如增加灵性回复速度
                 mp.spiritualityRegenTimer += 2;

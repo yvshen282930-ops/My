@@ -59,7 +59,10 @@ namespace zhashi.Content
         public bool isStrengthCardEquipped = false;
         public bool isAntiDivinationActive = false; // 反占卜状态
         public int blasphemyCardEquippedCount = 0;
-        public bool isLoversCardEquipped = false; 
+        public bool isLoversCardEquipped = false;
+        public bool isRedPriestCardEquipped = false;
+        public bool isSunCardEquipped = false;
+        public bool isMoonCardEquipped = false;
 
 
         public bool IsBeyonder => currentSequence < 10 || currentHunterSequence < 10 || currentMoonSequence < 10 || currentFoolSequence < 10 || currentMarauderSequence < 10 || currentSunSequence < 10;
@@ -742,6 +745,9 @@ namespace zhashi.Content
             isFoolCardEquipped = false;
             isStrengthCardEquipped = false;//力量
             isLoversCardEquipped = false;
+            isRedPriestCardEquipped = false;
+            isSunCardEquipped = false;
+            isMoonCardEquipped = false;
 
 
             currentSequence = baseSequence;
@@ -1548,13 +1554,10 @@ namespace zhashi.Content
 
                 var godLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.DjinnsCurse];
 
-                // 2. 强制覆盖外观
                 Player.head = godHead.headSlot;
                 Player.body = godBody.bodySlot;
                 Player.legs = godLegs.legSlot;
 
-                // 3. 注入“灰雾”神性染料
-                // MirageDye (幻象染料) 
                 int dyeId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.MirageDye);
 
                 Player.cHead = dyeId;
@@ -1563,7 +1566,6 @@ namespace zhashi.Content
             }
             if (isStrengthCardEquipped)
             {
-                // 使用原版【日耀盔甲】(Solar Flare) 的外观，霸气十足
                 var head = Terraria.ID.ContentSamples.ItemsByType[ItemID.SolarFlareHelmet];
                 var body = Terraria.ID.ContentSamples.ItemsByType[ItemID.SolarFlareBreastplate];
                 var legs = Terraria.ID.ContentSamples.ItemsByType[ItemID.SolarFlareLeggings];
@@ -1572,11 +1574,79 @@ namespace zhashi.Content
                 Player.body = body.bodySlot;
                 Player.legs = legs.legSlot;
 
-                // 染成银色 (黄昏巨人风格)
                 int dyeId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.ReflectiveSilverDye);
                 Player.cHead = dyeId;
                 Player.cBody = dyeId;
                 Player.cLegs = dyeId;
+            }
+            if (isLoversCardEquipped)
+            {
+                var godHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.VortexHelmet];
+                var godBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.VortexBreastplate];
+                var godLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.VortexLeggings];
+
+                Player.head = godHead.headSlot;
+                Player.body = godBody.bodySlot;
+                Player.legs = godLegs.legSlot;
+
+                int dyeId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.PhaseDye);
+
+                Player.cHead = dyeId;
+                Player.cBody = dyeId;
+                Player.cLegs = dyeId;
+            }
+            if (isRedPriestCardEquipped)
+            {
+                var godHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.SolarFlareHelmet];
+                var godBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.SolarFlareBreastplate];
+                var godLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.SolarFlareLeggings];
+
+                Player.head = godHead.headSlot;
+                Player.body = godBody.bodySlot;
+                Player.legs = godLegs.legSlot;
+
+                int dyeId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.RedAcidDye);
+
+                Player.cHead = dyeId;
+                Player.cBody = dyeId;
+                Player.cLegs = dyeId;
+            }
+            if (isSunCardEquipped)
+            {
+                var godHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.AncientHallowedMask];
+                var godBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.AncientHallowedPlateMail];
+                var godLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.AncientHallowedGreaves];
+
+                Player.head = godHead.headSlot;
+                Player.body = godBody.bodySlot;
+                Player.legs = godLegs.legSlot;
+
+                int dyeId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.ReflectiveGoldDye);
+
+                Player.cHead = dyeId;
+                Player.cBody = dyeId;
+                Player.cLegs = dyeId;
+            }
+            if (isMoonCardEquipped)
+            {
+                var moonMask = Terraria.ID.ContentSamples.ItemsByType[ItemID.MoonMask];
+                Player.head = moonMask.headSlot;
+
+                var tuxBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.TuxedoShirt];
+                Player.body = tuxBody.bodySlot;
+
+                var tuxLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.TuxedoPants];
+                Player.legs = tuxLegs.legSlot;
+
+                var redCape = Terraria.ID.ContentSamples.ItemsByType[ItemID.RedCape];
+                Player.back = redCape.backSlot;
+
+                int silverDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.ReflectiveSilverDye);
+                Player.cHead = silverDye;
+
+                int grimDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.GrimDye);
+                Player.cBody = grimDye; // 染衣服
+                Player.cLegs = grimDye; // 染裤子
             }
         }
         public override void PostUpdateEquips()
@@ -2314,25 +2384,39 @@ namespace zhashi.Content
             {
                 if (currentMarauderSequence <= 9)
                 {
-                    if (Main.rand.NextBool(5)) // 20% 几率
+                    // 1. 金币窃取 (任何序列9)
+                    // 如果佩戴恋人牌，金币窃取几率提升至 100%
+                    if (isLoversCardEquipped || Main.rand.NextBool(5))
                     {
-                        target.value *= 1.2f; // 增加掉落钱币价值
-                                              // 制造一点金币特效
+                        target.value *= 1.2f;
                         Dust.NewDust(target.position, target.width, target.height, DustID.GoldCoin, 0, 0, 0, default, 0.8f);
                     }
+
+                    // 2. 物品窃取 (序列6 盗火人)
                     if (currentMarauderSequence <= 6)
                     {
                         float baseChance = target.boss ? 0.002f : 0.02f;
                         float multiplier = 1f + (6 - currentMarauderSequence) * 0.3f;
                         float finalChance = baseChance * multiplier;
 
-                        if (!target.boss && finalChance > 0.1f) finalChance = 0.1f;
-                        if (target.boss && finalChance > 0.01f) finalChance = 0.01f;
+                        // === [新增逻辑] 恋人牌判定 ===
+                        if (isLoversCardEquipped)
+                        {
+                            finalChance = 1.0f; // 强制几率为 100% (必定掉落)
+                            // 注意：对于 Boss，强制掉落可能会过于变态，如果想平衡可以改为 finalChance = 0.1f;
+                        }
+                        // ===========================
 
-                        // 2. 触发判定
+                        // 原有的上限限制 (如果有恋人牌则突破限制)
+                        if (!isLoversCardEquipped)
+                        {
+                            if (!target.boss && finalChance > 0.1f) finalChance = 0.1f;
+                            if (target.boss && finalChance > 0.01f) finalChance = 0.01f;
+                        }
+
+                        // 3. 触发次数
                         int stealAttempts = (currentMarauderSequence <= 2) ? 6 : (currentMarauderSequence <= 3 ? 3 : 1);
 
-                        // 这里的变量名改成了 n
                         for (int n = 0; n < stealAttempts; n++)
                         {
                             if (Main.rand.NextFloat() < finalChance && target.life > 0)
@@ -2348,14 +2432,21 @@ namespace zhashi.Content
                                 };
                                 Main.ItemDropSolver.TryDropping(dropInfo);
 
-                                // 只在第一次循环显示文字
+                                // 只有第一次显示文字
                                 if (n == 0)
                                 {
                                     string text = "窃取!";
-                                    if (currentMarauderSequence <= 2) text = "命运窃取 (x6)!"; // 序列 2/1 提示
-                                    else if (currentMarauderSequence <= 3) text = "三重窃取!";   // 序列 3 提示
+                                    Color color = new Color(255, 165, 0); // 橙色
 
-                                    CombatText.NewText(target.getRect(), new Color(255, 165, 0), text, true);
+                                    if (isLoversCardEquipped)
+                                    {
+                                        text = "命运窃取!";
+                                        color = new Color(178, 102, 255); // 紫色
+                                    }
+                                    else if (currentMarauderSequence <= 2) text = "命运窃取 (x6)!";
+                                    else if (currentMarauderSequence <= 3) text = "三重窃取!";
+
+                                    CombatText.NewText(target.getRect(), color, text, true);
                                 }
 
                                 // 窃取成功时的金光特效 (这里可能用的是 i，没关系)

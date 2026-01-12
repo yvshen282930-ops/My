@@ -1,12 +1,16 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using zhashi.Content;
+using zhashi.Content.Items.Accessories; // 引用红祭司牌
 
 namespace zhashi.Content.Items.Potions.Hunter
 {
-    public class ProvokerPotion : ModItem
+    public class ProvokerPotion : LotMItem
     {
+        // 1. 定义途径和前置序列
+        public override string Pathway => "Hunter";
+        public override int RequiredSequence => 9; // 需要序列9 (猎人)
+
         public override void SetDefaults()
         {
             Item.width = 20;
@@ -18,48 +22,48 @@ namespace zhashi.Content.Items.Potions.Hunter
             Item.useTurn = true;
             Item.maxStack = 99;
             Item.consumable = true;
-            Item.rare = ItemRarityID.Blue; // 蓝色稀有度
+            Item.rare = ItemRarityID.Blue; // 序列8 蓝色
             Item.value = Item.buyPrice(gold: 1);
         }
 
+        // 2. 晋升逻辑
         public override bool? UseItem(Player player)
         {
-            var modPlayer = player.GetModPlayer<LotMPlayer>();
-
-            // 必须先成为 序列9 猎人
-            if (modPlayer.baseHunterSequence == 9)
+            if (player.whoAmI == Main.myPlayer)
             {
+                var modPlayer = player.GetModPlayer<LotMPlayer>();
+
+                // 防止高序列误服 (序列8及以上)
+                if (modPlayer.baseHunterSequence <= 8)
+                {
+                    Main.NewText("你已经是更高序列的强者了，无需再次服用。", 200, 200, 200);
+                    return false;
+                }
+
+                // 晋升逻辑：LotMItem 基类已确保玩家至少是序列9
                 modPlayer.baseHunterSequence = 8;
+
+                // 音效与文本
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Roar, player.position);
 
-                Main.NewText("你感觉喉咙里像吞了一块火炭，想要大声嘲笑这个世界...", 255, 150, 50);
+                Main.NewText("你感觉喉咙里像吞了一块火炭，想要大声嘲笑这个世界...", 255, 150, 50); // 挑衅者的橙色
                 Main.NewText("晋升成功：序列8 挑衅者！", 255, 150, 50);
                 Main.NewText("获得能力：【挑衅】(大幅吸引仇恨) | 【格斗体魄】", 255, 255, 255);
-                return true;
             }
-            else if (modPlayer.baseHunterSequence > 9)
-            {
-                Main.NewText("你还未成为猎人，无法消化这份非凡特性。", 200, 50, 50);
-                return true;
-            }
-            else
-            {
-                Main.NewText("你已经是更高序列的强者了。", 200, 200, 200);
-                return true;
-            }
+            return true;
         }
 
+        // 3. 双配方支持
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.Ale, 1)         // 蒸馏酒 -> 麦芽酒
-                .AddIngredient(ItemID.Vine, 2)        // 葡萄藤 -> 藤蔓
-                .AddIngredient(ItemID.Obsidian, 5)    // 深黑石头 -> 黑曜石
-                .AddIngredient(ItemID.Waterleaf, 2)   // 水蕨草 -> 水叶草
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            CreateDualRecipe(
+                ModContent.ItemType<RedPriestCard>(), // 核心：红祭司牌
+                (ItemID.BottledWater, 1),
+                (ItemID.Ale, 1),        // 麦芽酒 (酒精/挑衅)
+                (ItemID.Vine, 2),       // 藤蔓 (纠缠)
+                (ItemID.Obsidian, 5),   // 黑曜石 (坚固/火)
+                (ItemID.Waterleaf, 2)   // 水叶草
+            );
         }
     }
 }

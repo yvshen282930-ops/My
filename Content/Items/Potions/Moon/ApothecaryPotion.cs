@@ -1,18 +1,22 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Microsoft.Xna.Framework; // 【核心修复】必须引用这个才能使用 Color
-using zhashi.Content.Items.Materials;
-using zhashi.Content;
+using Microsoft.Xna.Framework; // 使用 Color
+using zhashi.Content.Items.Accessories; // 引用月亮牌
 
 namespace zhashi.Content.Items.Potions.Moon
 {
     public class ApothecaryPotion : LotMItem
     {
+        // 1. 定义途径
+        public override string Pathway => "Moon";
+
+        // 序列要求：0 代表无序列门槛 (凡人可服)
+        public override int RequiredSequence => 0;
+
         public override void SetStaticDefaults()
         {
             // DisplayName.SetDefault("药师魔药");
-            // Tooltip.SetDefault("服用后晋升为 序列9：药师\n获得灵视、抗毒体质与治疗能力");
         }
 
         public override void SetDefaults()
@@ -26,7 +30,7 @@ namespace zhashi.Content.Items.Potions.Moon
             Item.UseSound = SoundID.Item3;
             Item.maxStack = 30;
             Item.consumable = true;
-            Item.rare = ItemRarityID.Blue;
+            Item.rare = ItemRarityID.Blue; // 序列9 蓝色
             Item.value = Item.sellPrice(silver: 50);
         }
 
@@ -34,18 +38,24 @@ namespace zhashi.Content.Items.Potions.Moon
         {
             if (player.whoAmI == Main.myPlayer)
             {
-                LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
+                var modPlayer = player.GetModPlayer<LotMPlayer>();
 
+                // 【核心逻辑】检查是否已是非凡者 (防止多重途径)
                 if (modPlayer.IsBeyonder)
                 {
-                    Main.NewText("你的灵性已定型...", 255, 50, 50);
+                    Main.NewText("你的灵性已定型，无法开启第二条途径！强行服用导致魔药失效...", 255, 50, 50);
+                    // 返回 true 代表消耗掉物品 (惩罚机制)
                     return true;
                 }
 
-                modPlayer.baseMoonSequence = 9; // 现在这行肯定能跑到了
+                // 晋升逻辑：月亮途径
+                modPlayer.baseMoonSequence = 9;
 
+                // 视觉反馈
                 CombatText.NewText(player.getRect(), Color.LightGreen, "晋升：药师", true);
-                Main.NewText("你感觉自己对草药与生命有了更深的理解...", 100, 255, 100);
+                Main.NewText("你感觉自己对草药与生命有了更深的理解...", 100, 255, 100); // 药草绿
+
+                // 音效
                 Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, player.position);
             }
             return true;
@@ -53,14 +63,14 @@ namespace zhashi.Content.Items.Potions.Moon
 
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient(ItemID.BottledWater, 1)
-                .AddIngredient(ItemID.Stinger, 3)
-                .AddIngredient(ItemID.Glowstick, 7)
-                .AddIngredient(ItemID.Deathweed, 1)
-                .AddTile(TileID.Bottles)
-                .AddIngredient(ModContent.ItemType<Items.BlasphemySlate>(), 1)
-                .Register();
+            // 使用双配方：支持 石板 或 月亮牌
+            CreateDualRecipe(
+                ModContent.ItemType<MoonCard>(), // 核心：月亮牌
+                (ItemID.BottledWater, 1),
+                (ItemID.Stinger, 3),    // 毒刺 (药性/毒性)
+                (ItemID.Glowstick, 7),  // 发光棒 (微光)
+                (ItemID.Deathweed, 1)   // 死亡草 (药材)
+            );
         }
     }
 }
