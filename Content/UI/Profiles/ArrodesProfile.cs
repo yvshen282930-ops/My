@@ -239,19 +239,23 @@ namespace zhashi.Content.UI.Profiles
         private void SetupLocationMenu(GalgameDialogueUI ui)
         {
             ui.ClearButtons();
-            ui.SetDialogueText("在这个世界上，没有什么是阿罗德斯看不到的！\n哪怕是深埋地底的秘密，只要您支付一点点灵性（10%），我就为您指明方向。\n\n您想找什么？");
+            ui.SetDialogueText("阿罗德斯的镜面反射着世间万物。\n搜寻大地形消耗 10% 灵性，搜寻稀有微小物体消耗 20% 灵性（因为更费眼睛）。\n\n您想找什么？");
 
-            // 1. 寻找地牢
+            // --- 大地形 (10% 灵性) ---
             ui.AddButton("地牢的位置", () => FindLocation(ui, "Dungeon"));
-
-            // 2. 寻找丛林神庙 (石巨人)
             ui.AddButton("神庙的位置", () => FindLocation(ui, "Temple"));
-
-            // 3. 寻找以太 (微光湖) - 1.4.4版本特性
             ui.AddButton("以太(微光)的位置", () => FindLocation(ui, "Aether"));
-
-            // 4. 寻找漂浮岛
             ui.AddButton("最近的空岛", () => FindLocation(ui, "SkyIsland"));
+
+            // --- 稀有物品 (20% 灵性) ---
+            ui.AddButton("【真·附魔剑】", () => FindLocation(ui, "EnchantedSword"));
+            ui.AddButton("【生命水晶】", () => FindLocation(ui, "LifeCrystal"));
+
+            // 只有打败肉山后才显示花苞选项
+            if (Main.hardMode)
+            {
+                ui.AddButton("【世纪之花花苞】", () => FindLocation(ui, "PlanteraBulb"));
+            }
 
             ui.AddButton("<< 返回", () => { ui.ClearButtons(); SetupButtons(null, ui); ui.SetDialogueText("阿罗德斯的目光时刻追随着您。"); });
         }
@@ -259,38 +263,62 @@ namespace zhashi.Content.UI.Profiles
         // ★ 核心逻辑：寻找并标记地图 ★
         private void FindLocation(GalgameDialogueUI ui, string type)
         {
-            // 寻找地点是高级功能，消耗 10% 灵性
-            if (!TryConsumeSpirituality(ui, 0.1f)) return;
+            // 默认消耗 10%，如果是找小东西（剑、水晶）消耗 20%
+            float cost = (type == "EnchantedSword" || type == "LifeCrystal" || type == "PlanteraBulb") ? 0.2f : 0.1f;
+
+            if (!TryConsumeSpirituality(ui, cost)) return;
 
             Vector2? targetPos = null;
             string locationName = "";
+            bool isSmallObject = false; // 是否是小物体（决定是否精确扫描）
 
             switch (type)
             {
+                // --- 大地形 ---
                 case "Dungeon":
                     locationName = "地牢";
-                    // 泰拉瑞亚直接存储了地牢坐标
                     targetPos = new Vector2(Main.dungeonX * 16, Main.dungeonY * 16);
                     break;
 
                 case "Temple":
                     locationName = "丛林蜥蜴神庙";
-                    // 扫描寻找神庙砖 (226)
                     targetPos = ScanForTile(TileID.LihzahrdBrick);
                     break;
 
                 case "Aether":
                     locationName = "以太微光湖";
-                    // 扫描寻找微光块 (572 in 1.4.4, check ID) 或者直接用微光液体
-                    // 这里为了保险，如果不确定版本，可以尝试寻找特定的地形特征
-                    // 如果是1.4.4+ tModLoader，通常微光会在地牢同侧的海边地下
                     targetPos = ScanForTile(TileID.ShimmerBlock);
                     break;
 
                 case "SkyIsland":
                     locationName = "最近的漂浮岛";
-                    // 扫描天空中的云块 (189)
-                    targetPos = ScanForTile(TileID.Cloud, true);
+                    targetPos = ScanForTile(TileID.Cloud, skyOnly: true);
+                    break;
+
+                // --- 稀有小物体 (需要精确扫描) ---
+                case "LifeCrystal":
+                    locationName = "最近的生命水晶";
+                    isSmallObject = true;
+                    // 心形水晶的 ID 是 12
+                    targetPos = ScanForTile(TileID.Heart, precise: true);
+                    break;
+
+                case "PlanteraBulb":
+                    locationName = "最近的世纪之花花苞";
+                    isSmallObject = true;
+                    // 花苞 ID 是 238
+                    targetPos = ScanForTile(TileID.PlanteraBulb, precise: true);
+                    break;
+
+                case "EnchantedSword":
+                    locationName = "最近的真·附魔剑";
+                    isSmallObject = true;
+                    // ★ 修改：给匿名函数加上参数名 extraCondition: 
+                    targetPos = ScanForTile(TileID.LargePiles2, precise: true, extraCondition: (tile) => {
+                        // 检查 FrameX 是否对应真剑 (918)
+                        // 注意：不同版本可能会微调，但通常 918 是真剑，936 是假剑(Junk)
+                        return tile.TileFrameX == 918;
+                    });
                     break;
             }
 
@@ -300,72 +328,85 @@ namespace zhashi.Content.UI.Profiles
             if (targetPos.HasValue)
             {
                 Vector2 pos = targetPos.Value;
-                // ★ 关键：揭开地图迷雾 ★
-                // 将坐标转换为图格坐标
                 int tileX = (int)(pos.X / 16);
                 int tileY = (int)(pos.Y / 16);
 
-                // 在地图上揭示该点周围 20x20 的区域
-                for (int x = tileX - 20; x < tileX + 20; x++)
+                // 在地图上揭示
+                // 如果是小物体，揭示范围小一点；大地形范围大一点
+                int range = isSmallObject ? 10 : 25;
+
+                for (int x = tileX - range; x < tileX + range; x++)
                 {
-                    for (int y = tileY - 20; y < tileY + 20; y++)
+                    for (int y = tileY - range; y < tileY + range; y++)
                     {
                         if (WorldGen.InWorld(x, y))
                         {
-                            Main.Map.Update(x, y, 255); // 255 表示完全照亮
+                            Main.Map.Update(x, y, 255);
                         }
                     }
                 }
 
-                // 刷新地图
                 Main.refreshMap = true;
 
-                // 在聊天栏输出，方便查看
                 string direction = pos.X < Main.LocalPlayer.Center.X ? "西边" : "东边";
                 Main.NewText($"[阿罗德斯]: 找到了！{locationName}位于您的{direction}！", Color.Cyan);
                 Main.NewText($"[坐标]: {tileX} (东西), {tileY} (深度)", Color.Yellow);
                 Main.NewText("（已为您在地图(M键)上标记该区域）", Color.Gray);
 
-                ui.SetDialogueText($"看见了吗，主人？\n{locationName}就在那里！\n\n我已经帮您擦去了地图上的迷雾，没有任何秘密能逃过我的眼睛！");
+                ui.SetDialogueText($"看见了吗，主人？\n{locationName}就在那里！\n\n这花费了我不少精力，但为了您，一切都是值得的！");
             }
             else
             {
-                ui.SetDialogueText($"（镜面变得模糊）\n非常抱歉，主人...我尽力搜寻了，但似乎这个世界并没有生成{locationName}，或者它被某种高位格的力量屏蔽了。");
+                ui.SetDialogueText($"（镜面变得模糊，阿罗德斯似乎很沮丧）\n\n非常抱歉，主人...我搜寻了整个世界，但没有发现{locationName}。\n它可能被世界生成机制遗漏了，或者...它根本不存在。");
             }
         }
 
-        // 辅助方法：扫描图格
-        private Vector2? ScanForTile(int tileType, bool skyOnly = false)
+        // ==========================================
+        // ★ 核心辅助方法：通用扫描 (升级版) ★
+        // ==========================================
+        // precise: true 表示逐格扫描（慢，准），false 表示跳格扫描（快，适合大地形）
+        // extraCondition: 额外的判断逻辑，例如检查 FrameX
+        private Vector2? ScanForTile(int tileType, bool skyOnly = false, Func<Tile, bool> extraCondition = null, bool precise = false)
         {
-            // 为了防止卡顿，我们设置一些步长，不扫描每一个格子
-            int step = 5;
+            // 如果是精确搜索(找剑/心)，步长为1；如果找大地形(神庙/空岛)，步长为5以优化性能
+            int step = precise ? 1 : 5;
+
             int startY = skyOnly ? 0 : (int)Main.worldSurface;
             int endY = skyOnly ? (int)Main.worldSurface : Main.maxTilesY;
 
-            // 如果是找空岛，找离玩家最近的
             Vector2 playerCenter = Main.LocalPlayer.Center;
             Vector2? bestPos = null;
             float bestDist = float.MaxValue;
 
-            for (int x = 10; x < Main.maxTilesX - 10; x += step)
+            // 遍历世界 (注意边界保护)
+            for (int x = 20; x < Main.maxTilesX - 20; x += step)
             {
-                for (int y = skyOnly ? 10 : startY; y < endY; y += step)
+                for (int y = skyOnly ? 20 : startY; y < endY - 20; y += step)
                 {
                     Tile tile = Main.tile[x, y];
+
+                    // 1. 检查是否存在且 ID 匹配
                     if (tile.HasTile && tile.TileType == tileType)
                     {
+                        // 2. 如果有额外条件（比如检查附魔剑的 Frame），则执行检查
+                        if (extraCondition != null)
+                        {
+                            if (!extraCondition(tile)) continue; // 如果不满足额外条件，跳过
+                        }
+
                         Vector2 pos = new Vector2(x * 16, y * 16);
                         float dist = Vector2.Distance(pos, playerCenter);
 
-                        if (skyOnly)
+                        // 找到一个就记录下来，我们想要离玩家最近的
+                        if (dist < bestDist)
                         {
-                            // 找最近的
-                            if (dist < bestDist) { bestDist = dist; bestPos = pos; }
-                        }
-                        else
-                        {
-                            // 找第一个找到的就行（通常神庙只有一个）
-                            return pos;
+                            bestDist = dist;
+                            bestPos = pos;
+
+                            // 优化：如果是找大地形，找到一个足够近的可能就可以停止了？
+                            // 但为了准确，还是建议找完全图或找到最近的。
+                            // 为了性能，如果是非精确搜索，且距离小于 1000 像素，直接返回即可
+                            if (!precise && dist < 1000f) return pos;
                         }
                     }
                 }

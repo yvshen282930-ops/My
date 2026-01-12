@@ -732,6 +732,86 @@ Mods: {
 				Tooltip: ""
 				DisplayName: Moon Card
 			}
+
+			DoorCard: {
+				DisplayName: Door Card
+				Tooltip: ""
+			}
+
+			WhiteTowerCard: {
+				Tooltip: ""
+				DisplayName: White Tower Card
+			}
+
+			VisionaryCard: {
+				DisplayName: Visionary Card
+				Tooltip: ""
+			}
+
+			BlackEmperorCard: {
+				Tooltip: ""
+				DisplayName: Black Emperor Card
+			}
+
+			TyrantCard: {
+				Tooltip: ""
+				DisplayName: Tyrant Card
+			}
+
+			HangedManCard: {
+				Tooltip: ""
+				DisplayName: Hanged Man Card
+			}
+
+			DarknessCard: {
+				DisplayName: Darkness Card
+				Tooltip: ""
+			}
+
+			DeathCard: {
+				DisplayName: Death Card
+				Tooltip: ""
+			}
+
+			DemonessCard: {
+				DisplayName: Demoness Card
+				Tooltip: ""
+			}
+
+			JusticiarCard: {
+				DisplayName: Justiciar Card
+				Tooltip: ""
+			}
+
+			AbyssCard: {
+				DisplayName: Abyss Card
+				Tooltip: ""
+			}
+
+			ChainedCard: {
+				DisplayName: Chained Card
+				Tooltip: ""
+			}
+
+			PerfectionistCard: {
+				Tooltip: ""
+				DisplayName: Perfectionist Card
+			}
+
+			HermitCard: {
+				Tooltip: ""
+				DisplayName: Hermit Card
+			}
+
+			MotherCard: {
+				DisplayName: Mother Card
+				Tooltip: ""
+			}
+
+			WheelOfFortuneCard: {
+				DisplayName: Wheel Of Fortune Card
+				Tooltip: ""
+			}
 		}
 
 		# ==========================================

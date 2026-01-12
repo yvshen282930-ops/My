@@ -63,6 +63,23 @@ namespace zhashi.Content
         public bool isRedPriestCardEquipped = false;
         public bool isSunCardEquipped = false;
         public bool isMoonCardEquipped = false;
+        public bool isDoorCardEquipped = false;
+        public bool isWhiteTowerCardEquipped = false;
+        public bool isVisionaryCardEquipped = false;
+        public bool isBlackEmperorCardEquipped = false;
+        public bool isTyrantCardEquipped = false;
+        public bool isHangedManCardEquipped = false;
+        public bool isDeathCardEquipped = false;
+        public bool isDarknessCardEquipped = false;
+        public bool isJusticiarCardEquipped = false;
+        public bool isDemonessCardEquipped = false;
+        public bool isAbyssCardEquipped = false;
+        public bool isChainedCardEquipped = false;
+        public bool isHermitCardEquipped = false;
+        public bool isPerfectionistCardEquipped = false;
+        public bool isMotherCardEquipped = false;
+        public bool isWheelOfFortuneCardEquipped = false;
+
 
 
         public bool IsBeyonder => currentSequence < 10 || currentHunterSequence < 10 || currentMoonSequence < 10 || currentFoolSequence < 10 || currentMarauderSequence < 10 || currentSunSequence < 10;
@@ -748,6 +765,22 @@ namespace zhashi.Content
             isRedPriestCardEquipped = false;
             isSunCardEquipped = false;
             isMoonCardEquipped = false;
+            isDoorCardEquipped = false;//门
+            isWhiteTowerCardEquipped = false;//白塔
+            isVisionaryCardEquipped = false;//空想家
+            isBlackEmperorCardEquipped = false;//黑皇帝
+            isTyrantCardEquipped = false;//暴君
+            isHangedManCardEquipped = false;//倒吊人
+            isDeathCardEquipped = false;//死神
+            isDarknessCardEquipped = false;//黑暗
+            isJusticiarCardEquipped = false;//审判者
+            isDemonessCardEquipped = false;//魔女
+            isAbyssCardEquipped = false;//深渊
+            isChainedCardEquipped = false;//被束缚者
+            isHermitCardEquipped = false;//隐者
+            isPerfectionistCardEquipped = false;//完美者
+            isMotherCardEquipped = false;//母亲
+            isWheelOfFortuneCardEquipped = false;//命运之轮
 
 
             currentSequence = baseSequence;
@@ -1648,6 +1681,262 @@ namespace zhashi.Content
                 Player.cBody = grimDye; // 染衣服
                 Player.cLegs = grimDye; // 染裤子
             }
+            if (isDoorCardEquipped)
+            {
+                var starHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.VortexHelmet];
+                var starBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.VortexBreastplate];
+                var starLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.VortexLeggings];
+
+                Player.head = starHead.headSlot;
+                Player.body = starBody.bodySlot;
+                Player.legs = starLegs.legSlot;
+
+                int spaceDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.MartianArmorDye);
+
+                Player.cHead = spaceDye;
+                Player.cBody = spaceDye;
+                Player.cLegs = spaceDye;
+            }
+            if (isWhiteTowerCardEquipped)
+            {
+                var sageHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.HallowedHeadgear];
+                var sageBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.HallowedPlateMail]; // 自带披风
+                var sageLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.HallowedGreaves];
+
+                Player.head = sageHead.headSlot;
+                Player.body = sageBody.bodySlot;
+                Player.legs = sageLegs.legSlot;
+
+                int whiteDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.ReflectiveSilverDye);
+
+                Player.cHead = whiteDye;
+                Player.cBody = whiteDye;
+                Player.cLegs = whiteDye;
+            }
+            if (isBlackEmperorCardEquipped)
+            {
+                var crown = Terraria.ID.ContentSamples.ItemsByType[ItemID.GoldCrown];
+                Player.head = crown.headSlot;
+
+                var armorBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.HallowedPlateMail];
+                Player.body = armorBody.bodySlot;
+
+                var armorLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.HallowedGreaves];
+                Player.legs = armorLegs.legSlot;
+
+                int blackDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.ShadowDye);
+
+                Player.cHead = blackDye;
+                Player.cBody = blackDye;
+                Player.cLegs = blackDye;
+            }
+            if (isTyrantCardEquipped)
+            {
+                var tyrantHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.HallowedMask];
+                Player.head = tyrantHead.headSlot;
+
+                var tyrantBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.HallowedPlateMail];
+                Player.body = tyrantBody.bodySlot;
+
+                var tyrantLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.HallowedGreaves];
+                Player.legs = tyrantLegs.legSlot;
+
+                int oceanDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.LivingOceanDye);
+
+                Player.cHead = oceanDye;
+                Player.cBody = oceanDye;
+                Player.cLegs = oceanDye;
+            }
+            if (isHangedManCardEquipped)
+            {
+                var cultHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.ReaperHood];
+                Player.head = cultHead.headSlot;
+
+                var cultBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.ReaperRobe];
+                Player.body = cultBody.bodySlot;
+
+                var blackPants = Terraria.ID.ContentSamples.ItemsByType[ItemID.TuxedoPants];
+                Player.legs = blackPants.legSlot;
+
+                int chaosDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.TwilightDye);
+
+                Player.cHead = chaosDye;
+                Player.cBody = chaosDye;
+                Player.cLegs = chaosDye;
+            }
+            if (isDeathCardEquipped)
+            {
+                var ghostHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.SpectreHood];
+                Player.head = ghostHead.headSlot;
+
+                var ghostBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.SpectreRobe];
+                Player.body = ghostBody.bodySlot;
+
+                var ghostLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.SpectrePants];
+                Player.legs = ghostLegs.legSlot;
+
+                int voidDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.VoidDye);
+
+                Player.cHead = voidDye;
+                Player.cBody = voidDye;
+                Player.cLegs = voidDye;
+
+            }
+            if (isDarknessCardEquipped)
+            {
+                var starHelm = Terraria.ID.ContentSamples.ItemsByType[ItemID.StardustHelmet];
+                Player.head = starHelm.headSlot;
+
+                var starBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.StardustBreastplate];
+                Player.body = starBody.bodySlot;
+
+                var starLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.StardustLeggings];
+                Player.legs = starLegs.legSlot;
+
+                int nightDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.MidnightRainbowDye);
+
+                Player.cHead = nightDye;
+                Player.cBody = nightDye;
+                Player.cLegs = nightDye;
+            }
+            if (isJusticiarCardEquipped)
+            {
+                var ironHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.TitaniumMask];
+                Player.head = ironHead.headSlot;
+
+                var ironBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.TitaniumBreastplate];
+                Player.body = ironBody.bodySlot;
+
+                var ironLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.TitaniumLeggings];
+                Player.legs = ironLegs.legSlot;
+
+                int lawDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.ReflectiveMetalDye);
+
+                Player.cHead = lawDye;
+                Player.cBody = lawDye;
+                Player.cLegs = lawDye;
+            }
+            if (isDemonessCardEquipped)
+            {
+                var witchHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.NebulaHelmet];
+                Player.head = witchHead.headSlot;
+
+                var witchBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.NebulaBreastplate];
+                Player.body = witchBody.bodySlot;
+
+                var witchLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.NebulaLeggings];
+                Player.legs = witchLegs.legSlot;
+
+                int painDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.GrimDye);
+
+                Player.cHead = painDye;
+                Player.cBody = painDye;
+                Player.cLegs = painDye;
+            }
+            if (isAbyssCardEquipped)
+            {
+                var devilHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.MoltenHelmet];
+                Player.head = devilHead.headSlot;
+
+                var devilBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.MoltenBreastplate];
+                Player.body = devilBody.bodySlot;
+
+                var devilLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.MoltenGreaves];
+                Player.legs = devilLegs.legSlot;
+
+                int hellDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.BurningHadesDye);
+
+                Player.cHead = hellDye;
+                Player.cBody = hellDye;
+                Player.cLegs = hellDye;
+            }
+            if (isChainedCardEquipped)
+            {
+                var mummyHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.MummyMask];
+                Player.head = mummyHead.headSlot;
+
+                var mummyBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.MummyShirt];
+                Player.body = mummyBody.bodySlot;
+
+                var mummyLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.MummyPants];
+                Player.legs = mummyLegs.legSlot;
+
+                int shadowDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.ShadowDye);
+
+                Player.cHead = shadowDye;
+                Player.cBody = shadowDye;
+                Player.cLegs = shadowDye;
+            }
+            if (isHermitCardEquipped)
+            {
+                var runeHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.RuneHat];
+                Player.head = runeHead.headSlot;
+
+                var runeBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.RuneRobe];
+                Player.body = runeBody.bodySlot;
+
+                var genericLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.TuxedoPants];
+                Player.legs = genericLegs.legSlot;
+
+                int mysteryDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.NebulaDye);
+
+                Player.cHead = mysteryDye;
+                Player.cBody = mysteryDye;
+                Player.cLegs = mysteryDye;
+            }
+            if (isPerfectionistCardEquipped)
+            {
+                var mechHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.ShroomiteHelmet];
+                Player.head = mechHead.headSlot;
+
+                var mechBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.ShroomiteBreastplate];
+                Player.body = mechBody.bodySlot;
+
+                var mechLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.ShroomiteLeggings];
+                Player.legs = mechLegs.legSlot;
+
+                int steamDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.ReflectiveCopperDye);
+
+                Player.cHead = steamDye;
+                Player.cBody = steamDye;
+                Player.cLegs = steamDye;
+
+            }
+            if (isMotherCardEquipped)
+            {
+                var natureHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.ChlorophyteMask];
+                Player.head = natureHead.headSlot;
+
+                var natureBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.ChlorophytePlateMail];
+                Player.body = natureBody.bodySlot;
+
+                var natureLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.ChlorophyteGreaves];
+                Player.legs = natureLegs.legSlot;
+
+                int lifeDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.GreenFlameDye);
+
+                Player.cHead = lifeDye;
+                Player.cBody = lifeDye;
+                Player.cLegs = lifeDye;
+
+            }
+            if (isWheelOfFortuneCardEquipped)
+            {
+                var fateHead = Terraria.ID.ContentSamples.ItemsByType[ItemID.AncientHallowedHeadgear];
+                Player.head = fateHead.headSlot;
+
+                var fateBody = Terraria.ID.ContentSamples.ItemsByType[ItemID.AncientHallowedPlateMail];
+                Player.body = fateBody.bodySlot;
+
+                var fateLegs = Terraria.ID.ContentSamples.ItemsByType[ItemID.AncientHallowedGreaves];
+                Player.legs = fateLegs.legSlot;
+
+                int mercuryDye = GameShaders.Armor.GetShaderIdFromItemId(ItemID.ReflectiveSilverDye);
+
+                Player.cHead = mercuryDye;
+                Player.cBody = mercuryDye;
+                Player.cLegs = mercuryDye;
+            }
         }
         public override void PostUpdateEquips()
         {
@@ -1673,13 +1962,10 @@ namespace zhashi.Content
                 // 步骤B: 将透明度设为 0 (双重保险)
                 a = 0f;
 
-                // 步骤C: 【防崩溃关键】将所有装备栏位的视觉ID设为 0 (空)
-                // 警告：绝对不要设为 -1，否则会导致 System.IndexOutOfRangeException 崩溃
                 drawInfo.drawPlayer.head = 0;
                 drawInfo.drawPlayer.body = 0;
                 drawInfo.drawPlayer.legs = 0;
 
-                // 隐藏所有饰品栏位 (解决翅膀/背饰依然显示的问题)
                 drawInfo.drawPlayer.wings = 0;
                 drawInfo.drawPlayer.back = 0;
                 drawInfo.drawPlayer.front = 0;

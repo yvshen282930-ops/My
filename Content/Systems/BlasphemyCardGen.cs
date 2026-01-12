@@ -29,8 +29,33 @@ namespace zhashi.Content.Systems
 
             cardsToSpawn.Add(ModContent.ItemType<MoonCard>());
 
-            // === 未来有新牌直接在这里继续 Add ===
-            // cardsToSpawn.Add(ModContent.ItemType<HangedManCard>());
+            cardsToSpawn.Add(ModContent.ItemType<DoorCard>());//门
+
+            cardsToSpawn.Add(ModContent.ItemType<WhiteTowerCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<VisionaryCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<BlackEmperorCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<TyrantCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<HangedManCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<DeathCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<DarknessCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<JusticiarCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<DemonessCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<AbyssCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<ChainedCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<HermitCard>());
+
+            cardsToSpawn.Add(ModContent.ItemType<PerfectionistCard>());
 
 
             // =====================================================
