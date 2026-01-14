@@ -1326,6 +1326,48 @@ Mods: {
 					[c/696969:“错的不是我，是这个世界的概率。”]
 					'''
 			}
+
+			GoldenGun: {
+				Tooltip:
+					'''
+					[c/FF0000:“有人用它杀了自己。”]
+					<right>以阅读内容
+					'''
+				DisplayName: 左轮
+			}
+
+			KleinsDiary: {
+				Tooltip:
+					'''
+					一本黑色封皮的笔记本，纸张因岁月的侵蚀而微微泛黄。
+					翻开它，你仿佛能闻到陈旧墨水与干涸血迹混合的味道。
+					字里行间记录了一个灵魂从迷茫走向疯狂的绝望过程。
+					[c/FF0000:“所有人都会死，包括我。”]
+					<right>以阅读内容
+					'''
+				DisplayName: 克莱恩的日记
+			}
+
+			ExorcismBullet: {
+				DisplayName: 猎魔子弹
+				Tooltip:
+					'''
+					表面刻有繁复赫密斯语铭文的特制炼金子弹。
+					在这个污秽潜藏的世界里，唯有附带神圣力量的银光能净化一切。
+					击中目标时会爆发出金色的灵性光辉，对亡灵与黑暗生物具有毁灭性的打击。
+					'''
+			}
+
+			NighthawkPistol: {
+				DisplayName: 值夜人制式手枪
+				Tooltip:
+					'''
+					阿霍瓦郡警察厅特殊行动部的标准配枪，枪管修长，通体漆黑。
+					握把上隐约刻着象征黑夜女神的繁星圣徽，入手沉重而冰冷。
+					它牺牲了部分射速以换取巨大的破坏力，那是对非凡生物的仁慈一击。
+					“恐惧来自于未知，而这把枪能带给你确定的安全感。”
+					'''
+			}
 		}
 
 		# ==========================================
@@ -1374,6 +1416,7 @@ Mods: {
 			// HandOfGodProjectile.DisplayName: Hand Of God Projectile
 			// HandOfGodCharge.DisplayName: Hand Of God Charge
 			// HandOfGodAirCannon.DisplayName: Hand Of God Air Cannon
+			// ExorcismBulletProjectile.DisplayName: Exorcism Bullet Projectile
 		}
 
 		# ==========================================
@@ -1396,6 +1439,36 @@ Mods: {
 					NoHome: 我讨厌没有家。
 					Content: 我很满足。
 				}
+			}
+
+			DunnSmith: {
+				TownNPCMood: {
+					// Princess_LovesNPC: 我喜欢 {NPCName}。
+					// LikeNPC_Princess: 我喜欢 {NPCName}。
+					HateCrowded: 太吵了...就像是有无数个疯狂的声音在耳边低语，我必须尽快离开这里。
+					DislikeCrowded: 周围的人太多了，各种杂乱的思绪混杂在一起，让我的太阳穴隐隐作痛。
+					LoveSpace: 这种空旷的环境很好，有助于安抚焦躁的灵性，减少失控的风险。
+					FarFromHome: 我离廷根市太远了，希望伦纳德和弗莱能处理好那里的突发状况。
+					NoHome: 我需要一个有屋顶的地方来存放查查林格协会的封印物，露宿街头太危险了。
+					Content: 这里很安静，灵性的波动也很平稳，非常适合思考案情。
+				}
+
+				DisplayName: 邓恩·史密斯
+			}
+
+			OldNeil: {
+				TownNPCMood: {
+					// Princess_LovesNPC: 我喜欢 {NPCName}。
+					// LikeNPC_Princess: 我喜欢 {NPCName}。
+					// HateCrowded: 我讨厌这么拥挤。
+					// DislikeCrowded: 我不喜欢这么拥挤。
+					// LoveSpace: 我非常喜欢有这么大的空间。
+					// FarFromHome: 我离家太远了。
+					// NoHome: 我讨厌没有家。
+					// Content: 我很满足。
+				}
+
+				// DisplayName: Old Neil
 			}
 		}
 

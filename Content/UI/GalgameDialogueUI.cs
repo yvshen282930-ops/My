@@ -6,12 +6,13 @@ using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
 using Terraria.ModLoader;
 using Terraria.ID;
-using Terraria.Audio; // 引用音频系统
+using Terraria.Audio;
 using ReLogic.Content;
 using System;
 using System.Collections.Generic;
 using zhashi.Content.UI.Profiles;
 using zhashi.Content.Items;
+using zhashi.Content.NPCs.Town;
 
 namespace zhashi.Content.UI
 {
@@ -34,6 +35,10 @@ namespace zhashi.Content.UI
         private Dictionary<int, GalgameProfile> profiles;
         private GalgameProfile currentProfile;
 
+        // 手动模式标记
+        private bool isManualMode = false;
+        public bool IsManualMode => isManualMode;
+
         // 布局常量
         private const float PANEL_WIDTH = 800f;
         private const float PANEL_HEIGHT = 240f;
@@ -41,12 +46,19 @@ namespace zhashi.Content.UI
 
         public override void OnInitialize()
         {
-            profiles = new Dictionary<int, GalgameProfile>();
-            profiles[NPCID.Nurse] = new NurseProfile();
-            profiles[NPCID.Guide] = new GuideProfile();
-            profiles[NPCID.Dryad] = new DryadProfile();
-            profiles[NPCID.Angler] = new AnglerProfile();
-            profiles[ArrodesItem.ARRODES_ID] = new ArrodesProfile();
+            if (profiles == null) profiles = new Dictionary<int, GalgameProfile>();
+
+            // 注册原版 NPC
+            if (!profiles.ContainsKey(NPCID.Nurse)) profiles[NPCID.Nurse] = new NurseProfile();
+            if (!profiles.ContainsKey(NPCID.Guide)) profiles[NPCID.Guide] = new GuideProfile();
+            if (!profiles.ContainsKey(NPCID.Dryad)) profiles[NPCID.Dryad] = new DryadProfile();
+            if (!profiles.ContainsKey(NPCID.Angler)) profiles[NPCID.Angler] = new AnglerProfile();
+            if (!profiles.ContainsKey(ArrodesItem.ARRODES_ID)) profiles[ArrodesItem.ARRODES_ID] = new ArrodesProfile();
+            int dunnID = ModContent.NPCType<DunnSmith>();
+            if (!profiles.ContainsKey(dunnID))
+            {
+                profiles[dunnID] = new DunnProfile();
+            }
 
             if (currentProfile == null) currentProfile = new GalgameProfile();
 
@@ -76,6 +88,43 @@ namespace zhashi.Content.UI
             optionScrollbar = new UIScrollbar(); optionScrollbar.SetView(100f, 1000f); optionScrollbar.Height.Set(-40f, 1f); optionScrollbar.Left.Set(-20f, 1f); optionScrollbar.Top.Set(20f, 0f); optionList.SetScrollbar(optionScrollbar); textPanel.Append(optionScrollbar);
         }
 
+        public void RegisterProfile(int npcType, GalgameProfile profile)
+        {
+            if (profiles == null) profiles = new Dictionary<int, GalgameProfile>();
+            profiles[npcType] = profile;
+        }
+
+        public void SetCustomProfile(GalgameProfile profile)
+        {
+            isManualMode = true;
+            currentProfile = profile;
+            currentNPCIndex = -1;
+            UpdateStaticInfo(null);
+            ClearButtons();
+            currentProfile.SetupButtons(null, this);
+            SetDialogueText(currentProfile.GetDialogue(null));
+            Recalculate();
+            ForcePositionUpdate();
+        }
+
+        public void Show()
+        {
+            ModContent.GetInstance<GalgameUISystem>().OpenUI();
+        }
+
+        public void Close()
+        {
+            isManualMode = false;
+            ModContent.GetInstance<GalgameUISystem>().CloseUI();
+        }
+
+        public override void OnDeactivate()
+        {
+            isManualMode = false;
+            currentNPCIndex = -1;
+            base.OnDeactivate();
+        }
+
         public void AddButton(string text, Action onClick)
         {
             UITextPanel<string> button = new UITextPanel<string>(text); button.Width.Set(0, 1f); button.Height.Set(40f, 0f);
@@ -83,6 +132,7 @@ namespace zhashi.Content.UI
             button.BackgroundColor = baseColor; button.OnMouseOver += (evt, e) => button.BackgroundColor = currentProfile.NameColor; button.OnMouseOut += (evt, e) => button.BackgroundColor = baseColor;
             button.OnLeftClick += (evt, e) => { SoundEngine.PlaySound(SoundID.MenuTick); onClick?.Invoke(); }; optionList.Add(button);
         }
+
         public void SetDialogueText(string text) => dialogueText.SetText(text);
         public void ClearButtons() => optionList.Clear();
 
@@ -90,48 +140,55 @@ namespace zhashi.Content.UI
         {
             base.Update(gameTime);
 
+            // ★★★ 核心修复1：当鼠标悬停在UI上时，阻止物品使用 ★★★
+            if (ContainsPoint(Main.MouseScreen))
+            {
+                Main.LocalPlayer.mouseInterface = true;
+            }
+
+            if (Main.playerInventory)
+            {
+                if (GalgameUISystem.visible) Close();
+                return;
+            }
+
+            if (isManualMode) return;
+
             int targetID = -1;
             if (GalgameUISystem.isTalkingToArrodes) targetID = ArrodesItem.ARRODES_ID;
             else if (Main.LocalPlayer.talkNPC != -1) targetID = Main.npc[Main.LocalPlayer.talkNPC].type;
 
-            if (targetID == -1 || Main.playerInventory)
+            if (targetID == -1)
             {
-                if (GalgameUISystem.visible) ModContent.GetInstance<GalgameUISystem>().CloseUI();
+                if (GalgameUISystem.visible) Close();
                 currentNPCIndex = -1;
                 return;
             }
 
-            int score = FavorabilitySystem.GetFavorability(targetID);
-            heartIcon.SetFavorability(score);
+            if (targetID != -1 && !GalgameUISystem.isTalkingToArrodes)
+            {
+                int score = FavorabilitySystem.GetFavorability(targetID);
+                heartIcon.SetFavorability(score);
+            }
 
             int checkIndex = GalgameUISystem.isTalkingToArrodes ? ArrodesItem.ARRODES_ID : Main.LocalPlayer.talkNPC;
 
             if (checkIndex != currentNPCIndex)
             {
                 currentNPCIndex = checkIndex;
-
                 if (profiles.ContainsKey(targetID)) currentProfile = profiles[targetID];
                 else currentProfile = new GalgameProfile();
 
                 NPC npcObj = GalgameUISystem.isTalkingToArrodes ? null : Main.npc[Main.LocalPlayer.talkNPC];
-
                 UpdateStaticInfo(npcObj);
                 optionList.Clear();
                 currentProfile.SetupButtons(npcObj, this);
 
                 if (!GalgameUISystem.isTalkingToArrodes) FavorabilitySystem.RecordInteraction(targetID);
-
-                // ★★★ 音效播放逻辑 ★★★
-                if (GalgameUISystem.isTalkingToArrodes)
-                {
-                    // 确保你的文件在 ModSources/zhashi/Content/Sounds/ArrodesOpen.ogg
-                    // 并且在 ModSources/zhashi/Content/Sounds/ 文件夹下
-                    // 如果文件不存在，可以先注释掉下面这行，或者用 SoundID.Item4 代替测试
-                    SoundEngine.PlaySound(new SoundStyle("zhashi/Assets/Sounds/ArrodesOpen"));
-                }
+                if (GalgameUISystem.isTalkingToArrodes) SoundEngine.PlaySound(new SoundStyle("zhashi/Assets/Sounds/ArrodesOpen"));
 
                 string initialText = currentProfile.GetDialogue(npcObj);
-                if (string.IsNullOrEmpty(initialText) && !GalgameUISystem.isTalkingToArrodes) initialText = Main.npcChatText;
+                if (string.IsNullOrEmpty(initialText) && !GalgameUISystem.isTalkingToArrodes && npcObj != null) initialText = Main.npcChatText;
                 dialogueText.SetText(initialText);
 
                 Recalculate();
@@ -141,8 +198,27 @@ namespace zhashi.Content.UI
 
         private void UpdateStaticInfo(NPC npc)
         {
-            if (GalgameUISystem.isTalkingToArrodes) npcNameText.SetText("阿罗德斯");
-            else if (npc != null) npcNameText.SetText(npc.GivenName);
+            // 日记模式：隐藏名字、立绘、爱心，并拓宽文本框
+            if (isManualMode && npc == null)
+            {
+                npcNameText.SetText("");
+                heartIcon.Left.Set(-1000, 0f);
+
+                // 拓宽文本框
+                dialogueText.Left.Set(40f, 0f);
+                dialogueText.Width.Set(-260f, 1f);
+            }
+            else
+            {
+                heartIcon.Left.Set(260f, 0f);
+
+                // 恢复默认布局
+                dialogueText.Left.Set(120f, 0f);
+                dialogueText.Width.Set(-360f, 1f);
+
+                if (GalgameUISystem.isTalkingToArrodes) npcNameText.SetText("阿罗德斯");
+                else if (npc != null) npcNameText.SetText(npc.GivenName);
+            }
 
             backgroundPanel.BackgroundColor = currentProfile.BackgroundColor;
             backgroundPanel.BorderColor = currentProfile.BorderColor;
@@ -150,11 +226,19 @@ namespace zhashi.Content.UI
 
             string headPath = currentProfile.HeadTexture;
             if (!string.IsNullOrEmpty(headPath) && ModContent.RequestIfExists<Texture2D>(headPath, out var headAsset))
+            {
                 npcPortrait.SetImage(headAsset);
+                npcPortrait.Color = Color.White;
+            }
             else if (npc != null)
             {
                 int headIndex = NPC.TypeToDefaultHeadIndex(npc.type);
-                if (headIndex >= 0) npcPortrait.SetImage(TextureAssets.NpcHead[headIndex]);
+                if (headIndex >= 0) { npcPortrait.SetImage(TextureAssets.NpcHead[headIndex]); npcPortrait.Color = Color.White; }
+            }
+            else
+            {
+                npcPortrait.SetImage(TextureAssets.NpcHead[0]);
+                npcPortrait.Color = Color.Transparent;
             }
 
             string standPath = currentProfile.StandingTexture;
@@ -169,9 +253,30 @@ namespace zhashi.Content.UI
             {
                 standingPortrait.Color = Color.Transparent;
             }
+
+            textPanel.Recalculate();
         }
 
-        private void ForcePositionUpdate() { if (standingPortrait != null && standingPortrait.Color.A > 0) { float imgHeight = standingPortrait.Height.Pixels; if (imgHeight <= 1f) return; var panelRect = textPanel.GetDimensions(); if (panelRect.Y > 0) { standingPortrait.HAlign = 0f; standingPortrait.VAlign = 0f; float targetLeft = panelRect.X + currentProfile.OffsetX; float targetTop = panelRect.Y - imgHeight + currentProfile.OffsetY; standingPortrait.Left.Set(targetLeft, 0f); standingPortrait.Top.Set(targetTop, 0f); standingPortrait.Recalculate(); } } }
+        private void ForcePositionUpdate()
+        {
+            if (standingPortrait != null && standingPortrait.Color.A > 0)
+            {
+                float imgHeight = standingPortrait.Height.Pixels;
+                if (imgHeight <= 1f) return;
+                var panelRect = textPanel.GetDimensions();
+                if (panelRect.Y > 0)
+                {
+                    standingPortrait.HAlign = 0f;
+                    standingPortrait.VAlign = 0f;
+                    float targetLeft = panelRect.X + currentProfile.OffsetX;
+                    float targetTop = panelRect.Y - imgHeight + currentProfile.OffsetY;
+                    standingPortrait.Left.Set(targetLeft, 0f);
+                    standingPortrait.Top.Set(targetTop, 0f);
+                    standingPortrait.Recalculate();
+                }
+            }
+        }
+
         public override void Draw(SpriteBatch spriteBatch) { ForcePositionUpdate(); base.Draw(spriteBatch); }
     }
 

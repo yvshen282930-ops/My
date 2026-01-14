@@ -1,77 +1,177 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
-using Terraria.GameContent; // 用于获取贴图
+using Terraria.GameContent;
+using Terraria.GameContent.UI.Elements;
+using Terraria.UI.Chat;
 using Terraria.ModLoader;
 using Terraria.UI;
 using System;
 using Terraria.ID;
-using zhashi.Content; // 引用 Player 类
+using zhashi.Content;
 
-// 引用魔药命名空间以获取图标 ID
-using zhashi.Content.Items.Potions;        // 巨人途径 (Warrior等)
-using zhashi.Content.Items.Potions.Hunter; // 猎人途径
-using zhashi.Content.Items.Potions.Moon;   // 月亮途径
-using zhashi.Content.Items.Potions.Fool; //愚者
-using zhashi.Content.Items.Potions.Marauder; //错误
+// 引用魔药命名空间
+using zhashi.Content.Items.Potions;
+using zhashi.Content.Items.Potions.Hunter;
+using zhashi.Content.Items.Potions.Moon;
+using zhashi.Content.Items.Potions.Fool;
+using zhashi.Content.Items.Potions.Marauder;
 using zhashi.Content.Items.Potions.Sun;
 
 namespace zhashi.Content.UI
 {
     public class SequenceInfoUI : UIState
     {
-        // 定义图标的位置和大小
         private const int ICON_SIZE = 44;
         private const int LEFT_MARGIN = 20;
-        private const int TOP_MARGIN = 120; // 您可以调整这个值改变垂直位置
+        private const int TOP_MARGIN = 120;
+
+        private UIPanel _infoPanel;
+        private UIList _textList;
+        private UIScrollbar _scrollbar;
+
+        private string _cachedText = "";
+        private int _lastPotionId = -1;
+        private int _hoverTimer = 0; // 悬停缓冲计时器
+
+        public override void OnInitialize()
+        {
+            _infoPanel = new UIPanel();
+            _infoPanel.SetPadding(15);
+            // 透明黑色背景，无边框
+            _infoPanel.BackgroundColor = new Color(0, 0, 0) * 0.6f;
+            _infoPanel.BorderColor = Color.Transparent;
+
+            _infoPanel.Left.Set(-9999, 0f); // 默认隐藏
+            _infoPanel.Top.Set(TOP_MARGIN, 0f);
+            _infoPanel.Width.Set(450, 0f);
+            _infoPanel.Height.Set(400, 0f);
+
+            _scrollbar = new UIScrollbar();
+            _scrollbar.Height.Set(0, 1f);
+            _scrollbar.Left.Set(-10, 1f);
+            _scrollbar.Top.Set(0, 0f);
+
+            _textList = new UIList();
+            _textList.Width.Set(-25, 1f);
+            _textList.Height.Set(0, 1f);
+            _textList.ListPadding = 5f;
+            _textList.SetScrollbar(_scrollbar);
+
+            _infoPanel.Append(_textList);
+            _infoPanel.Append(_scrollbar);
+
+            Append(_infoPanel);
+        }
+
+        private class UIColoredText : UIElement
+        {
+            private string _text;
+            public UIColoredText(string text) { SetText(text); }
+            public void SetText(string text)
+            {
+                _text = text;
+                Vector2 size = ChatManager.GetStringSize(FontAssets.MouseText.Value, _text, Vector2.One);
+                this.Width.Set(size.X, 0f);
+                this.Height.Set(size.Y, 0f);
+            }
+            protected override void DrawSelf(SpriteBatch spriteBatch)
+            {
+                if (string.IsNullOrEmpty(_text)) return;
+                CalculatedStyle dimensions = GetInnerDimensions();
+                ChatManager.DrawColorCodedStringWithShadow(spriteBatch, FontAssets.MouseText.Value, _text, dimensions.Position(), Color.White, 0f, Vector2.Zero, Vector2.One);
+            }
+        }
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            // 获取当前玩家
             Player player = Main.LocalPlayer;
             if (player == null || !player.active || player.dead || player.ghost) return;
 
             LotMPlayer modPlayer = player.GetModPlayer<LotMPlayer>();
-
-            // 只有非凡者才显示
             if (!modPlayer.IsBeyonder) return;
 
-            // 1. 获取当前应该显示的魔药图标 ID
             int itemType = GetCurrentSequencePotionID(modPlayer);
             if (itemType <= 0) return;
 
-            // 2. 加载贴图
+            // 1. 绘制图标
             Main.instance.LoadItem(itemType);
             Texture2D texture = TextureAssets.Item[itemType].Value;
-
-            // 3. 计算绘制位置 (屏幕左上角)
             Vector2 drawPos = new Vector2(LEFT_MARGIN, TOP_MARGIN);
             Rectangle iconRect = new Rectangle((int)drawPos.X, (int)drawPos.Y, ICON_SIZE, ICON_SIZE);
 
-            // 4. 绘制图标背景 (可选，增加一个半透明黑底让图标更清楚)
-            Utils.DrawInvBG(spriteBatch, iconRect, new Color(20, 20, 40, 150));
+            Utils.DrawInvBG(spriteBatch, iconRect, new Color(20, 20, 40, 100));
 
-            // 5. 绘制图标 (居中绘制)
-            Rectangle frame = texture.Frame(); // 获取图片完整帧
+            Rectangle frame = texture.Frame();
             float scale = 1f;
-            if (frame.Width > 32 || frame.Height > 32) scale = 0.8f; // 如果图太大就缩一下
-
+            if (frame.Width > 32 || frame.Height > 32) scale = 0.8f;
             Vector2 origin = frame.Size() / 2f;
             Vector2 center = drawPos + new Vector2(ICON_SIZE / 2f, ICON_SIZE / 2f);
-
             spriteBatch.Draw(texture, center, frame, Color.White, 0f, origin, scale, SpriteEffects.None, 0f);
 
-            // 6. 鼠标悬停检测
-            if (iconRect.Contains(Main.MouseScreen.ToPoint()))
+            // --- 2. 悬停检测逻辑 ---
+            Point mousePoint = Main.MouseScreen.ToPoint();
+            bool isHoveringIcon = iconRect.Contains(mousePoint);
+
+            // 如果鼠标在图标上，给计时器充能，并定位面板
+            if (isHoveringIcon)
             {
-                // 暂时禁止玩家使用物品，防止点穿
+                _infoPanel.Left.Set(LEFT_MARGIN + ICON_SIZE + 2, 0f);
+                _infoPanel.Recalculate();
+                _hoverTimer = 15; // 续命 0.25秒
+            }
+
+            // 如果鼠标在面板上，持续充能
+            if (_infoPanel.IsMouseHovering)
+            {
+                _hoverTimer = 15;
                 player.mouseInterface = true;
+            }
 
-                // 获取详细文本
-                string tooltip = GetSequenceDescription(modPlayer);
+            // --- 3. 面板内容更新逻辑 (修复Bug的核心) ---
+            if (_hoverTimer > 0)
+            {
+                _hoverTimer--;
 
-                // 绘制原版风格的鼠标提示文字
-                Main.instance.MouseText(tooltip);
+                // [修复]：每一帧都必须获取最新文本，无论鼠标在哪里
+                // 这样才能实时显示冷却时间变化 (5s -> 4s) 和技能开启状态
+                string fullText = GetSequenceDescription(modPlayer);
+
+                // 只有当文本内容真的变了才去操作UI，节省性能
+                if (fullText != _cachedText)
+                {
+                    bool isSamePotion = (itemType == _lastPotionId);
+
+                    // 如果是同一个魔药（只是倒计时变了），记录当前滚动条位置
+                    float previousScroll = _scrollbar.ViewPosition;
+
+                    _cachedText = fullText;
+                    _lastPotionId = itemType;
+
+                    _textList.Clear();
+                    _textList.Add(new UIColoredText(_cachedText));
+
+                    // 强制刷新列表布局，让滚动条知道新内容有多高
+                    _textList.Recalculate();
+
+                    // 如果魔药没变，恢复之前的滚动位置（防止倒计时刷新时画面跳动）
+                    // 如果换了魔药，就自动回到顶部
+                    if (isSamePotion)
+                    {
+                        _scrollbar.ViewPosition = previousScroll;
+                    }
+                    else
+                    {
+                        _scrollbar.ViewPosition = 0f;
+                    }
+                }
+
+                _infoPanel.Recalculate();
+                base.Draw(spriteBatch);
+            }
+            else
+            {
+                _infoPanel.Left.Set(-9999, 0f); // 隐藏
             }
         }
 

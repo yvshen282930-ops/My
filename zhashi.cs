@@ -1,29 +1,24 @@
-using Terraria.ModLoader;
-using System.IO;
-using Terraria.ID;
 using Terraria;
+using Terraria.ModLoader;
+using Terraria.ID;
+using System.IO;
 using zhashi.Content;
 using zhashi.Content.UI;
 using zhashi.Content.Buffs;
 
 namespace zhashi
 {
-    // 定义网络消息类型
+    // ★★★ 修复点：将枚举移到 Class 外面，直接放在 Namespace 下 ★★★
     public enum LotMNetMsg : byte
     {
         PlayerSync = 0,
         ApplySunSuppression = 1,
-        SyncFavorability = 2  // <--- 新增的好感度同步 ID
+        SyncFavorability = 2,
+        StoryDataSync = 3
     }
 
     public class zhashi : Mod
     {
-        public enum LotMNetMsg : byte
-        {
-            PlayerSync = 0,
-            ApplySunSuppression = 1,
-            SyncFavorability = 2
-        }
         public override void HandlePacket(BinaryReader reader, int whoAmI)
         {
             // 读取消息类型
@@ -31,15 +26,13 @@ namespace zhashi
 
             switch (msgType)
             {
-                // ==========================================================
-                // Case 0: 玩家数据同步 (保持原样)
-                // ==========================================================
+                // Case 0: 战斗玩家数据同步
                 case LotMNetMsg.PlayerSync:
                     byte playernumber = reader.ReadByte();
                     if (playernumber >= Main.maxPlayers || !Main.player[playernumber].active) return;
                     LotMPlayer modPlayer = Main.player[playernumber].GetModPlayer<LotMPlayer>();
 
-                    // 读取所有 LotMPlayer 的数据 (保持你原有的代码逻辑)
+                    // 读取数据
                     modPlayer.baseSequence = reader.ReadInt32();
                     modPlayer.baseMarauderSequence = reader.ReadInt32();
                     modPlayer.baseFoolSequence = reader.ReadInt32();
@@ -92,52 +85,59 @@ namespace zhashi
                     modPlayer.isSunMessenger = reader.ReadBoolean();
                     modPlayer.isPassiveStealEnabled = reader.ReadBoolean();
 
-                    // 如果我是服务器，我要把这份数据转发给其他玩家
                     if (Main.netMode == NetmodeID.Server)
-                    {
                         modPlayer.SyncPlayer(-1, whoAmI, false);
-                    }
                     break;
 
-                // ==========================================================
-                // Case 1: 太阳途径压制 Buff (保持原样)
-                // ==========================================================
+                // Case 1: 太阳压制
                 case LotMNetMsg.ApplySunSuppression:
                     int targetWho = reader.ReadByte();
                     int duration = reader.ReadInt32();
-
                     if (Main.netMode == NetmodeID.Server)
                     {
-                        Player target = Main.player[targetWho];
-                        if (target.active)
+                        if (targetWho >= 0 && targetWho < Main.maxPlayers)
                         {
-                            target.AddBuff(ModContent.BuffType<SunSuppressionDebuff>(), duration);
+                            Player target = Main.player[targetWho];
+                            if (target.active) target.AddBuff(ModContent.BuffType<SunSuppressionDebuff>(), duration);
                         }
                     }
                     break;
 
-                // ==========================================================
-                // Case 2: 好感度同步 (这里是合并后的新逻辑)
-                // ==========================================================
+                // Case 2: 好感度
                 case LotMNetMsg.SyncFavorability:
                     int npcID = reader.ReadInt32();
                     int score = reader.ReadInt32();
-
-                    // 2. 更新本地数据
                     if (!FavorabilitySystem.favorabilityScores.ContainsKey(npcID))
                         FavorabilitySystem.favorabilityScores[npcID] = 0;
-
                     FavorabilitySystem.favorabilityScores[npcID] = score;
 
-                    // 3. 如果我是服务器，转发给其他所有客户端
                     if (Main.netMode == NetmodeID.Server)
                     {
                         ModPacket packet = GetPacket();
                         packet.Write((byte)LotMNetMsg.SyncFavorability);
                         packet.Write(npcID);
                         packet.Write(score);
-                        packet.Send(-1, whoAmI); // 发给除了发送者以外的所有人
+                        packet.Send(-1, whoAmI);
                     }
+                    break;
+
+                // Case 3: 剧情
+                case LotMNetMsg.StoryDataSync:
+                    byte storyPlayerNum = reader.ReadByte();
+                    if (storyPlayerNum >= Main.maxPlayers || !Main.player[storyPlayerNum].active) return;
+                    LotMStoryPlayer storyPlayer = Main.player[storyPlayerNum].GetModPlayer<LotMStoryPlayer>();
+
+                    storyPlayer.StoryStage = reader.ReadInt32();
+                    storyPlayer.DaysSinceJoined = reader.ReadInt32();
+                    storyPlayer.HasDailyQuest = reader.ReadBoolean();
+                    storyPlayer.QuestCompletedToday = reader.ReadBoolean();
+                    storyPlayer.QuestType = reader.ReadInt32();
+                    storyPlayer.QuestTargetID = reader.ReadInt32();
+                    storyPlayer.QuestRequiredAmount = reader.ReadInt32();
+                    storyPlayer.QuestCurrentAmount = reader.ReadInt32();
+
+                    if (Main.netMode == NetmodeID.Server)
+                        storyPlayer.SyncPlayer(-1, whoAmI, false);
                     break;
             }
         }

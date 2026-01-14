@@ -812,6 +812,26 @@ Mods: {
 				DisplayName: Wheel Of Fortune Card
 				Tooltip: ""
 			}
+
+			GoldenGun: {
+				Tooltip: ""
+				DisplayName: Golden Gun
+			}
+
+			KleinsDiary: {
+				Tooltip: ""
+				DisplayName: Kleins Diary
+			}
+
+			ExorcismBullet: {
+				DisplayName: Exorcism Bullet
+				Tooltip: ""
+			}
+
+			NighthawkPistol: {
+				DisplayName: Nighthawk Pistol
+				Tooltip: ""
+			}
 		}
 
 		# ==========================================
@@ -860,6 +880,7 @@ Mods: {
 			HandOfGodProjectile.DisplayName: Hand Of God Projectile
 			HandOfGodCharge.DisplayName: Hand Of God Charge
 			HandOfGodAirCannon.DisplayName: Hand Of God Air Cannon
+			ExorcismBulletProjectile.DisplayName: Exorcism Bullet Projectile
 		}
 
 		# ==========================================
@@ -882,6 +903,36 @@ Mods: {
 					NoHome: I hate not having a home.
 					Content: I am content.
 				}
+			}
+
+			DunnSmith: {
+				TownNPCMood: {
+					Princess_LovesNPC: 我喜欢 {NPCName}。
+					LikeNPC_Princess: 我喜欢 {NPCName}。
+					HateCrowded: 我讨厌这么拥挤。
+					DislikeCrowded: 我不喜欢这么拥挤。
+					LoveSpace: 我非常喜欢有这么大的空间。
+					FarFromHome: 我离家太远了。
+					NoHome: 我讨厌没有家。
+					Content: 我很满足。
+				}
+
+				DisplayName: Dunn Smith
+			}
+
+			OldNeil: {
+				TownNPCMood: {
+					Princess_LovesNPC: 我喜欢 {NPCName}。
+					LikeNPC_Princess: 我喜欢 {NPCName}。
+					HateCrowded: 我讨厌这么拥挤。
+					DislikeCrowded: 我不喜欢这么拥挤。
+					LoveSpace: 我非常喜欢有这么大的空间。
+					FarFromHome: 我离家太远了。
+					NoHome: 我讨厌没有家。
+					Content: 我很满足。
+				}
+
+				DisplayName: Old Neil
 			}
 		}
 

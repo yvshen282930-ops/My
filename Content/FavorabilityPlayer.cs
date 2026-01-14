@@ -2,7 +2,7 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using zhashi; // 确保引用了 zhashi 命名空间以使用 LotMNetMsg
+using zhashi; // 引用命名空间
 
 namespace zhashi.Content.UI
 {
@@ -34,7 +34,10 @@ namespace zhashi.Content.UI
             if (Main.netMode == Terraria.ID.NetmodeID.SinglePlayer) return;
 
             ModPacket packet = Mod.GetPacket();
-            packet.Write((byte)LotMNetMsg.SyncFavorability); // 现在这个枚举存在了，就不会报错了
+
+            // ★★★ 修复点：直接使用 LotMNetMsg，去掉 zhashi. 前缀 ★★★
+            packet.Write((byte)LotMNetMsg.SyncFavorability);
+
             packet.Write((byte)Player.whoAmI);
             packet.Write(npcId);
             packet.Write(favorScores[npcId]);

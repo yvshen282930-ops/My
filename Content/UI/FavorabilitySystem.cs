@@ -74,7 +74,7 @@ namespace zhashi.Content.UI
             ModPacket packet = ModContent.GetInstance<zhashi>().GetPacket();
 
             // ★★★ 核心修复：使用统一的枚举 ID，防止冲突 ★★★
-            packet.Write((byte)zhashi.LotMNetMsg.SyncFavorability);
+            packet.Write((byte)LotMNetMsg.SyncFavorability); // 去掉 zhashi.
 
             // 数据内容：NPC ID + 新分数
             packet.Write(npcID);
