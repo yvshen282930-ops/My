@@ -4,6 +4,7 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using System.Collections.Generic;
 using System.IO;
+using zhashi.Content.Items;
 using zhashi.Content.Items.Story;
 using zhashi.Content.Items.Weapons;
 
@@ -31,6 +32,7 @@ namespace zhashi.Content
             items.Add(new Item(ModContent.ItemType<KleinsDiary>()));
             items.Add(new Item(ModContent.ItemType<GoldenGun>()));
             items.Add(new Item(ItemID.MusketBall, 100));
+            items.Add(new Item(ModContent.ItemType<RoselleDiary>()));
             return items;
         }
 

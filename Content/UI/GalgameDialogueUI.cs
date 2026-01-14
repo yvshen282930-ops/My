@@ -59,6 +59,11 @@ namespace zhashi.Content.UI
             {
                 profiles[dunnID] = new DunnProfile();
             }
+            int oldNeilID = ModContent.NPCType<OldNeil>(); // 获取老尼尔的ID
+            if (!profiles.ContainsKey(oldNeilID))
+            {
+                profiles[oldNeilID] = new OldNeilProfile(); // 关联他的档案
+            }
 
             if (currentProfile == null) currentProfile = new GalgameProfile();
 
