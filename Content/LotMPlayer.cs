@@ -21,6 +21,7 @@ using ReLogic.Utilities;
 using zhashi.Content.Configs;
 using Terraria.Graphics.Effects;
 using Terraria.Localization;
+using zhashi.Content.Projectiles.Demoness;
 
 namespace zhashi.Content
 {
@@ -44,15 +45,17 @@ namespace zhashi.Content
         public int baseFoolSequence = 10;
         public int baseMarauderSequence = 10;
         public int baseSunSequence = 10;
+        public int baseDemonessSequence = 10; 
 
 
-        public int currentSequence = 10;       // 巨人/战士途径 (9-2)
+        public int currentSequence = 10;       // 巨人/战士途径 
         public int currentGiantSequence = 10;
         public int currentHunterSequence = 10; // 猎人途径 (9-1)
         public int currentMoonSequence = 10;   // 月亮途径 (9-1)
         public int currentFoolSequence = 10;   // 愚者途径 (9-1)
         public int currentMarauderSequence = 10; // 错误途径 (9-1)
         public int currentSunSequence = 10;    // 太阳途径 (9-1)
+        public int currentDemonessSequence = 10; // 刺客途径
 
         //亵渎之牌
         public bool isFoolCardEquipped = false;
@@ -82,7 +85,7 @@ namespace zhashi.Content
 
 
 
-        public bool IsBeyonder => currentSequence < 10 || currentHunterSequence < 10 || currentMoonSequence < 10 || currentFoolSequence < 10 || currentMarauderSequence < 10 || currentSunSequence < 10;
+        public bool IsBeyonder => currentSequence < 10 || currentHunterSequence < 10 || currentMoonSequence < 10 || currentFoolSequence < 10 || currentMarauderSequence < 10 || currentSunSequence < 10 || currentDemonessSequence < 10;
 
         // 灵性系统
         public float spiritualityCurrent = 100;
@@ -215,6 +218,16 @@ namespace zhashi.Content
         public int notarizeCooldown = 0;
         public bool isSunMessenger = false; // 是否开启太阳使者形态
 
+
+        // --- 魔女途径 ---
+        public bool instigatorEffect = false;
+        private bool preventRecursiveOp = false;
+        public bool witchIceEffect = false; // 冰霜开关
+        public int witchCurseCooldown = 0;  // 诅咒冷却 (放在这里定义)
+        public bool pleasureDemonessEffect = false; // 序列6 开关
+        public int mirrorSubstituteCooldown = 0;    // 镜子替身冷却
+        public int spiderSilkCooldown = 0;          // 蛛丝控制冷却(防止无限晕)
+
         // ===================================================
         // 【新增】狗的数据存储 (绑定在玩家身上)
         // ===================================================
@@ -271,6 +284,7 @@ namespace zhashi.Content
             tag["FoolSequence"] = baseFoolSequence;
             tag["MarauderSequence"] = baseMarauderSequence; // 只存这一行！
             tag["SunSequence"] = baseSunSequence;           // 太阳途径存的是 Base，这是对的
+            tag["DemonessSequence"] = baseDemonessSequence;
 
 
             tag["Spirituality"] = spiritualityCurrent;
@@ -316,9 +330,8 @@ namespace zhashi.Content
             if (tag.ContainsKey("MoonSequence")) baseMoonSequence = tag.GetInt("MoonSequence");
             if (tag.ContainsKey("FoolSequence")) baseFoolSequence = tag.GetInt("FoolSequence");
             if (tag.ContainsKey("MarauderSequence")) baseMarauderSequence = tag.GetInt("MarauderSequence");
-
-            // 【关键】太阳途径读取到 Base 变量里
             if (tag.ContainsKey("SunSequence")) baseSunSequence = tag.GetInt("SunSequence");
+            if (tag.ContainsKey("DemonessSequence")) baseDemonessSequence = tag.GetInt("DemonessSequence");
 
             if (tag.ContainsKey("Spirituality")) spiritualityCurrent = tag.GetFloat("Spirituality");
             if (tag.ContainsKey("GuardianRitual")) guardianRitualProgress = tag.GetInt("GuardianRitual");
@@ -375,6 +388,7 @@ namespace zhashi.Content
             packet.Write(baseHunterSequence);    // 猎人基础
             packet.Write(baseMoonSequence);      // 月亮基础
             packet.Write(baseSunSequence);       // 太阳基础 (必须有这个！)
+            packet.Write(baseDemonessSequence);   //刺客基础
 
             // --- [1] 基础数值 (7个) ---
             packet.Write(currentSequence);
@@ -383,6 +397,7 @@ namespace zhashi.Content
             packet.Write(currentHunterSequence);
             packet.Write(currentMoonSequence);
             packet.Write(currentSunSequence);
+            packet.Write(currentDemonessSequence);
             packet.Write(spiritualityCurrent); // float
 
             // --- [2] 寄生与仪式 (7个) ---
@@ -445,6 +460,7 @@ namespace zhashi.Content
             clone.baseHunterSequence = baseHunterSequence;
             clone.baseMoonSequence = baseMoonSequence;
             clone.baseSunSequence = baseSunSequence;
+            clone.baseDemonessSequence = baseDemonessSequence;
 
             // [1] 基础
             clone.currentSequence = currentSequence;
@@ -453,6 +469,7 @@ namespace zhashi.Content
             clone.currentHunterSequence = currentHunterSequence;
             clone.currentMoonSequence = currentMoonSequence;
             clone.currentSunSequence = currentSunSequence;
+            clone.currentDemonessSequence = currentDemonessSequence;
             clone.spiritualityCurrent = spiritualityCurrent;
 
             // [2] 寄生
@@ -514,14 +531,16 @@ namespace zhashi.Content
         clone.baseFoolSequence != baseFoolSequence ||
         clone.baseHunterSequence != baseHunterSequence ||
         clone.baseMoonSequence != baseMoonSequence ||
-        clone.baseSunSequence != baseSunSequence || // 关键！
-                                                    // [1]
+        clone.baseSunSequence != baseSunSequence ||
+        clone.baseDemonessSequence != baseDemonessSequence ||
+
                 clone.currentSequence != currentSequence ||
                 clone.currentMarauderSequence != currentMarauderSequence ||
                 clone.currentFoolSequence != currentFoolSequence ||
                 clone.currentHunterSequence != currentHunterSequence ||
                 clone.currentMoonSequence != currentMoonSequence ||
                 clone.currentSunSequence != currentSunSequence ||
+                clone.currentDemonessSequence != currentDemonessSequence ||
                 Math.Abs(clone.spiritualityCurrent - spiritualityCurrent) > 0.1f ||
 
                 // [2]
@@ -789,7 +808,11 @@ namespace zhashi.Content
             currentFoolSequence = baseFoolSequence;
             currentMarauderSequence = baseMarauderSequence;
             currentSunSequence = baseSunSequence;
+            currentDemonessSequence = baseDemonessSequence;
 
+            instigatorEffect = false;
+            witchIceEffect = false;
+            pleasureDemonessEffect = false;
 
             CalculateMaxSpirituality();
             HandleSpiritualityRegen();
@@ -827,13 +850,15 @@ namespace zhashi.Content
             if (holyOathCooldown > 0) holyOathCooldown--;
             if (fireOceanCooldown > 0) fireOceanCooldown--;
             if (notarizeCooldown > 0) notarizeCooldown--;
+            if (witchCurseCooldown > 0) witchCurseCooldown--;
+            if (mirrorSubstituteCooldown > 0) mirrorSubstituteCooldown--;
+            if (spiderSilkCooldown > 0) spiderSilkCooldown--;
 
             // ==========================================
-            // 3. 灵之虫自动再生系统 (整合版)
+            // 3. 灵之虫自动再生系统
             // ==========================================
             if (currentFoolSequence <= 4)
             {
-                // 动态设定上限和回复速度
                 int wormCap = 50;       // 序列4 默认
                 int regenSpeed = 1800;  // 序列4: 30秒回1条
 
@@ -1006,6 +1031,7 @@ namespace zhashi.Content
             float foolMult = GetSequenceMultiplier(currentFoolSequence);
             float marauderMult = GetSequenceMultiplier(currentMarauderSequence);
             float sunMult = GetSequenceMultiplier(currentSunSequence);
+            float demonessMult = GetSequenceMultiplier(currentDemonessSequence);
 
             // 2. 动态调整血量、伤害、防御的基础倍率
             // 原来的逻辑是直接 +5000 血，现在改为：世界越强，加成越高
@@ -1421,6 +1447,68 @@ namespace zhashi.Content
 
                 // 攻击附带纯白净化 (Daybreak)
                 Player.GetDamage(DamageClass.Generic) += 0.5f;
+            }
+
+            // --- 新增：刺客(魔女)途径 (Demoness) ---
+            if (currentDemonessSequence <= 9) // 序列9 刺客
+            {
+                Player.nightVision = true;      // 夜视药水效果
+                Player.detectCreature = true;   // 生物分析仪效果（看到敌人）
+                Player.dangerSense = true;      // 危险感知（看到陷阱）
+
+                Player.moveSpeed += 0.20f;             // 移动速度 +20%
+                Player.jumpSpeedBoost += 1.2f;         // 跳跃速度提升
+                Player.noFallDmg = true;               // 免疫摔落伤害（轻盈的体现）
+                Player.runAcceleration += 0.1f;        // 加速更快
+
+                Player.GetCritChance(DamageClass.Generic) += 10;       // 全暴击率 +10%
+                Player.GetArmorPenetration(DamageClass.Generic) += 5;  // 护甲穿透 +5 (刺破防御)
+
+                Player.aggro -= 200;
+            }
+            if (currentDemonessSequence <= 8) // 序列8 教唆者
+            {
+                instigatorEffect = true;
+
+                Player.GetDamage(DamageClass.Summon) += 0.15f; // 召唤伤害 +15%
+                Player.maxMinions += 1; // 召唤栏位 +1 (哪怕不玩召唤，多带个跟班也符合设定)
+
+                Player.aggro -= 300; // 进一步降低仇恨 (比刺客更低，躲在幕后)
+            }
+            if (currentDemonessSequence <= 7)
+            {
+                Player.Male = false;
+                Player.discountAvailable = true;
+                Player.aggro -= 400;
+
+                witchIceEffect = true;
+
+                // 魔法增强
+                Player.GetDamage(DamageClass.Magic) += 0.20f;
+                Player.manaCost -= 0.15f;
+                Player.statManaMax2 += 60;
+
+                // 隐身逻辑
+                if (Player.velocity.Length() < 1.5f)
+                {
+                    Player.shroomiteStealth = true;
+                    Player.stealth = 0.1f;
+                    Player.GetDamage(DamageClass.Generic) += 0.2f;
+                }
+            }
+            if (currentDemonessSequence <= 6)
+            {
+                pleasureDemonessEffect = true; // 核心开关！不加这句后面全都没用
+
+                // 1. 【被动魅惑增强】
+                // 仇恨进一步降低，几乎隐形于怪物的感知中
+                Player.aggro -= 500;
+                Player.GetCritChance(DamageClass.Magic) += 10; // 魔法暴击+10%
+                Player.GetDamage(DamageClass.Magic) += 0.15f;  // 魔法伤害再+15%
+
+                // 2. 【黑魔法增强】
+                // 魔力上限大幅提升
+                Player.statManaMax2 += 100;
             }
         }
         private void ProcessRealmOfMysteries()
@@ -2666,6 +2754,7 @@ namespace zhashi.Content
         // 6. 攻击
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            if (preventRecursiveOp) return;
             ApplyHitEffects(target); CheckRitualKill(target); CheckExecution(target); if (isPassiveStealEnabled)
             {
                 if (currentMarauderSequence <= 9)
@@ -2841,6 +2930,129 @@ namespace zhashi.Content
                         Vector2 speed = Main.rand.NextVector2Circular(6f, 6f);
                         Dust d = Dust.NewDustPerfect(target.Center, DustID.Smoke, speed, 100, default, 1.5f);
                         d.noGravity = true;
+                    }
+                }
+            }
+            if (instigatorEffect)
+            {
+                // 20% 几率让非Boss敌人陷入混乱 3秒
+                if (Main.rand.NextBool(5) && !target.boss)
+                {
+                    target.AddBuff(Terraria.ID.BuffID.Confused, 180);
+                }
+
+                // 攻击原本就混乱的敌人，造成额外真实伤害
+                if (target.HasBuff(Terraria.ID.BuffID.Confused))
+                {
+                    // 【关键修改】：先上锁，再造成伤害，最后解锁
+                    preventRecursiveOp = true;
+
+                    try
+                    {
+                        // 这里的伤害会再次触发 OnHitNPC，但因为锁上了，会直接 return，不会死循环
+                        Player.ApplyDamageToNPC(target, (int)(damageDone * 0.2f), 0f, 0, false);
+                    }
+                    finally
+                    {
+                        preventRecursiveOp = false; // 无论发生什么，一定要把锁解开
+                    }
+                }
+            }
+            if (witchIceEffect)
+            {
+                // 1. 必带 霜冻 (Frostburn) - 持续3秒
+                target.AddBuff(BuffID.Frostburn, 180);
+
+                // 2. 33% 几率带 暗影焰 (Shadowflame) - 持续3秒
+                if (Main.rand.NextBool(3))
+                {
+                    target.AddBuff(BuffID.ShadowFlame, 180);
+                }
+
+                bool conditionMet = target.HasBuff(BuffID.Frostburn) &&
+                                   (target.HasBuff(BuffID.Confused) || target.HasBuff(BuffID.ShadowFlame));
+
+                if (conditionMet && witchCurseCooldown <= 0)
+                {
+                    preventRecursiveOp = true; // 上锁
+                    try
+                    {
+                        int burstDmg = (int)(damageDone * 0.5f) + 20;
+
+                        CombatText.NewText(target.getRect(), new Color(148, 0, 211), burstDmg, true);
+
+                        Player.ApplyDamageToNPC(target, burstDmg, 0f, 0, false);
+
+                        // 设置冷却时间：2秒 (120帧)
+                        witchCurseCooldown = 120;
+
+                        for (int i = 0; i < 15; i++)
+                        {
+                            Vector2 speed = Main.rand.NextVector2Circular(3f, 3f);
+                            Dust.NewDust(target.position, target.width, target.height, DustID.IceTorch, speed.X, speed.Y, 0, default, 1.2f);
+                            Dust.NewDust(target.position, target.width, target.height, DustID.Shadowflame, speed.X, speed.Y, 0, default, 1.2f);
+                        }
+                        Terraria.Audio.SoundEngine.PlaySound(SoundID.Item103, target.Center);
+                    }
+                    finally
+                    {
+                        preventRecursiveOp = false; // 解锁
+                    }
+                }
+            }
+            if (pleasureDemonessEffect)
+            {
+                // 机制一：实体蛛丝 (Living Threads)
+                // 攻击有 15% 几率从玩家身上自动射出一根追踪蛛丝
+                if (Main.rand.NextBool(7))
+                {
+                    if (Main.myPlayer == Player.whoAmI) // 仅在本地生成
+                    {
+                        Vector2 spawnPos = Player.Center + Main.rand.NextVector2Circular(20, 20);
+                        Vector2 velocity = (target.Center - spawnPos).SafeNormalize(Vector2.Zero) * 10f;
+
+                        Projectile.NewProjectile(
+                            Player.GetSource_OnHit(target),
+                            spawnPos,
+                            velocity,
+                            ModContent.ProjectileType<DemonessSpiderSilk>(),
+                            (int)(damageDone * 0.8f),
+                            2f,
+                            Player.whoAmI
+                        );
+                    }
+                }
+
+                // 机制二：欢愉崩溃 (Pleasure Collapse)
+                bool isCharmed = target.HasBuff(BuffID.Lovestruck);
+
+                if (!isCharmed)
+                {
+                    // 第一阶段：给予欢愉 (施加状态)
+                    if (Main.rand.NextBool(4))
+                    {
+                        target.AddBuff(BuffID.Lovestruck, 300); // 标记：欢愉
+                        target.AddBuff(BuffID.Venom, 300);      // 疾病：剧毒
+                    }
+                }
+                else
+                {
+                    // 第二阶段：欢愉崩溃 (引爆状态)
+                    // 攻击已魅惑的敌人，有 20% 几率引爆
+                    if (Main.rand.NextBool(5))
+                    {
+                        preventRecursiveOp = true; // 上锁防止死循环
+                        try
+                        {
+                            int collapseDamage = damageDone * 2;
+                            CombatText.NewText(target.getRect(), new Color(255, 105, 180), "欢愉崩溃!", true);
+                            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29, target.Center);
+                            Player.ApplyDamageToNPC(target, collapseDamage, 0f, 0, false);
+                        }
+                        finally
+                        {
+                            preventRecursiveOp = false; // 解锁
+                        }
                     }
                 }
             }
@@ -3238,6 +3450,7 @@ namespace zhashi.Content
 
             return true; // 允许死亡 (如果上面都没触发)
         }
+        
 
         // 【美神被动】
         public override bool FreeDodge(Player.HurtInfo info)
@@ -3372,6 +3585,56 @@ namespace zhashi.Content
                 return true;
 
             return base.FreeDodge(info);
+            if (pleasureDemonessEffect && mirrorSubstituteCooldown <= 0)
+            {
+                // 触发条件：消耗 60 魔力
+                if (Player.CheckMana(60, true))
+                {
+                    Vector2 originalPos = Player.Center;
+
+                    // 1. 设置无敌时间与冷却
+                    Player.SetImmuneTimeForAllTypes(80);
+                    mirrorSubstituteCooldown = 900;      // 冷却 15秒
+
+                    // 2. 玩家本体：破碎传输
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Shatter, Player.position);
+
+                    // 向后方传送
+                    Vector2 teleportPos = Player.position + new Vector2(-300 * Player.direction, -50);
+                    if (!Collision.SolidCollision(teleportPos, Player.width, Player.height))
+                    {
+                        Player.Teleport(teleportPos, 1);
+                    }
+
+                    // 3. 镜面残影反击 (发射碎片)
+                    if (Main.myPlayer == Player.whoAmI)
+                    {
+                        int shardCount = 8;
+                        for (int i = 0; i < shardCount; i++)
+                        {
+                            Vector2 vel = Vector2.UnitX.RotatedBy(MathHelper.TwoPi * i / shardCount) * 12f;
+                            Projectile.NewProjectile(
+                                Player.GetSource_FromThis(),
+                                originalPos,
+                                vel,
+                                ModContent.ProjectileType<DemonessMirrorShard>(),
+                                (int)(Player.GetDamage(DamageClass.Magic).ApplyTo(60)),
+                                3f,
+                                Player.whoAmI
+                            );
+                        }
+                    }
+
+                    // 4. 原地特效
+                    for (int i = 0; i < 30; i++)
+                    {
+                        Dust.NewDust(originalPos, 30, 30, DustID.Glass, Main.rand.NextFloat(-4, 4), Main.rand.NextFloat(-4, 4), 0, default, 1.5f);
+                    }
+
+                    Main.NewText("镜子替身已触发！", 150, 150, 255);
+                    return true; // 【关键】返回 true 表示成功闪避（不受伤害）
+                }
+            }
         }
 
         // 7. 按键
@@ -4872,6 +5135,17 @@ namespace zhashi.Content
             if (currentSunSequence <= 3) max = Math.Max(max, 10000);
             if (currentSunSequence <= 2) max = Math.Max(max, 20000);
             if (currentSunSequence <= 1) max = Math.Max(max, 60000);
+
+            // --- 7. 魔女途径 (Sun) ---
+            if (currentDemonessSequence <= 9) max = Math.Max(max, 120);
+            if (currentDemonessSequence <= 8) max = Math.Max(max, 200);
+            if (currentDemonessSequence <= 7) max = Math.Max(max, 500);
+            if (currentDemonessSequence <= 6) max = Math.Max(max, 1000);
+            if (currentDemonessSequence <= 5) max = Math.Max(max, 2000);
+            if (currentDemonessSequence <= 4) max = Math.Max(max, 5000);
+            if (currentDemonessSequence <= 3) max = Math.Max(max, 10000);
+            if (currentDemonessSequence <= 2) max = Math.Max(max, 20000);
+            if (currentDemonessSequence <= 1) max = Math.Max(max, 60000);
 
             spiritualityMax = max;
         }

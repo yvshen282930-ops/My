@@ -39,6 +39,7 @@ namespace zhashi
                     modPlayer.baseHunterSequence = reader.ReadInt32();
                     modPlayer.baseMoonSequence = reader.ReadInt32();
                     modPlayer.baseSunSequence = reader.ReadInt32();
+                    modPlayer.baseDemonessSequence = reader.ReadInt32();
 
                     modPlayer.currentSequence = reader.ReadInt32();
                     modPlayer.currentMarauderSequence = reader.ReadInt32();
@@ -46,6 +47,7 @@ namespace zhashi
                     modPlayer.currentHunterSequence = reader.ReadInt32();
                     modPlayer.currentMoonSequence = reader.ReadInt32();
                     modPlayer.currentSunSequence = reader.ReadInt32();
+                    modPlayer.currentDemonessSequence = reader.ReadInt32();
                     modPlayer.spiritualityCurrent = reader.ReadSingle();
 
                     modPlayer.isParasitizing = reader.ReadBoolean();
@@ -135,6 +137,7 @@ namespace zhashi
                     storyPlayer.QuestTargetID = reader.ReadInt32();
                     storyPlayer.QuestRequiredAmount = reader.ReadInt32();
                     storyPlayer.QuestCurrentAmount = reader.ReadInt32();
+                    storyPlayer.HasReceivedStarterPotion = reader.ReadBoolean();
 
                     if (Main.netMode == NetmodeID.Server)
                         storyPlayer.SyncPlayer(-1, whoAmI, false);

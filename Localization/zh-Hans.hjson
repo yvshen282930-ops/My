@@ -1368,6 +1368,31 @@ Mods: {
 					“恐惧来自于未知，而这把枪能带给你确定的安全感。”
 					'''
 			}
+
+			MysteryMusicBox1: {
+				// Tooltip: ""
+				// DisplayName: Mystery Music Box1
+			}
+
+			AssassinPotion: {
+				// Tooltip: ""
+				// DisplayName: Assassin Potion
+			}
+
+			InstigatorPotion: {
+				// Tooltip: ""
+				// DisplayName: Instigator Potion
+			}
+
+			WitchPotion: {
+				// Tooltip: ""
+				// DisplayName: Witch Potion
+			}
+
+			PleasureDemonessPotion: {
+				// DisplayName: Pleasure Demoness Potion
+				// Tooltip: ""
+			}
 		}
 
 		# ==========================================
@@ -1417,6 +1442,8 @@ Mods: {
 			// HandOfGodCharge.DisplayName: Hand Of God Charge
 			// HandOfGodAirCannon.DisplayName: Hand Of God Air Cannon
 			// ExorcismBulletProjectile.DisplayName: Exorcism Bullet Projectile
+			// DemonessMirrorShard.DisplayName: Demoness Mirror Shard
+			// DemonessSpiderSilk.DisplayName: Demoness Spider Silk
 		}
 
 		# ==========================================
@@ -1458,17 +1485,17 @@ Mods: {
 
 			OldNeil: {
 				TownNPCMood: {
-					// Princess_LovesNPC: 我喜欢 {NPCName}。
-					// LikeNPC_Princess: 我喜欢 {NPCName}。
-					// HateCrowded: 我讨厌这么拥挤。
-					// DislikeCrowded: 我不喜欢这么拥挤。
-					// LoveSpace: 我非常喜欢有这么大的空间。
-					// FarFromHome: 我离家太远了。
-					// NoHome: 我讨厌没有家。
-					// Content: 我很满足。
+					Princess_LovesNPC: 我想听听老尼尔讲关于神灵的故事！
+					LikeNPC_Princess: 多么可爱的孩子，让我想起了...
+					HateCrowded: 人太多了！我都听不清女神的启示了！
+					DislikeCrowded: 太吵了...这让我很难集中精神调配魔药。
+					LoveSpace: 这里很宽敞，即使在这练习格斗也没问题。
+					FarFromHome: 这里离廷根市太远了，我没法去熟悉的咖啡馆了。
+					NoHome: 我需要一个住处，最好离邓恩远一点，免得他催我工作。
+					Content: 这种安宁的感觉真不错...只要不用写报销单。
 				}
 
-				// DisplayName: Old Neil
+				DisplayName: 老尼尔
 			}
 		}
 
@@ -1757,5 +1784,7 @@ Mods: {
 				}
 			}
 		}
+
+		// Tiles.MysteryMusicBox1Tile.MapEntry: Mystery Music Box1 Tile
 	}
 }

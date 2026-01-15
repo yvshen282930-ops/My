@@ -95,7 +95,8 @@ namespace zhashi.Content
                 oldPlayer.HasDailyQuest != HasDailyQuest ||
                 oldPlayer.QuestCompletedToday != QuestCompletedToday ||
                 oldPlayer.QuestCurrentAmount != QuestCurrentAmount ||
-                oldPlayer.QuestType != QuestType)
+                oldPlayer.QuestType != QuestType ||
+                oldPlayer.HasReceivedStarterPotion != HasReceivedStarterPotion)
             {
                 SyncPlayer(toWho: -1, fromWho: Main.myPlayer, newPlayer: false);
             }
@@ -113,6 +114,7 @@ namespace zhashi.Content
             clone.QuestTargetID = QuestTargetID;
             clone.QuestRequiredAmount = QuestRequiredAmount;
             clone.QuestCurrentAmount = QuestCurrentAmount;
+            clone.HasReceivedStarterPotion = HasReceivedStarterPotion;
         }
 
         public override void PostUpdate()

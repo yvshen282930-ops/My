@@ -156,6 +156,7 @@ namespace zhashi.Content
                     case "Moon": pathName = "月亮"; break;
                     case "Marauder": pathName = "错误"; break;
                     case "Sun": pathName = "太阳"; break;
+                    case "Demoness": pathName = "魔女"; break;
                 }
                 tooltips.Add(new TooltipLine(Mod, "SequenceReq", $"[c/{colorHex}:需要 {pathName} 途径 序列 {RequiredSequence} ({statusText})]"));
             }
@@ -169,6 +170,7 @@ namespace zhashi.Content
             if (Pathway == "Moon") return p.baseMoonSequence <= RequiredSequence;
             if (Pathway == "Marauder") return p.currentMarauderSequence <= RequiredSequence;
             if (Pathway == "Sun") return p.baseSunSequence <= RequiredSequence;
+            if (Pathway == "Demoness") return p.currentDemonessSequence <= RequiredSequence;
             return false;
         }
     }

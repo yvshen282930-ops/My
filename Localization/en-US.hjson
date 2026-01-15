@@ -832,6 +832,31 @@ Mods: {
 				DisplayName: Nighthawk Pistol
 				Tooltip: ""
 			}
+
+			MysteryMusicBox1: {
+				Tooltip: ""
+				DisplayName: Mystery Music Box1
+			}
+
+			AssassinPotion: {
+				Tooltip: ""
+				DisplayName: Assassin Potion
+			}
+
+			InstigatorPotion: {
+				Tooltip: ""
+				DisplayName: Instigator Potion
+			}
+
+			WitchPotion: {
+				Tooltip: ""
+				DisplayName: Witch Potion
+			}
+
+			PleasureDemonessPotion: {
+				DisplayName: Pleasure Demoness Potion
+				Tooltip: ""
+			}
 		}
 
 		# ==========================================
@@ -881,6 +906,8 @@ Mods: {
 			HandOfGodCharge.DisplayName: Hand Of God Charge
 			HandOfGodAirCannon.DisplayName: Hand Of God Air Cannon
 			ExorcismBulletProjectile.DisplayName: Exorcism Bullet Projectile
+			DemonessMirrorShard.DisplayName: Demoness Mirror Shard
+			DemonessSpiderSilk.DisplayName: Demoness Spider Silk
 		}
 
 		# ==========================================
@@ -1179,5 +1206,7 @@ Mods: {
 				}
 			}
 		}
+
+		Tiles.MysteryMusicBox1Tile.MapEntry: Mystery Music Box1 Tile
 	}
 }

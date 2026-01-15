@@ -17,6 +17,7 @@ using zhashi.Content.Items.Potions.Moon;
 using zhashi.Content.Items.Potions.Fool;
 using zhashi.Content.Items.Potions.Marauder;
 using zhashi.Content.Items.Potions.Sun;
+using zhashi.Content.Items.Potions.Demoness;
 
 namespace zhashi.Content.UI
 {
@@ -279,6 +280,17 @@ namespace zhashi.Content.UI
                     case 2: return ModContent.ItemType<LightSeekerPotion>();       // 逐光者
                     case 1: return ModContent.ItemType<WhiteAngelPotion>();        // 白天使
                     default: return ModContent.ItemType<Content.Items.Potions.Sun.BardPotion>();
+                }
+            }
+            if (p.currentDemonessSequence <= 9)
+            {
+                switch (p.currentDemonessSequence)
+                {
+                    case 9: return ModContent.ItemType<AssassinPotion>();
+                    case 8: return ModContent.ItemType<InstigatorPotion>();
+                    case 7: return ModContent.ItemType<WitchPotion>();
+                    case 6: return ModContent.ItemType<PleasureDemonessPotion>();
+                    default: return ModContent.ItemType<AssassinPotion>();
                 }
             }
             return 0;
@@ -1039,6 +1051,43 @@ namespace zhashi.Content.UI
                     text += "- [被动] 神圣之国: 压制全场，斩杀亡灵\n";
                     text += "- [技能] 纯白之光 / 信仰之仆\n";
                     text += "  (已达当前版本顶峰)";
+                }
+            }
+            else if (p.currentDemonessSequence <= 9)
+            {
+                text += $"[c/FF1493:魔女途径 序列{p.currentDemonessSequence}]\n";
+
+                if (p.currentDemonessSequence <= 9) // 刺客
+                {
+                    text += $"序列九: [c/FF69B4:刺客]\n"; // 热粉色
+                    text += "- [被动] 鹰之视力: 获得夜视与生物探测\n";
+                    text += "- [被动] 体态轻盈: 移速+20% /跳跃提升免疫摔伤\n";
+                    text += "- [被动] 致命一击: 全暴击+10% / 护甲穿透+5\n";
+                    text += "- [被动] 阴影潜伏: 大幅降低敌人仇恨\n";
+                }
+                if (p.currentDemonessSequence <= 8)
+                {
+                    text += $"序列八: [c/FF1493:教唆者]\n"; // 深粉色
+                    text += "- [被动] 教唆: 攻击有20%几率使敌人混乱\n";
+                    text += "- [被动] 借刀杀人: 召唤伤害+15% / 栏位+1\n";
+                    text += "- [被动] 幕后黑手: 仇恨值大幅降低\n";
+                }
+                if (p.currentDemonessSequence <= 7)
+                {
+                    text += $"序列七: [c/FF00FF:女巫]\n"; // 亮紫色
+                    text += "- [被动] 魅惑: 商店打折 / 仇恨极大降低\n";
+                    text += "- [被动] 黑魔法: 攻击附带霜冻与暗影焰\n";
+                    text += "- [被动] 隐身: 站立不动时潜入阴影(隐形+增伤)\n";
+                    text += "- [魔法] 魔法伤害+20%\n";
+                    text += "- [诅咒] 对负面状态缠身的敌人造成爆发伤害\n";
+                }
+                if (p.currentDemonessSequence <= 6)
+                {
+                    text += $"序列六: [c/FF00FF:欢愉魔女]\n";
+                    text += "- [被动] 魅惑EX: 仇恨极低 / 魔法暴击+10%\n";
+                    text += "- [疾病] 攻击散播剧毒、虚弱与混乱\n";
+                    text += "- [蛛丝] 几率定身敌人(Boss减速)\n";
+                    text += "- [保命] 镜子替身: 受伤时消耗魔力免疫并传送(CD:15s)\n";
                 }
             }
 
