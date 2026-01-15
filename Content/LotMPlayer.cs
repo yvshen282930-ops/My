@@ -17,11 +17,12 @@ using zhashi.Content.Projectiles;
 using zhashi.Content.Items.Weapons;
 using zhashi.Content.Buffs;
 using zhashi.Content.Items;
+using zhashi.Content.Projectiles.Demoness;
 using ReLogic.Utilities;
 using zhashi.Content.Configs;
 using Terraria.Graphics.Effects;
 using Terraria.Localization;
-using zhashi.Content.Projectiles.Demoness;
+
 
 namespace zhashi.Content
 {
@@ -2752,6 +2753,86 @@ namespace zhashi.Content
         }
 
         // 6. 攻击
+        private void ApplyDemonessHitEffects(NPC target, int damageDone)
+        {
+            // 1. 序列7：女巫 (冰霜)
+            if (witchIceEffect)
+            {
+                target.AddBuff(BuffID.Frostburn, 180);
+                if (Main.rand.NextBool(3)) target.AddBuff(BuffID.ShadowFlame, 180);
+
+                // 诅咒爆发逻辑 (保持不变)
+                bool conditionMet = target.HasBuff(BuffID.Frostburn) && (target.HasBuff(BuffID.Confused) || target.HasBuff(BuffID.ShadowFlame));
+                if (conditionMet && witchCurseCooldown <= 0)
+                {
+                    if (!preventRecursiveOp)
+                    {
+                        preventRecursiveOp = true;
+                        try
+                        {
+                            int burstDmg = (int)(damageDone * 0.5f) + 20;
+                            CombatText.NewText(target.getRect(), new Color(148, 0, 211), "诅咒爆发!", true);
+                            Player.ApplyDamageToNPC(target, burstDmg, 0f, 0, false);
+                            witchCurseCooldown = 120;
+                            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item103, target.Center);
+                            for (int i = 0; i < 15; i++)
+                                Dust.NewDust(target.position, target.width, target.height, DustID.IceTorch, 0, 0, 0, default, 1.2f);
+                        }
+                        finally { preventRecursiveOp = false; }
+                    }
+                }
+            }
+
+            // 2. 序列6：欢愉魔女 (剧毒、虚弱、蛛丝)
+            if (pleasureDemonessEffect)
+            {
+                // 【新增】在这里给所有攻击都加上剧毒和虚弱
+                target.AddBuff(BuffID.Poisoned, 180); // 3秒
+                target.AddBuff(BuffID.Weak, 180);     // 3秒
+
+                // 机制一：实体蛛丝
+                if (Main.rand.NextBool(5) && Main.myPlayer == Player.whoAmI) // 几率提高 1/7 -> 1/5
+                {
+                    Vector2 spawnPos = Player.Center + Main.rand.NextVector2Circular(20, 20);
+                    Vector2 velocity = (target.Center - spawnPos).SafeNormalize(Vector2.Zero) * 12f; // 速度 10 -> 12
+
+                    // 使用简写，因为同名空间下可以直接访问，或者你需要加 using
+                    int projType = ModContent.ProjectileType<DemonessSpiderSilk>();
+
+                    Projectile.NewProjectile(
+                    Player.GetSource_OnHit(target),
+                    spawnPos,
+                    velocity,
+                    projType, // <--- 检查这里！必须是 projType
+                    (int)(damageDone * 0.8f),
+                    2f,
+                    Player.whoAmI
+                );
+                }
+
+                // 机制二：欢愉崩溃 (保持不变)
+                if (!target.HasBuff(BuffID.Lovestruck))
+                {
+                    if (Main.rand.NextBool(4))
+                    {
+                        target.AddBuff(BuffID.Lovestruck, 300);
+                        CombatText.NewText(target.getRect(), Color.Pink, "❤", true);
+                    }
+                }
+                else
+                {
+                    if (Main.rand.NextBool(5))
+                    {
+                        int heal = damageDone / 10;
+                        if (heal > 0)
+                        {
+                            Player.statLife += heal;
+                            Player.HealEffect(heal);
+                        }
+                    }
+                }
+            }
+        }
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (preventRecursiveOp) return;
@@ -2958,104 +3039,8 @@ namespace zhashi.Content
                     }
                 }
             }
-            if (witchIceEffect)
-            {
-                // 1. 必带 霜冻 (Frostburn) - 持续3秒
-                target.AddBuff(BuffID.Frostburn, 180);
+            ApplyDemonessHitEffects(target, damageDone);
 
-                // 2. 33% 几率带 暗影焰 (Shadowflame) - 持续3秒
-                if (Main.rand.NextBool(3))
-                {
-                    target.AddBuff(BuffID.ShadowFlame, 180);
-                }
-
-                bool conditionMet = target.HasBuff(BuffID.Frostburn) &&
-                                   (target.HasBuff(BuffID.Confused) || target.HasBuff(BuffID.ShadowFlame));
-
-                if (conditionMet && witchCurseCooldown <= 0)
-                {
-                    preventRecursiveOp = true; // 上锁
-                    try
-                    {
-                        int burstDmg = (int)(damageDone * 0.5f) + 20;
-
-                        CombatText.NewText(target.getRect(), new Color(148, 0, 211), burstDmg, true);
-
-                        Player.ApplyDamageToNPC(target, burstDmg, 0f, 0, false);
-
-                        // 设置冷却时间：2秒 (120帧)
-                        witchCurseCooldown = 120;
-
-                        for (int i = 0; i < 15; i++)
-                        {
-                            Vector2 speed = Main.rand.NextVector2Circular(3f, 3f);
-                            Dust.NewDust(target.position, target.width, target.height, DustID.IceTorch, speed.X, speed.Y, 0, default, 1.2f);
-                            Dust.NewDust(target.position, target.width, target.height, DustID.Shadowflame, speed.X, speed.Y, 0, default, 1.2f);
-                        }
-                        Terraria.Audio.SoundEngine.PlaySound(SoundID.Item103, target.Center);
-                    }
-                    finally
-                    {
-                        preventRecursiveOp = false; // 解锁
-                    }
-                }
-            }
-            if (pleasureDemonessEffect)
-            {
-                // 机制一：实体蛛丝 (Living Threads)
-                // 攻击有 15% 几率从玩家身上自动射出一根追踪蛛丝
-                if (Main.rand.NextBool(7))
-                {
-                    if (Main.myPlayer == Player.whoAmI) // 仅在本地生成
-                    {
-                        Vector2 spawnPos = Player.Center + Main.rand.NextVector2Circular(20, 20);
-                        Vector2 velocity = (target.Center - spawnPos).SafeNormalize(Vector2.Zero) * 10f;
-
-                        Projectile.NewProjectile(
-                            Player.GetSource_OnHit(target),
-                            spawnPos,
-                            velocity,
-                            ModContent.ProjectileType<DemonessSpiderSilk>(),
-                            (int)(damageDone * 0.8f),
-                            2f,
-                            Player.whoAmI
-                        );
-                    }
-                }
-
-                // 机制二：欢愉崩溃 (Pleasure Collapse)
-                bool isCharmed = target.HasBuff(BuffID.Lovestruck);
-
-                if (!isCharmed)
-                {
-                    // 第一阶段：给予欢愉 (施加状态)
-                    if (Main.rand.NextBool(4))
-                    {
-                        target.AddBuff(BuffID.Lovestruck, 300); // 标记：欢愉
-                        target.AddBuff(BuffID.Venom, 300);      // 疾病：剧毒
-                    }
-                }
-                else
-                {
-                    // 第二阶段：欢愉崩溃 (引爆状态)
-                    // 攻击已魅惑的敌人，有 20% 几率引爆
-                    if (Main.rand.NextBool(5))
-                    {
-                        preventRecursiveOp = true; // 上锁防止死循环
-                        try
-                        {
-                            int collapseDamage = damageDone * 2;
-                            CombatText.NewText(target.getRect(), new Color(255, 105, 180), "欢愉崩溃!", true);
-                            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29, target.Center);
-                            Player.ApplyDamageToNPC(target, collapseDamage, 0f, 0, false);
-                        }
-                        finally
-                        {
-                            preventRecursiveOp = false; // 解锁
-                        }
-                    }
-                }
-            }
             base.OnHitNPC(target, hit, damageDone);
         }
         public override void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
@@ -3120,6 +3105,7 @@ namespace zhashi.Content
                     }
                 }
             }
+            ApplyDemonessHitEffects(target, damageDone);
 
             base.OnHitNPCWithProj(proj, target, hit, damageDone);
         }
@@ -3585,56 +3571,7 @@ namespace zhashi.Content
                 return true;
 
             return base.FreeDodge(info);
-            if (pleasureDemonessEffect && mirrorSubstituteCooldown <= 0)
-            {
-                // 触发条件：消耗 60 魔力
-                if (Player.CheckMana(60, true))
-                {
-                    Vector2 originalPos = Player.Center;
-
-                    // 1. 设置无敌时间与冷却
-                    Player.SetImmuneTimeForAllTypes(80);
-                    mirrorSubstituteCooldown = 900;      // 冷却 15秒
-
-                    // 2. 玩家本体：破碎传输
-                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Shatter, Player.position);
-
-                    // 向后方传送
-                    Vector2 teleportPos = Player.position + new Vector2(-300 * Player.direction, -50);
-                    if (!Collision.SolidCollision(teleportPos, Player.width, Player.height))
-                    {
-                        Player.Teleport(teleportPos, 1);
-                    }
-
-                    // 3. 镜面残影反击 (发射碎片)
-                    if (Main.myPlayer == Player.whoAmI)
-                    {
-                        int shardCount = 8;
-                        for (int i = 0; i < shardCount; i++)
-                        {
-                            Vector2 vel = Vector2.UnitX.RotatedBy(MathHelper.TwoPi * i / shardCount) * 12f;
-                            Projectile.NewProjectile(
-                                Player.GetSource_FromThis(),
-                                originalPos,
-                                vel,
-                                ModContent.ProjectileType<DemonessMirrorShard>(),
-                                (int)(Player.GetDamage(DamageClass.Magic).ApplyTo(60)),
-                                3f,
-                                Player.whoAmI
-                            );
-                        }
-                    }
-
-                    // 4. 原地特效
-                    for (int i = 0; i < 30; i++)
-                    {
-                        Dust.NewDust(originalPos, 30, 30, DustID.Glass, Main.rand.NextFloat(-4, 4), Main.rand.NextFloat(-4, 4), 0, default, 1.5f);
-                    }
-
-                    Main.NewText("镜子替身已触发！", 150, 150, 255);
-                    return true; // 【关键】返回 true 表示成功闪避（不受伤害）
-                }
-            }
+            
         }
 
         // 7. 按键
@@ -4902,6 +4839,84 @@ namespace zhashi.Content
                 else
                 {
                     CastHolyOath();
+                }
+            }
+            if (baseDemonessSequence <= 6 && LotMKeybinds.Demoness_Mirror.JustPressed)
+            {
+                // ★ 修改1：冷却时间大幅缩短 (如果冷却小于等于0 且 灵性足够)
+                if (mirrorSubstituteCooldown <= 0 && TryConsumeSpirituality(40)) // 耗蓝降低到40
+                {
+                    Vector2 targetPos = Main.MouseWorld;
+
+                    // ★ 修改2：传送距离翻倍 (450 -> 900)
+                    float maxDistance = 900f;
+
+                    // 限制距离
+                    if (Player.Distance(targetPos) > maxDistance)
+                    {
+                        targetPos = Player.Center + (targetPos - Player.Center).SafeNormalize(Vector2.Zero) * maxDistance;
+                    }
+
+                    bool canTeleport = !Collision.SolidCollision(targetPos, Player.width, Player.height);
+
+                    if (canTeleport)
+                    {
+                        // === 原地生成替身碎片 ===
+                        if (Main.myPlayer == Player.whoAmI)
+                        {
+                            // 确保这里引用的是 DemonessMirrorShard (镜子碎片)
+                            int shardType = ModContent.ProjectileType<DemonessMirrorShard>();
+
+                            // 爆发更多碎片 (8 -> 12)
+                            for (int i = 0; i < 12; i++)
+                            {
+                                Vector2 shardVel = Main.rand.NextVector2Circular(10, 10);
+                                Projectile.NewProjectile(
+                                    Player.GetSource_Misc("MirrorSubstitute"),
+                                    Player.Center.X, Player.Center.Y - 10,
+                                    shardVel.X, shardVel.Y,
+                                    shardType,
+                                    50, // 伤害提升
+                                    3f,
+                                    Player.whoAmI
+                                );
+                            }
+                        }
+
+                        // === 音效与特效 ===
+                        Terraria.Audio.SoundEngine.PlaySound(SoundID.Item27, Player.position); // 清脆破碎声
+                        for (int i = 0; i < 20; i++)
+                            Dust.NewDust(Player.position, Player.width, Player.height, DustID.Glass, 0, 0, 0, default, 1.5f);
+
+                        // === 玩家瞬移 ===
+                        Player.Teleport(targetPos, 1);
+
+                        // === 瞬移后处理 ===
+                        // 给予较短的无敌帧 (0.5秒)，防止连续使用太无赖
+                        Player.SetImmuneTimeForAllTypes(30);
+
+                        // ★ 修改4：冷却时间改为 2秒 (120帧)
+                        mirrorSubstituteCooldown = 120;
+
+                        Terraria.Audio.SoundEngine.PlaySound(SoundID.Item8, Player.position);
+                    }
+                    else
+                    {
+                        // 如果卡墙，尝试稍微往上提一点再试一次 (优化手感)
+                        targetPos.Y -= 16;
+                        if (!Collision.SolidCollision(targetPos, Player.width, Player.height))
+                        {
+                            // 重复上面的传送逻辑 (简写)
+                            Player.Teleport(targetPos, 1);
+                            mirrorSubstituteCooldown = 120;
+                            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item8, Player.position);
+                        }
+                        else
+                        {
+                            // 只有真的完全卡住才提示
+                            Main.NewText("无法在该位置重组身体！", 255, 100, 100);
+                        }
+                    }
                 }
             }
         }

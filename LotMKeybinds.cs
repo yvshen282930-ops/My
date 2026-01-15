@@ -68,6 +68,11 @@ namespace zhashi
         public static ModKeybind Sun_Notarize { get; private set; } // 公证人技能键
         public static ModKeybind Sun_Messenger { get; private set; } // 公证人技能键
 
+        // --- 魔女途径  [新增] ---
+        public static ModKeybind Demoness_Mirror { get; private set; }   // 核心技能：镜子替身
+        public static ModKeybind Demoness_Web { get; private set; }      // 备用：蛛丝生成
+        public static ModKeybind Demoness_Charm { get; private set; }    // 备用：魅惑
+
         // ===================================================
         // 2. 注册按键 (Load)
         // ===================================================
@@ -132,6 +137,11 @@ namespace zhashi
             Sun_FireOcean = KeybindLoader.RegisterKeybind(Mod, "太阳：光明之火", "G");
             Sun_Notarize = KeybindLoader.RegisterKeybind(Mod, "太阳：公证", "J");
             Sun_Messenger = KeybindLoader.RegisterKeybind(Mod, "太阳: 太阳使者", "P");
+
+            // Demoness
+            Demoness_Mirror = KeybindLoader.RegisterKeybind(Mod, "魔女: 镜子替身", "Q");
+            Demoness_Web = KeybindLoader.RegisterKeybind(Mod, "魔女: 蛛丝", "Z");
+            Demoness_Charm = KeybindLoader.RegisterKeybind(Mod, "魔女: 魅惑", "C");
 
         }
 
@@ -199,6 +209,11 @@ namespace zhashi
             Sun_FireOcean = null;
             Sun_Notarize = null;
             Sun_Messenger = null;
+
+            //魔女
+            Demoness_Mirror = null;
+            Demoness_Web = null;
+            Demoness_Charm = null;
         }
     }
 }

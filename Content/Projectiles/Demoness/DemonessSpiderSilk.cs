@@ -7,14 +7,13 @@ namespace zhashi.Content.Projectiles.Demoness
 {
     public class DemonessSpiderSilk : ModProjectile
     {
-        // 【核心修改】这里直接指定使用原版"蜘蛛网唾液"的贴图
-        // 这样你就不用自己做 DemonessSpiderSilk.png 了
         public override string Texture => "Terraria/Images/Projectile_" + ProjectileID.WebSpit;
 
         public override void SetDefaults()
         {
-            Projectile.width = 14;
-            Projectile.height = 14;
+            // 【修改1】增大碰撞箱，更容易打中
+            Projectile.width = 24;
+            Projectile.height = 24;
             Projectile.friendly = true;
             Projectile.penetrate = 3;
             Projectile.timeLeft = 300;
@@ -26,23 +25,14 @@ namespace zhashi.Content.Projectiles.Demoness
 
         public override void AI()
         {
-            // 只有一半的几率产生粉色或白色的丝线粒子
-            if (Main.rand.NextBool(2))
-            {
-                // DustID.Web 是白色，DustID.PinkSlime 是粉色
-                int dustType = Main.rand.NextBool() ? DustID.Web : DustID.PinkSlime;
-                Dust d = Dust.NewDustPerfect(Projectile.Center, dustType, Vector2.Zero, 100, default, 0.8f);
-                d.noGravity = true;
-            }
+            // 【修改2】特效增强：频率提高，尺寸变大
+            // 每一帧都产生粒子，而不是只有一半几率
+            int dustType = Main.rand.NextBool() ? DustID.Web : DustID.PinkSlime;
 
-            // 追踪最近的敌人
-            NPC closestNPC = FindClosestNPC(500f);
-            if (closestNPC != null)
-            {
-                Vector2 direction = (closestNPC.Center - Projectile.Center).SafeNormalize(Vector2.Zero);
-                // 追踪速度
-                Projectile.velocity = (Projectile.velocity * 25f + direction * 18f) / 26f;
-            }
+            // Scale 从 0.8f 改为 1.5f (变大近一倍)
+            Dust d = Dust.NewDustPerfect(Projectile.Center, dustType, Vector2.Zero, 100, default, 1.5f);
+            d.noGravity = true;
+            d.velocity *= 0.5f; // 让粒子稍微飘散一点
         }
 
         private NPC FindClosestNPC(float maxDetectDistance)
@@ -67,11 +57,20 @@ namespace zhashi.Content.Projectiles.Demoness
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            // 【修改3】补全剧毒和虚弱效果
+            target.AddBuff(BuffID.Poisoned, 300); // 剧毒 5秒
+            target.AddBuff(BuffID.Weak, 300);     // 虚弱 5秒
+
+            // 原有的蛛丝控制
             if (!target.boss) target.AddBuff(BuffID.Webbed, 120);
             else target.AddBuff(BuffID.Slow, 180);
 
-            for (int i = 0; i < 10; i++)
-                Dust.NewDust(target.position, target.width, target.height, DustID.Web, 0, 0, 0, default, 1.2f);
+            // 【修改4】命中特效：数量翻倍，尺寸变大
+            for (int i = 0; i < 20; i++) // 10 -> 20
+            {
+                // Scale 1.2f -> 2.0f
+                Dust.NewDust(target.position, target.width, target.height, DustID.Web, 0, 0, 0, default, 2.0f);
+            }
         }
     }
 }

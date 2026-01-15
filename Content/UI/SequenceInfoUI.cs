@@ -1085,9 +1085,16 @@ namespace zhashi.Content.UI
                 {
                     text += $"序列六: [c/FF00FF:欢愉魔女]\n";
                     text += "- [被动] 魅惑EX: 仇恨极低 / 魔法暴击+10%\n";
-                    text += "- [疾病] 攻击散播剧毒、虚弱与混乱\n";
-                    text += "- [蛛丝] 几率定身敌人(Boss减速)\n";
-                    text += "- [保命] 镜子替身: 受伤时消耗魔力免疫并传送(CD:15s)\n";
+
+                    text += "- [被动] 欢愉之触: 攻击必定附加剧毒与虚弱\n";
+
+                    text += "- [特效] 魔女蛛丝: 攻击几率生成蛛丝定身敌人\n";
+
+                    string keyName = "未绑定";
+                    if (LotMKeybinds.Demoness_Mirror.GetAssignedKeys().Count > 0)
+                        keyName = LotMKeybinds.Demoness_Mirror.GetAssignedKeys()[0];
+
+                    text += $"- [主动] 镜子替身: 消耗灵性瞬移 ({keyName}) (CD:2s)\n";
                 }
             }
 
