@@ -18,10 +18,12 @@ using zhashi.Content.Items.Weapons;
 using zhashi.Content.Buffs;
 using zhashi.Content.Items;
 using zhashi.Content.Projectiles.Demoness;
+using zhashi.Content.Systems;
 using ReLogic.Utilities;
 using zhashi.Content.Configs;
 using Terraria.Graphics.Effects;
 using Terraria.Localization;
+using Terraria.DataStructures;
 
 
 namespace zhashi.Content
@@ -228,6 +230,12 @@ namespace zhashi.Content
         public bool pleasureDemonessEffect = false; // 序列6 开关
         public int mirrorSubstituteCooldown = 0;    // 镜子替身冷却
         public int spiderSilkCooldown = 0;          // 蛛丝控制冷却(防止无限晕)
+        public int afflictionRitualTimer = 0; // 仪式计时器
+        public bool isAfflictionDemoness = false; // 序列5能力开关
+        public bool mirrorCloneActive = false;
+        public int despairRitualCount = 0;
+        public int unagingRebirthCooldown = 0; // 重生冷却
+        public const int REBIRTH_COOLDOWN_MAX = 18000; // 5分钟冷却 (60 * 60 * 5)
 
         // ===================================================
         // 【新增】狗的数据存储 (绑定在玩家身上)
@@ -312,6 +320,8 @@ namespace zhashi.Content
             tag["PurificationProgress"] = purificationProgress;
             tag["JudgmentProgress"] = judgmentProgress;
             tag["Sanity"] = sanityCurrent;
+            tag["AfflictionTimer"] = afflictionRitualTimer;
+            tag["DespairKills"] = despairRitualCount;
 
             if (DogInventory == null) DogInventory = new Item[3];
             for (int i = 0; i < 3; i++)
@@ -358,6 +368,8 @@ namespace zhashi.Content
             if (tag.ContainsKey("PurificationProgress")) purificationProgress = tag.GetInt("PurificationProgress");
             if (tag.ContainsKey("JudgmentProgress")) judgmentProgress = tag.GetInt("JudgmentProgress");
             if (tag.ContainsKey("Sanity")) sanityCurrent = tag.GetFloat("Sanity");
+            if (tag.ContainsKey("AfflictionTimer")) afflictionRitualTimer = tag.GetInt("AfflictionTimer");
+            if (tag.ContainsKey("DespairKills")) despairRitualCount = tag.GetInt("DespairKills");
 
 
 
@@ -814,6 +826,7 @@ namespace zhashi.Content
             instigatorEffect = false;
             witchIceEffect = false;
             pleasureDemonessEffect = false;
+            isAfflictionDemoness = false;
 
             CalculateMaxSpirituality();
             HandleSpiritualityRegen();
@@ -854,6 +867,7 @@ namespace zhashi.Content
             if (witchCurseCooldown > 0) witchCurseCooldown--;
             if (mirrorSubstituteCooldown > 0) mirrorSubstituteCooldown--;
             if (spiderSilkCooldown > 0) spiderSilkCooldown--;
+            if (unagingRebirthCooldown > 0) unagingRebirthCooldown--;
 
             // ==========================================
             // 3. 灵之虫自动再生系统
@@ -1501,15 +1515,44 @@ namespace zhashi.Content
             {
                 pleasureDemonessEffect = true; // 核心开关！不加这句后面全都没用
 
-                // 1. 【被动魅惑增强】
-                // 仇恨进一步降低，几乎隐形于怪物的感知中
                 Player.aggro -= 500;
                 Player.GetCritChance(DamageClass.Magic) += 10; // 魔法暴击+10%
                 Player.GetDamage(DamageClass.Magic) += 0.15f;  // 魔法伤害再+15%
 
-                // 2. 【黑魔法增强】
-                // 魔力上限大幅提升
                 Player.statManaMax2 += 100;
+            }
+            if (currentDemonessSequence <= 5)
+            {
+                isAfflictionDemoness = true;
+
+                Player.statLifeMax2 += (int)(300 * demonessMult); // 血量提升
+                Player.GetDamage(DamageClass.Magic) += 0.2f;      // 魔法伤害再+20%
+                Player.lifeRegen += 3;                            // 自愈能力提升
+
+                Player.buffImmune[BuffID.Poisoned] = true;
+                Player.buffImmune[BuffID.Venom] = true;
+                Player.buffImmune[BuffID.Rabies] = true;
+            }
+            if (currentDemonessSequence <= 4) // 序列4 绝望魔女
+            {
+                Player.statLifeMax2 += (int)(500 * demonessMult); // 大幅加血
+                Player.GetDamage(DamageClass.Magic) += 0.3f;      // 30% 伤害加成
+                Player.lifeRegen += 10;                           // 极强的自愈
+                Player.endurance += 0.15f;                        // 15% 免伤 (痛苦耐受)
+
+                Player.buffImmune[BuffID.OnFire] = true;
+                Player.buffImmune[BuffID.Frostburn] = true;
+                Player.buffImmune[BuffID.CursedInferno] = true; // 既然玩黑火，自然免疫诅咒火
+            }
+            if (currentDemonessSequence <= 3)
+            {
+                Player.statLifeMax2 += (int)(500 * demonessMult);
+                Player.lifeRegen += 20; // 极强的自然回血 (青春永驻)
+                Player.GetDamage(DamageClass.Magic) += 0.4f; // +40% 伤害
+
+                Player.buffImmune[BuffID.Slow] = true;
+                Player.buffImmune[BuffID.Weak] = true;
+                Player.buffImmune[BuffID.Silenced] = true;
             }
         }
         private void ProcessRealmOfMysteries()
@@ -2750,6 +2793,125 @@ namespace zhashi.Content
                     Player.endurance -= 1.0f;
                 }
             }
+            // ==========================================
+            // 痛苦魔女：仪式与能力逻辑
+            // ==========================================
+
+            // 1. 仪式逻辑：只有序列6需要做
+            if (baseDemonessSequence == 6)
+            {
+                // 检查脚下是不是“活火块” (Living Fire, ID 350)
+                // 或者是被烧着了 (BuffID.Burning) 也算
+                bool onFireBlock = false;
+                Point tilePos = Player.Center.ToTileCoordinates();
+
+                // 检查脚下和身体所在的方块
+                if (Main.tile[tilePos.X, tilePos.Y].TileType == TileID.LivingFire ||
+                    Main.tile[tilePos.X, tilePos.Y + 1].TileType == TileID.LivingFire)
+                {
+                    onFireBlock = true;
+                }
+
+                if (onFireBlock)
+                {
+                    afflictionRitualTimer++;
+                    // 每分钟提示一次
+                    if (afflictionRitualTimer % 3600 == 0)
+                    {
+                        int mins = afflictionRitualTimer / 3600;
+                        CombatText.NewText(Player.getRect(), new Microsoft.Xna.Framework.Color(255, 100, 50), $"痛苦煎熬: {mins}/1 分钟", true);
+                    }
+
+                    // 达到15分钟 (54000帧) 提示完成
+                    if (afflictionRitualTimer == 54000)
+                    {
+                        Main.NewText("烈火已将你的痛苦铭刻进灵体，魔药已准备就绪！", 255, 0, 255);
+                        Terraria.Audio.SoundEngine.PlaySound(SoundID.Item37, Player.position);
+                    }
+                }
+                else
+                {
+                    // 离开火焰，进度缓慢衰减（或清零，看你难度要求，这里设为不衰减但暂停）
+                    // 如果想增加难度，可以写: afflictionRitualTimer = 0;
+                }
+            }
+
+            // 2. 序列5 能力：瘟疫与魅惑光环
+            if (isAfflictionDemoness)
+            {
+                // 每秒触发一次 (60帧)
+                if (Main.GameUpdateCount % 60 == 0)
+                {
+                    // --- 改动 1: 动态范围判定 ---
+                    // 序列5范围约 1600 (100格)，序列4及以上范围扩大到 3200 (200格)
+                    float range = (currentDemonessSequence <= 4) ? 3200f : 1600f;
+
+                    foreach (NPC target in Main.ActiveNPCs)
+                    {
+                        if (target.friendly || target.dontTakeDamage) continue;
+
+                        if (target.Distance(Player.Center) < range)
+                        {
+                            // =================================================
+                            // A. 基础能力：痛苦瘟疫 (序列5及以上生效)
+                            // =================================================
+                            int rand = Main.rand.Next(4);
+                            if (rand == 0) target.AddBuff(BuffID.Poisoned, 300);
+                            if (rand == 1) target.AddBuff(BuffID.Venom, 300);
+                            if (rand == 2) target.AddBuff(BuffID.Weak, 300);
+                            if (rand == 3) target.AddBuff(ModContent.BuffType<Buffs.Curse.AfflictionCurseBuff>(), 300);
+
+                            // =================================================
+                            // B. 进阶能力：绝望灾祸 (序列4新增)
+                            // =================================================
+                            if (currentDemonessSequence <= 4)
+                            {
+                                // 必定施加黑焰 (对应黑焰能力)
+                                target.AddBuff(BuffID.ShadowFlame, 300);
+
+                                // 必定施加冻伤 (对应冰霜能力)
+                                target.AddBuff(BuffID.Frostburn2, 300);
+
+                                // 施加灵液(破甲)，模拟敌人因“绝望”而放弃抵抗
+                                target.AddBuff(BuffID.Ichor, 300);
+                            }
+
+                            // =================================================
+                            // C. 魅惑/驯化 (通用)
+                            // =================================================
+                            bool facingPlayer = (target.Center.X < Player.Center.X && target.direction == 1) ||
+                                                (target.Center.X > Player.Center.X && target.direction == -1);
+
+                            // 序列4的魅惑概率稍微提高一点 (10% -> 15%)
+                            int charmChance = (currentDemonessSequence <= 4) ? 7 : 10;
+
+                            if (facingPlayer && Main.rand.NextBool(charmChance) && !target.boss)
+                            {
+                                target.AddBuff(BuffID.Lovestruck, 120);
+                                target.AddBuff(BuffID.Confused, 120);
+                            }
+                        }
+                    }
+                }
+            }
+            // 检查是否有分身存在
+            if (Player.ownedProjectileCounts[ModContent.ProjectileType<Projectiles.Demoness.MirrorCloneProjectile>()] > 0)
+            {
+                // 每秒消耗 50 点 (60帧)
+                if (Main.GameUpdateCount % 60 == 0)
+                {
+                    if (spiritualityCurrent >= 50) 
+                    {
+                        spiritualityCurrent -= 50; 
+                    }
+                    else
+                    {
+                        // 灵性耗尽，强制关闭分身
+                        ToggleMirrorClone();
+                        Main.NewText("灵性枯竭，镜像消散了。", 255, 50, 50);
+                    }
+                }
+            }
         }
 
         // 6. 攻击
@@ -3105,9 +3267,34 @@ namespace zhashi.Content
                     }
                 }
             }
+            if (currentDemonessSequence <= 3)
+            {
+                LifeSteal(damageDone);
+            }
             ApplyDemonessHitEffects(target, damageDone);
 
             base.OnHitNPCWithProj(proj, target, hit, damageDone);
+        }
+        public override void OnHitNPCWithItem(Item item, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (currentDemonessSequence <= 3) // 序列3能力
+            {
+                LifeSteal(damageDone);
+            }
+        }
+        private void LifeSteal(int damage)
+        {
+            // 只有没满血时才吸，吸取伤害的 5%，最小 1 点
+            if (Player.statLife < Player.statLifeMax2 && Main.rand.NextBool(3)) // 33% 几率触发，防止太变态
+            {
+                int heal = damage / 20;
+                if (heal < 1) heal = 1;
+                if (heal > 10) heal = 10; // 单次上限
+
+                Player.Heal(heal);
+                // 吸血特效
+                Dust.NewDust(Player.position, Player.width, Player.height, DustID.HeartCrystal);
+            }
         }
 
         private void ApplyHitEffects(NPC target) { if (currentSequence <= 4) target.AddBuff(BuffID.Ichor, 300); if (currentHunterSequence <= 7) target.AddBuff(BuffID.OnFire, 300); if (isCalamityGiant) target.AddBuff(BuffID.Electrified, 300); if (currentHunterSequence <= 1) target.AddBuff(ModContent.BuffType<ConquerorWill>(), 600); if (currentMoonSequence <= 7 && (Player.HeldItem.DamageType == DamageClass.Melee || Player.HeldItem.DamageType == DamageClass.SummonMeleeSpeed || Player.HeldItem.DamageType == DamageClass.Summon)) { target.AddBuff(BuffID.Ichor, 300); if (Main.rand.NextBool(3)) target.AddBuff(BuffID.Poisoned, 300); } }
@@ -3433,6 +3620,39 @@ namespace zhashi.Content
                     return false; // 拒绝死亡
                 }
             }
+            if (currentDemonessSequence <= 3 && unagingRebirthCooldown <= 0 && spiritualityCurrent >= 500)
+            {
+                spiritualityCurrent -= 500;
+                unagingRebirthCooldown = REBIRTH_COOLDOWN_MAX; // 进入5分钟冷却
+
+                // 1. 恢复满血
+                Player.statLife = Player.statLifeMax2;
+
+                // 2. 移除所有负面Buff
+                for (int i = 0; i < Player.MaxBuffs; i++)
+                {
+                    if (Main.debuff[Player.buffType[i]] && !Main.buffNoTimeDisplay[Player.buffType[i]])
+                    {
+                        Player.DelBuff(i);
+                        i--;
+                    }
+                }
+
+                // 3. 特效与提示
+                Main.NewText("镜面破碎，你从虚幻中归来！", 255, 20, 147);
+                Terraria.Audio.SoundEngine.PlaySound(SoundID.Shatter, Player.position);
+
+                // 生成大量玻璃碎片特效
+                for (int i = 0; i < 50; i++)
+                {
+                    Dust.NewDust(Player.position, Player.width, Player.height, DustID.Glass, 0, 0, 100, default, 2f);
+                }
+
+                // 4. 短暂无敌
+                Player.AddBuff(BuffID.ShadowDodge, 180); // 3秒闪避
+
+                return false; // 阻止死亡！
+            }
 
             return true; // 允许死亡 (如果上面都没触发)
         }
@@ -3596,7 +3816,7 @@ namespace zhashi.Content
             }
 
             if (LotMKeybinds.Moon_Gaze.JustPressed && currentMoonSequence <= 4) { if (darknessGazeCooldown <= 0 && TryConsumeSpirituality(200)) { bool hit = false; for (int i = 0; i < Main.maxNPCs; i++) { NPC npc = Main.npc[i]; if (npc.active && !npc.friendly && npc.getRect().Contains(Main.MouseWorld.ToPoint())) { int dmg = (int)(5000 * moonMult); if (currentMoonSequence <= 1 && !npc.boss) dmg = 999999; npc.SimpleStrikeNPC(dmg, 0, true, 0, DamageClass.Magic); npc.AddBuff(BuffID.Darkness, 600); npc.AddBuff(BuffID.ShadowFlame, 600); hit = true; } } if (hit) { SoundEngine.PlaySound(SoundID.Item104, Main.MouseWorld); darknessGazeCooldown = 1200; } } else if (darknessGazeCooldown > 0) Main.NewText($"凝视冷却: {darknessGazeCooldown / 60}s", 150, 150, 150); }
-            if (LotMKeybinds.Moon_Shackles.JustPressed && currentMoonSequence <= 7) {if (abyssShackleCooldown <= 0 && TryConsumeSpirituality(30)) { Vector2 dir = (Main.MouseWorld - Player.Center).SafeNormalize(Vector2.Zero) * 12f; Projectile.NewProjectile(Player.GetSource_FromThis(), Player.Center, dir, ModContent.ProjectileType<AbyssShackleProjectile>(), 20, 0f, Player.whoAmI); SoundEngine.PlaySound(SoundID.Item8, Player.position); abyssShackleCooldown = 180; } }
+            if (LotMKeybinds.Moon_Shackles.JustPressed && currentMoonSequence <= 7) { if (abyssShackleCooldown <= 0 && TryConsumeSpirituality(30)) { Vector2 dir = (Main.MouseWorld - Player.Center).SafeNormalize(Vector2.Zero) * 12f; Projectile.NewProjectile(Player.GetSource_FromThis(), Player.Center, dir, ModContent.ProjectileType<AbyssShackleProjectile>(), 20, 0f, Player.whoAmI); SoundEngine.PlaySound(SoundID.Item8, Player.position); abyssShackleCooldown = 180; } }
             if (LotMKeybinds.Moon_Grenade.JustPressed && currentMoonSequence <= 6)
             {
                 if (currentMoonSequence <= 2) { if (purifyCooldown <= 0 && TryConsumeSpirituality(1000)) { int radius = 60; int centerX = (int)(Player.Center.X / 16f); int centerY = (int)(Player.Center.Y / 16f); for (int x = centerX - radius; x <= centerX + radius; x++) for (int y = centerY - radius; y <= centerY + radius; y++) WorldGen.Convert(x, y, 0, 0, false, false); SoundEngine.PlaySound(SoundID.Item29, Player.position); Main.NewText("大地重获新生。", 100, 255, 100); purifyCooldown = 600; } }
@@ -3657,7 +3877,7 @@ namespace zhashi.Content
             if (LotMKeybinds.Giant_Armor.JustPressed && currentSequence <= 6) { if (!isMercuryForm && !dawnArmorBroken) dawnArmorActive = !dawnArmorActive; }
             if (currentSequence <= 5 && LotMKeybinds.Giant_Guardian.Current && !isMercuryForm)
             {
-                if (TryConsumeSpirituality(10.0f)) 
+                if (TryConsumeSpirituality(10.0f))
                 {
                     isGuardianStance = true;
                     if (Player.ownedProjectileCounts[ModContent.ProjectileType<GuardianShieldProjectile>()] < 1)
@@ -3667,7 +3887,7 @@ namespace zhashi.Content
                             Player.Center,
                             Vector2.Zero,
                             ModContent.ProjectileType<GuardianShieldProjectile>(),
-                            0, 
+                            0,
                             0,
                             Player.whoAmI
                         );
@@ -4509,7 +4729,7 @@ namespace zhashi.Content
                         else if (fateTheftCooldown > 0) Main.NewText($"命运窃取冷却中: {fateTheftCooldown / 60}s", 150, 150, 150);
                     }
                 }
-        // --- [单按 O] : 基础窃取模式 (序列9) ---
+                // --- [单按 O] : 基础窃取模式 (序列9) ---
                 else if (currentMarauderSequence <= 9)
                 {
                     stealMode = !stealMode;
@@ -4919,6 +5139,223 @@ namespace zhashi.Content
                     }
                 }
             }
+            if (LotMKeybinds.Demoness_MirrorSwitch.JustPressed && baseDemonessSequence <= 5)
+            {
+                ToggleMirrorClone();
+            }
+            if (baseDemonessSequence <= 5) // 只有痛苦魔女及以上可用
+            {
+                // 技能1：魔女之发 (按 X)
+                if (LotMKeybinds.Demoness_HairAttack.JustPressed)
+                {
+                    UseDemonessHair();
+                }
+
+                // 技能2：蛛丝操控 (按 C)
+                if (LotMKeybinds.Demoness_SilkControl.JustPressed)
+                {
+                    UseSpiderSilk();
+                }
+            }
+            if (baseDemonessSequence <= 4 && LotMKeybinds.Demoness_DespairSkill.JustPressed)
+            {
+                UseDespairIce();
+            }
+            if (baseDemonessSequence <= 3 && LotMKeybinds.Demoness_PetrifySkill.JustPressed)
+            {
+                UsePetrificationGaze();
+            }
+        }
+        public void UsePetrificationGaze()
+        {
+            int cost = 500;
+            if (spiritualityCurrent < cost)
+            {
+                Main.NewText("灵性不足！(需要 500)", 255, 50, 50);
+                return;
+            }
+            spiritualityCurrent -= cost;
+
+            Main.NewText("万物静籁，唯我不朽。", 200, 200, 200);
+
+            SoundStyle timeStopSound = new SoundStyle("zhashi/Assets/Sounds/TimeStop")
+            {
+                Volume = 1.0f,       // 音量 (0.0 到 1.0)，觉得吵可以调成 0.5f
+                Pitch = 0.0f,        // 音调 (-1.0 到 1.0)，0是原声，负数低沉，正数尖锐
+                PitchVariance = 0f,  // 音调随机浮动范围 (0表示每次都一样)
+                MaxInstances = 1,    // 限制同时播放的数量 (防止连按时声音重叠太吵)
+            };
+
+            // 2. 播放音效
+            SoundEngine.PlaySound(timeStopSound, Player.Center);
+
+            TimeStopScreenEffect.Activate(Player.Center);
+
+            // --- 3. 技能实际效果 (保持不变) ---
+            float range = 1500f;
+
+            foreach (NPC target in Main.ActiveNPCs)
+            {
+                if (target.friendly || target.dontTakeDamage) continue;
+
+                if (target.Distance(Player.Center) > range) continue;
+
+                // 施加时间凝固 Buff
+                target.AddBuff(ModContent.BuffType<Content.Buffs.Debuffs.TimeStagnationBuff>(), 300);
+
+                if (target.boss)
+                {
+                    target.AddBuff(BuffID.Ichor, 300);
+                }
+
+                // 怪物身上的特效：改为简单的灰色静止粒子，不再大量冒烟
+                for (int i = 0; i < 5; i++)
+                {
+                    int d = Dust.NewDust(target.position, target.width, target.height, DustID.GemDiamond, 0, 0, 100, Color.Gray, 1.0f);
+                    Main.dust[d].velocity *= 0.1f; // 几乎不动
+                    Main.dust[d].noGravity = true;
+                }
+            }
+        }
+
+        // 辅助方法：执行镜面分身
+        public void ToggleMirrorClone()
+        {
+            // 检查是否已经有分身
+            bool alreadyHasClone = false;
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile p = Main.projectile[i];
+                if (p.active && p.type == ModContent.ProjectileType<Projectiles.Demoness.MirrorCloneProjectile>() && p.owner == Player.whoAmI)
+                {
+                    p.Kill(); // 再次按下则关闭
+                    alreadyHasClone = true;
+                    Main.NewText("镜面破碎...", 150, 150, 150);
+                }
+            }
+
+            if (!alreadyHasClone)
+            {
+                // --- 修正点：变量名改为 spiritualityCurrent ---
+                int cost = 500;
+                if (spiritualityCurrent < cost)
+                {
+                    Main.NewText("灵性不足以维持镜面世界！(需要 500)", 255, 50, 50);
+                    return;
+                }
+
+                spiritualityCurrent -= cost; 
+
+                // 生成分身
+                Projectile.NewProjectile(
+                    Player.GetSource_FromThis(),
+                    Player.Center,
+                    Microsoft.Xna.Framework.Vector2.Zero,
+                    ModContent.ProjectileType<Projectiles.Demoness.MirrorCloneProjectile>(),
+                    0, // 伤害由分身自己计算，这里填0
+                    0,
+                    Player.whoAmI,
+                    Player.Center.X // ai[0] = 镜面轴X
+                );
+
+                Terraria.Audio.SoundEngine.PlaySound(Terraria.ID.SoundID.Item28, Player.Center);
+                Main.NewText("绝望魔女的倒影已浮现...", 200, 50, 200);
+            }
+        }
+        public void UseDespairIce()
+        {
+            int cost = 80;
+            if (spiritualityCurrent < cost)
+            {
+                Main.NewText("灵性不足！(需要 80)", 255, 50, 50);
+                return;
+            }
+            spiritualityCurrent -= cost;
+
+            // 向鼠标发射 5 枚黑焰冰晶 (扇形)
+            Vector2 target = Main.MouseWorld;
+            Vector2 direction = (target - Player.Center).SafeNormalize(Vector2.UnitX);
+
+            int damage = 200 + (int)(Player.GetDamage(DamageClass.Magic).Additive * 50);
+
+            // 发射 5 枚，角度扩散
+            for (int i = -2; i <= 2; i++)
+            {
+                Vector2 velocity = direction.RotatedBy(MathHelper.ToRadians(10 * i)) * 16f;
+
+                Projectile.NewProjectile(
+                    Player.GetSource_FromThis(),
+                    Player.Center,
+                    velocity,
+                    ModContent.ProjectileType<Projectiles.Demoness.DespairIceProjectile>(),
+                    damage,
+                    5f,
+                    Player.whoAmI
+                );
+            }
+            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item28, Player.Center);
+        }
+        public void UseDemonessHair()
+        {
+            // 灵性消耗：例如 50点
+            int cost = 200;
+            if (spiritualityCurrent < cost)
+            {
+                Main.NewText("灵性不足！(需要 200)", 255, 50, 50);
+                return;
+            }
+            spiritualityCurrent -= cost;
+
+            // 向鼠标方向发射 3 根头发
+            Vector2 target = Main.MouseWorld;
+            Vector2 direction = (target - Player.Center).SafeNormalize(Vector2.UnitX);
+
+            int damage = 100 + (int)(Player.GetDamage(DamageClass.Magic).Additive * 20); // 基础伤害100 + 魔法加成
+
+            for (int i = -1; i <= 1; i++) // 发射3根
+            {
+                Vector2 perturbedSpeed = direction.RotatedBy(MathHelper.ToRadians(10 * i)) * 12f; // 扇形散射
+
+                Projectile.NewProjectile(
+                    Player.GetSource_FromThis(),
+                    Player.Center,
+                    perturbedSpeed,
+                    ModContent.ProjectileType<Projectiles.Demoness.DemonessHairProjectile>(),
+                    damage,
+                    3f,
+                    Player.whoAmI
+                );
+            }
+            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item39, Player.Center); // 鞭子挥舞声
+        }
+
+        public void UseSpiderSilk()
+        {
+            // 灵性消耗：例如 30点
+            int cost = 30;
+            if (spiritualityCurrent < cost)
+            {
+                Main.NewText("灵性不足！(需要 30)", 255, 50, 50);
+                return;
+            }
+            spiritualityCurrent -= cost;
+
+            // 向鼠标方向发射一团蛛丝
+            Vector2 target = Main.MouseWorld;
+            Vector2 velocity = (target - Player.Center).SafeNormalize(Vector2.UnitX) * 14f;
+
+            int damage = 60 + (int)(Player.GetDamage(DamageClass.Magic).Additive * 10);
+
+            Projectile.NewProjectile(
+                Player.GetSource_FromThis(),
+                Player.Center,
+                velocity,
+                ModContent.ProjectileType<Projectiles.Demoness.DemonessSpiderSilkProjectile>(),
+                damage,
+                0f, // 蛛丝主要靠控制，击退低
+                Player.whoAmI
+            );
+            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item17, Player.Center); // 投掷声
         }
 
         // 辅助方法：执行奇迹愿望
@@ -5067,7 +5504,6 @@ namespace zhashi.Content
             // 药师序列9以上：强制清除所有毒素
             if (currentMoonSequence <= 9)
             {
-                // 只要身上有毒，下一帧直接删掉
                 if (Player.HasBuff(BuffID.Poisoned)) Player.ClearBuff(BuffID.Poisoned);
                 if (Player.HasBuff(BuffID.Venom)) Player.ClearBuff(BuffID.Venom);
             }
@@ -5756,19 +6192,16 @@ namespace zhashi.Content
         NPCID.UndeadViking,      // 不死维京人
         NPCID.Nymph,             // 宁芙 (迷失女孩) - 可选
 
-        // --- 骷髅/地牢变种 ---
         NPCID.BoneLee,           // 骷髅李
         NPCID.AngryBones,        // 愤怒骷髅
         NPCID.AngryBonesBig,
         NPCID.AngryBonesBigHelmet,
         NPCID.AngryBonesBigMuscle,
         
-        // 装甲骷髅家族
         NPCID.BlueArmoredBones, NPCID.BlueArmoredBonesMace, NPCID.BlueArmoredBonesNoPants, NPCID.BlueArmoredBonesSword,
         NPCID.HellArmoredBones, NPCID.HellArmoredBonesMace, NPCID.HellArmoredBonesSpikeShield, NPCID.HellArmoredBonesSword,
         NPCID.RustyArmoredBonesFlail, NPCID.RustyArmoredBonesAxe, NPCID.RustyArmoredBonesSword,
         
-        // 法师类
         NPCID.DarkCaster,        //哪怕是暗黑法师
         NPCID.DiabolistRed,      // 魔教徒 (可能是你说的撒旦骷髅?)
         NPCID.DiabolistWhite,

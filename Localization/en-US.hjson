@@ -857,6 +857,21 @@ Mods: {
 				DisplayName: Pleasure Demoness Potion
 				Tooltip: ""
 			}
+
+			AfflictionDemonessPotion: {
+				Tooltip: ""
+				DisplayName: Affliction Demoness Potion
+			}
+
+			DespairDemonessPotion: {
+				DisplayName: Despair Demoness Potion
+				Tooltip: ""
+			}
+
+			UnagingDemonessPotion: {
+				Tooltip: ""
+				DisplayName: Unaging Demoness Potion
+			}
 		}
 
 		# ==========================================
@@ -908,6 +923,10 @@ Mods: {
 			ExorcismBulletProjectile.DisplayName: Exorcism Bullet Projectile
 			DemonessMirrorShard.DisplayName: Demoness Mirror Shard
 			DemonessSpiderSilk.DisplayName: Demoness Spider Silk
+			MirrorCloneProjectile.DisplayName: Mirror Clone Projectile
+			DemonessHairProjectile.DisplayName: Demoness Hair Projectile
+			DemonessSpiderSilkProjectile.DisplayName: Demoness Spider Silk Projectile
+			DespairIceProjectile.DisplayName: Despair Ice Projectile
 		}
 
 		# ==========================================
@@ -1031,6 +1050,16 @@ Mods: {
 				Description: Mods.zhashi.Buffs.SunSuppressionDebuff.Description
 				DisplayName: Sun Suppression Debuff
 			}
+
+			AfflictionCurseBuff: {
+				Description: Mods.zhashi.Buffs.AfflictionCurseBuff.Description
+				DisplayName: Affliction Curse Buff
+			}
+
+			TimeStagnationBuff: {
+				Description: Mods.zhashi.Buffs.TimeStagnationBuff.Description
+				DisplayName: Time Stagnation Buff
+			}
 		}
 
 		# ==========================================
@@ -1125,6 +1154,12 @@ Mods: {
 			"魔女: 魅惑.DisplayName": 魔女: 魅惑
 			"魔女: 蛛丝.DisplayName": 魔女: 蛛丝
 			"魔女: 镜子替身.DisplayName": 魔女: 镜子替身
+			"魔女: 镜子分身.DisplayName": 魔女: 镜子分身
+			"魔女: 头发攻击.DisplayName": 魔女: 头发攻击
+			"魔女: 蛛丝控制.DisplayName": 魔女: 蛛丝控制
+			"魔女: 黑焱冰晶.DisplayName": 魔女: 黑焱冰晶
+			"魔女: 石化.DisplayName": 魔女: 石化
+			"魔女: 时间石化.DisplayName": 魔女: 时间石化
 		}
 
 		# ==========================================

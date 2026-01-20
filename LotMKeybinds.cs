@@ -70,8 +70,11 @@ namespace zhashi
 
         // --- 魔女途径  [新增] ---
         public static ModKeybind Demoness_Mirror { get; private set; }   // 核心技能：镜子替身
-        public static ModKeybind Demoness_Web { get; private set; }      // 备用：蛛丝生成
-        public static ModKeybind Demoness_Charm { get; private set; }    // 备用：魅惑
+        public static ModKeybind Demoness_MirrorSwitch { get; private set; }
+        public static ModKeybind Demoness_HairAttack { get; private set; }   // 头发攻击
+        public static ModKeybind Demoness_SilkControl { get; private set; }  // 蛛丝控制
+        public static ModKeybind Demoness_DespairSkill { get; private set; }
+        public static ModKeybind Demoness_PetrifySkill { get; private set; }
 
         // ===================================================
         // 2. 注册按键 (Load)
@@ -140,8 +143,11 @@ namespace zhashi
 
             // Demoness
             Demoness_Mirror = KeybindLoader.RegisterKeybind(Mod, "魔女: 镜子替身", "Q");
-            Demoness_Web = KeybindLoader.RegisterKeybind(Mod, "魔女: 蛛丝", "Z");
-            Demoness_Charm = KeybindLoader.RegisterKeybind(Mod, "魔女: 魅惑", "C");
+            Demoness_MirrorSwitch = KeybindLoader.RegisterKeybind(Mod, "魔女: 镜子分身", "Z"); // 默认按 Z 键
+            Demoness_HairAttack = KeybindLoader.RegisterKeybind(Mod, "魔女: 头发攻击", "X");
+            Demoness_SilkControl = KeybindLoader.RegisterKeybind(Mod, "魔女: 蛛丝控制", "C");
+            Demoness_DespairSkill = KeybindLoader.RegisterKeybind(Mod, "魔女: 黑焱冰晶", "V");
+            Demoness_PetrifySkill = KeybindLoader.RegisterKeybind(Mod, "魔女: 时间石化", "G");
 
         }
 
@@ -212,8 +218,11 @@ namespace zhashi
 
             //魔女
             Demoness_Mirror = null;
-            Demoness_Web = null;
-            Demoness_Charm = null;
+            Demoness_MirrorSwitch = null;
+            Demoness_HairAttack = null;
+            Demoness_SilkControl = null;
+            Demoness_DespairSkill = null;
+            Demoness_PetrifySkill = null;
         }
     }
 }

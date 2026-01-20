@@ -290,6 +290,9 @@ namespace zhashi.Content.UI
                     case 8: return ModContent.ItemType<InstigatorPotion>();
                     case 7: return ModContent.ItemType<WitchPotion>();
                     case 6: return ModContent.ItemType<PleasureDemonessPotion>();
+                    case 5: return ModContent.ItemType<AfflictionDemonessPotion>();
+                    case 4: return ModContent.ItemType<DespairDemonessPotion>();
+                    case 3: return ModContent.ItemType<UnagingDemonessPotion>();     // 正义导师
                     default: return ModContent.ItemType<AssassinPotion>();
                 }
             }
@@ -1081,20 +1084,74 @@ namespace zhashi.Content.UI
                     text += "- [魔法] 魔法伤害+20%\n";
                     text += "- [诅咒] 对负面状态缠身的敌人造成爆发伤害\n";
                 }
-                if (p.currentDemonessSequence <= 6)
+                if (p.currentDemonessSequence <= 6) // 欢愉魔女
                 {
                     text += $"序列六: [c/FF00FF:欢愉魔女]\n";
                     text += "- [被动] 魅惑EX: 仇恨极低 / 魔法暴击+10%\n";
-
                     text += "- [被动] 欢愉之触: 攻击必定附加剧毒与虚弱\n";
-
                     text += "- [特效] 魔女蛛丝: 攻击几率生成蛛丝定身敌人\n";
 
                     string keyName = "未绑定";
-                    if (LotMKeybinds.Demoness_Mirror.GetAssignedKeys().Count > 0)
-                        keyName = LotMKeybinds.Demoness_Mirror.GetAssignedKeys()[0];
+                    if (LotMKeybinds.Demoness_MirrorSwitch != null && LotMKeybinds.Demoness_MirrorSwitch.GetAssignedKeys().Count > 0)
+                    {
+                        keyName = LotMKeybinds.Demoness_MirrorSwitch.GetAssignedKeys()[0];
+                    }
+                    text += $"- [主动] 镜子替身 (Z键): 消耗灵性瞬移\n";
 
-                    text += $"- [主动] 镜子替身: 消耗灵性瞬移 ({keyName}) (CD:2s)\n";
+                    if (p.currentDemonessSequence == 6)
+                    {
+                        int currentTimer = p.afflictionRitualTimer; // 活火站立时间
+                        int targetTimer = 3600; 
+                        int currentMins = currentTimer / 3600;
+
+                        bool isRitualReady = currentTimer >= targetTimer;
+                        string ritualStatus = isRitualReady ? "[肉体已重铸]" : $"[烈火焚身: {currentMins}/1 分钟]";
+
+                        string colorHex = isRitualReady ? "00FF00" : "FFA500";
+
+                        text += $"\n[c/{colorHex}:[晋升仪式] 痛苦魔女]\n";
+                        text += $"  条件: {ritualStatus}\n";
+                        text += "  (提示: 站在活火块上忍受灼烧1分钟)\n";
+                    }
+                }
+                if (p.currentDemonessSequence <= 5) // 痛苦魔女
+                {
+                    text += $"序列五: [c/FF1493:痛苦魔女]\n";
+
+                    text += "- [被动] 痛楚光环 / 免疫猛毒，自动散播疾病\n";
+                    text += "- [技能] 镜面分身 (Z键): 消耗灵性制造虚幻倒影\n";
+                    text += "- [技能] 魔女之发 (X键): 自动追踪的黑焰发丝\n";
+                    text += "- [技能] 蛛丝操控 (C键): 投掷蛛网定身敌人\n";
+
+                    if (p.currentDemonessSequence == 5)
+                    {
+                        string status = "[需制造灾难]";
+
+                        text += $"\n[c/FFA500:[晋升仪式] 绝望魔女]\n";
+                        text += $"  条件: {status}\n";
+                        text += "  (提示: 散播绝望，在盛大的灾难中收割生命)\n";
+                    }
+                }
+                if (p.currentDemonessSequence <= 4) // 绝望魔女
+                {
+                    text += $"序列四: [c/DC143C:绝望魔女 (半神)]\n";
+                    string keyName = "未绑定";
+                    if (LotMKeybinds.Demoness_DespairSkill != null && LotMKeybinds.Demoness_DespairSkill.GetAssignedKeys().Count > 0)
+                    {
+                        keyName = LotMKeybinds.Demoness_DespairSkill.GetAssignedKeys()[0];
+                    }
+                    text += "- [被动] 绝望灾祸: 瘟疫范围翻倍，附加黑焰/冻伤/破甲\n";
+                    text += "- [被动] 半神之躯: 获得15%免伤与极强自愈，免疫黑火\n";
+                    text += $"- [技能] 绝望冰晶 ({keyName}键): 消耗灵性爆发黑焰冰弹\n";
+                    if (p.currentDemonessSequence == 4)
+                    {
+                        bool condition = false;
+                        string status = "[需探寻不老之谜]";
+
+                        text += $"\n[c/FFA500:[晋升仪式] 不老魔女]\n";
+                        text += $"  条件: {status}\n";
+                        text += "  (提示: 追寻永恒，让时光在你身上停驻)\n";
+                    }
                 }
             }
 

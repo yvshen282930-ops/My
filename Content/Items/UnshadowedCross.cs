@@ -66,6 +66,7 @@ namespace zhashi.Content.Items
                 DowngradePathway(ref modPlayer.baseFoolSequence, ref modPlayer.currentFoolSequence, "愚者");
                 DowngradePathway(ref modPlayer.baseMarauderSequence, ref modPlayer.currentMarauderSequence, "错误");
                 DowngradePathway(ref modPlayer.baseSunSequence, ref modPlayer.currentSunSequence, "太阳");
+                DowngradePathway(ref modPlayer.baseDemonessSequence, ref modPlayer.currentDemonessSequence, "魔女");
 
                 // 如果有变化
                 if (loweredAny)
