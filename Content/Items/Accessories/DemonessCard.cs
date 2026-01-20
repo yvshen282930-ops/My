@@ -36,10 +36,18 @@ namespace zhashi.Content.Items.Accessories
             // [痛苦之刺]
             player.starCloakItem = Item;
 
-            // [魅惑]
-            // 【核心修复】brainOfConfusion 已改为 brainOfConfusionItem
-            // 这样写才能正确触发混乱之脑的闪避和混乱效果
+            // [魅惑] - 混乱之脑
             player.brainOfConfusionItem = Item;
+
+            // ======================================================
+            // [新增功能] 女巫扫帚权限
+            // ======================================================
+            if (mp.currentDemonessSequence <= 9)
+            {
+                // 只负责开启权限，具体按键逻辑交给 LotMPlayer.PostUpdate 处理
+                // 这样能完美解决“按键无效”或“无限上下马”的问题
+                mp.canUseWitchBroom = true;
+            }
         }
     }
 }

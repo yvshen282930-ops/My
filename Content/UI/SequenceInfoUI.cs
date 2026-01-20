@@ -29,38 +29,52 @@ namespace zhashi.Content.UI
 
         private UIPanel _infoPanel;
         private UIList _textList;
-        private UIScrollbar _scrollbar;
+        private UIScrollbar _scrollbar; // 垂直滚动条
+        private SimpleHorizontalScrollbar _hScrollbar; // 水平滚动条
 
         private string _cachedText = "";
         private int _lastPotionId = -1;
-        private int _hoverTimer = 0; // 悬停缓冲计时器
+        private int _hoverTimer = 0;
 
         public override void OnInitialize()
         {
             _infoPanel = new UIPanel();
             _infoPanel.SetPadding(15);
-            // 透明黑色背景，无边框
-            _infoPanel.BackgroundColor = new Color(0, 0, 0) * 0.6f;
-            _infoPanel.BorderColor = Color.Transparent;
+            _infoPanel.BackgroundColor = new Color(20, 20, 35) * 0.9f; // 深蓝灰背景，更有质感
+            _infoPanel.BorderColor = Color.Black;
+            _infoPanel.OverflowHidden = true; // 隐藏超出范围的内容
 
-            _infoPanel.Left.Set(-9999, 0f); // 默认隐藏
+            _infoPanel.Left.Set(-9999, 0f);
             _infoPanel.Top.Set(TOP_MARGIN, 0f);
             _infoPanel.Width.Set(450, 0f);
             _infoPanel.Height.Set(400, 0f);
 
+            // 1. 垂直滚动条 (放在右侧)
             _scrollbar = new UIScrollbar();
-            _scrollbar.Height.Set(0, 1f);
+            _scrollbar.Height.Set(-35, 1f); // 【调整】底部留出 35 像素给水平条
             _scrollbar.Left.Set(-10, 1f);
             _scrollbar.Top.Set(0, 0f);
 
+            // 2. 水平滚动条 (放在底部)
+            _hScrollbar = new SimpleHorizontalScrollbar();
+            _hScrollbar.Height.Set(24, 0f);
+            _hScrollbar.Width.Set(-30, 1f); // 宽度减去垂直条的空间
+            // 【核心修复】Top 设置为 -30 (从底部往上30像素)，之前是 0 导致跑出去了
+            _hScrollbar.Top.Set(-30, 1f);
+            _hScrollbar.Left.Set(0, 0f);
+
+            // 3. 文本列表
             _textList = new UIList();
             _textList.Width.Set(-25, 1f);
-            _textList.Height.Set(0, 1f);
+            // 【调整】列表高度减小，防止遮挡底部的水平滚动条
+            _textList.Height.Set(-40, 1f);
             _textList.ListPadding = 5f;
             _textList.SetScrollbar(_scrollbar);
 
+            // 注意 Append 顺序：先加列表，再加滚动条
             _infoPanel.Append(_textList);
             _infoPanel.Append(_scrollbar);
+            _infoPanel.Append(_hScrollbar);
 
             Append(_infoPanel);
         }
@@ -68,18 +82,23 @@ namespace zhashi.Content.UI
         private class UIColoredText : UIElement
         {
             private string _text;
+            public float TextWidth { get; private set; }
+
             public UIColoredText(string text) { SetText(text); }
             public void SetText(string text)
             {
                 _text = text;
-                Vector2 size = ChatManager.GetStringSize(FontAssets.MouseText.Value, _text, Vector2.One);
+                // 计算文本宽度 (强制单行不换行测量)
+                Vector2 size = ChatManager.GetStringSize(FontAssets.MouseText.Value, _text, Vector2.One, -1f);
                 this.Width.Set(size.X, 0f);
                 this.Height.Set(size.Y, 0f);
+                this.TextWidth = size.X;
             }
             protected override void DrawSelf(SpriteBatch spriteBatch)
             {
                 if (string.IsNullOrEmpty(_text)) return;
                 CalculatedStyle dimensions = GetInnerDimensions();
+                // 绘制文本
                 ChatManager.DrawColorCodedStringWithShadow(spriteBatch, FontAssets.MouseText.Value, _text, dimensions.Position(), Color.White, 0f, Vector2.Zero, Vector2.One);
             }
         }
@@ -95,13 +114,13 @@ namespace zhashi.Content.UI
             int itemType = GetCurrentSequencePotionID(modPlayer);
             if (itemType <= 0) return;
 
-            // 1. 绘制图标
+            // 1. 绘制魔药图标
             Main.instance.LoadItem(itemType);
             Texture2D texture = TextureAssets.Item[itemType].Value;
             Vector2 drawPos = new Vector2(LEFT_MARGIN, TOP_MARGIN);
             Rectangle iconRect = new Rectangle((int)drawPos.X, (int)drawPos.Y, ICON_SIZE, ICON_SIZE);
 
-            Utils.DrawInvBG(spriteBatch, iconRect, new Color(20, 20, 40, 100));
+            Utils.DrawInvBG(spriteBatch, iconRect, new Color(20, 20, 40, 200));
 
             Rectangle frame = texture.Frame();
             float scale = 1f;
@@ -110,72 +129,77 @@ namespace zhashi.Content.UI
             Vector2 center = drawPos + new Vector2(ICON_SIZE / 2f, ICON_SIZE / 2f);
             spriteBatch.Draw(texture, center, frame, Color.White, 0f, origin, scale, SpriteEffects.None, 0f);
 
-            // --- 2. 悬停检测逻辑 ---
+            // 2. 鼠标悬停逻辑
             Point mousePoint = Main.MouseScreen.ToPoint();
             bool isHoveringIcon = iconRect.Contains(mousePoint);
 
-            // 如果鼠标在图标上，给计时器充能，并定位面板
             if (isHoveringIcon)
             {
                 _infoPanel.Left.Set(LEFT_MARGIN + ICON_SIZE + 2, 0f);
                 _infoPanel.Recalculate();
-                _hoverTimer = 15; // 续命 0.25秒
+                _hoverTimer = 15;
             }
 
-            // 如果鼠标在面板上，持续充能
-            if (_infoPanel.IsMouseHovering)
+            if (_infoPanel.IsMouseHovering || _hScrollbar.IsDragging)
             {
                 _hoverTimer = 15;
                 player.mouseInterface = true;
             }
 
-            // --- 3. 面板内容更新逻辑 (修复Bug的核心) ---
             if (_hoverTimer > 0)
             {
                 _hoverTimer--;
 
-                // [修复]：每一帧都必须获取最新文本，无论鼠标在哪里
-                // 这样才能实时显示冷却时间变化 (5s -> 4s) 和技能开启状态
                 string fullText = GetSequenceDescription(modPlayer);
-
-                // 只有当文本内容真的变了才去操作UI，节省性能
                 if (fullText != _cachedText)
                 {
                     bool isSamePotion = (itemType == _lastPotionId);
-
-                    // 如果是同一个魔药（只是倒计时变了），记录当前滚动条位置
                     float previousScroll = _scrollbar.ViewPosition;
 
                     _cachedText = fullText;
                     _lastPotionId = itemType;
 
                     _textList.Clear();
+                    // 这里传入文本
                     _textList.Add(new UIColoredText(_cachedText));
-
-                    // 强制刷新列表布局，让滚动条知道新内容有多高
                     _textList.Recalculate();
 
-                    // 如果魔药没变，恢复之前的滚动位置（防止倒计时刷新时画面跳动）
-                    // 如果换了魔药，就自动回到顶部
-                    if (isSamePotion)
+                    if (isSamePotion) _scrollbar.ViewPosition = previousScroll;
+                    else _scrollbar.ViewPosition = 0f;
+                }
+
+                // =========================================================
+                // 【水平滚动核心逻辑修复】
+                // =========================================================
+                float maxTextWidth = 0f;
+                foreach (var element in _textList)
+                {
+                    if (element is UIColoredText textElement)
                     {
-                        _scrollbar.ViewPosition = previousScroll;
-                    }
-                    else
-                    {
-                        _scrollbar.ViewPosition = 0f;
+                        if (textElement.TextWidth > maxTextWidth) maxTextWidth = textElement.TextWidth;
                     }
                 }
 
-                _infoPanel.Recalculate();
+                float listVisibleWidth = _infoPanel.GetInnerDimensions().Width;
+
+                // 【修复点】：增加 100 像素的额外 Padding，确保最右侧能完全显示
+                // 之前只加20是不够的，因为UIList本身可能有内边距
+                float contentWidth = maxTextWidth + 120f;
+
+                // 设置滚动条
+                _hScrollbar.SetView(listVisibleWidth, contentWidth);
+
+                // 应用偏移
+                _textList.Left.Set(-_hScrollbar.ViewPosition, 0f);
+                _textList.Recalculate();
+
                 base.Draw(spriteBatch);
             }
             else
             {
-                _infoPanel.Left.Set(-9999, 0f); // 隐藏
+                _infoPanel.Left.Set(-9999, 0f);
             }
         }
-
         // --- 辅助方法：获取当前序列对应的魔药 ID ---
         private int GetCurrentSequencePotionID(LotMPlayer p)
         {
@@ -292,7 +316,9 @@ namespace zhashi.Content.UI
                     case 6: return ModContent.ItemType<PleasureDemonessPotion>();
                     case 5: return ModContent.ItemType<AfflictionDemonessPotion>();
                     case 4: return ModContent.ItemType<DespairDemonessPotion>();
-                    case 3: return ModContent.ItemType<UnagingDemonessPotion>();     // 正义导师
+                    case 3: return ModContent.ItemType<UnagingDemonessPotion>();
+                    case 2: return ModContent.ItemType<CatastropheDemonessPotion>();
+                    case 1: return ModContent.ItemType<ApocalypseDemonessPotion>();
                     default: return ModContent.ItemType<AssassinPotion>();
                 }
             }
@@ -1101,11 +1127,11 @@ namespace zhashi.Content.UI
                     if (p.currentDemonessSequence == 6)
                     {
                         int currentTimer = p.afflictionRitualTimer; // 活火站立时间
-                        int targetTimer = 3600; 
-                        int currentMins = currentTimer / 3600;
+                        int targetTimer = 3600;
+                        int currentMins = currentTimer / 60; // 显示秒数更直观
 
                         bool isRitualReady = currentTimer >= targetTimer;
-                        string ritualStatus = isRitualReady ? "[肉体已重铸]" : $"[烈火焚身: {currentMins}/1 分钟]";
+                        string ritualStatus = isRitualReady ? "[肉体已重铸]" : $"[烈火焚身: {currentMins}/60 秒]";
 
                         string colorHex = isRitualReady ? "00FF00" : "FFA500";
 
@@ -1145,7 +1171,6 @@ namespace zhashi.Content.UI
                     text += $"- [技能] 绝望冰晶 ({keyName}键): 消耗灵性爆发黑焰冰弹\n";
                     if (p.currentDemonessSequence == 4)
                     {
-                        bool condition = false;
                         string status = "[需探寻不老之谜]";
 
                         text += $"\n[c/FFA500:[晋升仪式] 不老魔女]\n";
@@ -1153,9 +1178,256 @@ namespace zhashi.Content.UI
                         text += "  (提示: 追寻永恒，让时光在你身上停驻)\n";
                     }
                 }
+                if (p.currentDemonessSequence <= 3) // 不老魔女
+                {
+                    text += $"序列三: [c/B22222:不老魔女 (圣者)]\n";
+
+                    string keyName = "未绑定";
+                    if (LotMKeybinds.Demoness_PetrifySkill != null && LotMKeybinds.Demoness_PetrifySkill.GetAssignedKeys().Count > 0)
+                    {
+                        keyName = LotMKeybinds.Demoness_PetrifySkill.GetAssignedKeys()[0];
+                    }
+
+                    text += "- [被动] 青春永驻: 极高的生命再生 / 免疫衰老与虚弱\n";
+
+                    string rebirthStatus = (p.unagingRebirthCooldown > 0)
+                        ? $"[c/FF0000:冷却中 {(p.unagingRebirthCooldown / 60f):F1}s]" // 显示小数
+                        : "[c/00FF00:就绪]";
+                    text += $"- [被动] 镜面重生: 消耗灵性抵挡致死伤害 {rebirthStatus}\n";
+
+                    text += "- [被动] 欢愉汲取: 攻击有概率吸取敌人生命\n";
+
+                    int currentCD = p.PetrificationGazeCD;
+                    string skillStatus;
+
+                    if (currentCD > 0)
+                    {
+                        // 【优化】使用浮点除法并保留1位小数，实现实时跳动效果
+                        skillStatus = $"[c/FF4500:冷却: {(currentCD / 60f):F1}s]";
+                    }
+                    else
+                    {
+                        if (p.spiritualityCurrent >= 500)
+                            skillStatus = "[c/00FF00:就绪]";
+                        else
+                            skillStatus = "[c/808080:灵性不足]";
+                    }
+
+                    text += $"- [技能] 石化凝视 ({keyName}键): 时停并石化万物 {skillStatus}\n";
+
+                    if (p.currentDemonessSequence == 3)
+                    {
+                        text += $"\n[c/FF4500:[晋升仪式] 灾难魔女]\n";
+                        text += "  条件: [需散播毁灭与寒冷]\n";
+                        text += "  (提示: 只有在大规模的死亡与冻结中，灾难的魔药才会凝结)\n";
+                    }
+                }
+                if (p.currentDemonessSequence <= 2) // 灾难魔女
+                {
+                    text += $"序列二: [c/DC143C:灾难魔女 (天使)]\n";
+                    string keyName = "未绑定";
+                    if (LotMKeybinds.Demoness_Catastrophe != null && LotMKeybinds.Demoness_Catastrophe.GetAssignedKeys().Count > 0)
+                    {
+                        keyName = LotMKeybinds.Demoness_Catastrophe.GetAssignedKeys()[0];
+                    }
+
+                    text += "- [被动] 灾难之躯: 免疫火焰、寒冰、雷电、窒息与强风\n";
+
+                    bool weatherBuffActive = Main.raining || Main.windSpeedCurrent > 20 || p.Player.ZoneSnow || p.Player.ZoneDesert;
+                    string weatherStatus = weatherBuffActive ? "[c/00FF00:已激活]" : "[c/808080:未激活]";
+                    text += $"- [被动] 自然主宰: 在恶劣天气下属性大幅提升 {weatherStatus}\n";
+
+                    text += "- [被动] 毁灭本源: 魔法伤害+60% / 极高生命回复\n";
+                    int currentCD = p.catastropheCooldown;
+                    string skillStatus;
+
+                    if (currentCD > 0)
+                    {
+                        // 【优化】保留1位小数，实时显示
+                        skillStatus = $"[c/FF0000:冷却中: {(currentCD / 60f):F1}s]";
+                    }
+                    else
+                    {
+                        if (p.spiritualityCurrent >= 5000)
+                            skillStatus = "[c/00FF00:就绪]";
+                        else
+                            skillStatus = "[c/808080:灵性不足 (需5000)]";
+                    }
+
+                    text += $"- [大招] 天灾降临 ({keyName}键): 引发全图气象灾难与毁灭打击 {skillStatus}\n";
+
+                    if (p.currentDemonessSequence == 2)
+                    {
+                        text += $"\n[c/FF4500:[晋升仪式] 末日魔女]\n";
+                        text += "  条件: [需毁灭旧时代的象征]\n";
+                        text += "  (提示: 让真正的末日降临于世)\n";
+                    }
+                }
+                if (p.currentDemonessSequence <= 1) // 末日魔女
+                {
+                    // 真正的神性颜色 (暗紫/黑红)
+                    text += $"序列一: [c/800080:末日魔女 (从神)]\n";
+
+                    // 获取按键
+                    string keyName = "未绑定";
+                    if (LotMKeybinds.Demoness_Apocalypse != null && LotMKeybinds.Demoness_Apocalypse.GetAssignedKeys().Count > 0)
+                    {
+                        keyName = LotMKeybinds.Demoness_Apocalypse.GetAssignedKeys()[0];
+                    }
+
+                    // 被动
+                    text += "- [被动] 神性之躯: 免疫几乎所有负面状态\n";
+                    text += "- [被动] 末日威压: 普通敌人无法行动，Boss攻击力大幅削减\n";
+                    text += "- [被动] 终结: 魔法消耗减半，受到伤害减免40%\n";
+
+                    // 大招 CD 显示
+                    int currentCD = p.apocalypseCooldown;
+                    string skillStatus;
+                    if (currentCD > 0)
+                    {
+                        int minutes = currentCD / 3600;
+                        // 这里虽然没有小数，但秒数每秒都在变，所以也是实时的
+                        int seconds = (currentCD % 3600) / 60;
+                        skillStatus = $"[c/FF0000:冷却中: {minutes}m {seconds}s]";
+                    }
+                    else
+                    {
+                        if (p.spiritualityCurrent >= 10000)
+                            skillStatus = "[c/00FF00:就绪]";
+                        else
+                            skillStatus = "[c/808080:灵性不足 (需10000)]";
+                    }
+
+                    text += $"- [权柄] 末日降临 ({keyName}键): 冻结时空，抹除弹幕，处决众生 {skillStatus}\n";
+                }
             }
 
             return text;
+        }
+    }
+    // ========================================================================
+    // 【美化版】自定义水平滚动条
+    // ========================================================================
+    public class SimpleHorizontalScrollbar : UIElement
+    {
+        public float ViewPosition = 0f;
+        public bool IsDragging = false;
+
+        private float _viewSize = 1f;
+        private float _maxViewSize = 20f;
+        private float _dragOffsetX = 0f;
+
+        public SimpleHorizontalScrollbar()
+        {
+            this.Height.Set(24f, 0f); // 稍微加高
+        }
+
+        public void SetView(float viewSize, float maxViewSize)
+        {
+            _viewSize = viewSize;
+            _maxViewSize = maxViewSize;
+            ViewPosition = MathHelper.Clamp(ViewPosition, 0f, Math.Max(0f, _maxViewSize - _viewSize));
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
+
+            if (IsDragging)
+            {
+                if (!Main.mouseLeft)
+                {
+                    IsDragging = false;
+                }
+                else
+                {
+                    CalculatedStyle inner = GetInnerDimensions();
+                    float trackWidth = inner.Width;
+                    float handleWidth = GetHandleWidth();
+                    float availableWidth = trackWidth - handleWidth;
+
+                    if (availableWidth > 0)
+                    {
+                        float mouseX = Main.mouseX - inner.X - _dragOffsetX;
+                        float pct = mouseX / availableWidth;
+                        pct = MathHelper.Clamp(pct, 0f, 1f);
+                        ViewPosition = pct * (_maxViewSize - _viewSize);
+                    }
+                }
+            }
+        }
+
+        public override void LeftMouseDown(UIMouseEvent evt)
+        {
+            base.LeftMouseDown(evt);
+            CalculatedStyle inner = GetInnerDimensions();
+
+            float trackWidth = inner.Width;
+            float handleWidth = GetHandleWidth();
+            float availableWidth = trackWidth - handleWidth;
+            float scrollPct = 0f;
+            if (_maxViewSize > _viewSize)
+                scrollPct = ViewPosition / (_maxViewSize - _viewSize);
+
+            float handleX = inner.X + scrollPct * availableWidth;
+
+            // 扩大点击判定范围，防止点不到
+            if (evt.MousePosition.X >= handleX && evt.MousePosition.X <= handleX + handleWidth)
+            {
+                IsDragging = true;
+                _dragOffsetX = evt.MousePosition.X - handleX;
+            }
+            // 点击轨道空处直接跳转 (类似原版)
+            else if (evt.MousePosition.X > inner.X && evt.MousePosition.X < inner.X + inner.Width)
+            {
+                if (evt.MousePosition.X < handleX)
+                    ViewPosition = Math.Max(0f, ViewPosition - _viewSize); // Page Up
+                else
+                    ViewPosition = Math.Min(_maxViewSize - _viewSize, ViewPosition + _viewSize); // Page Down
+            }
+        }
+
+        private float GetHandleWidth()
+        {
+            CalculatedStyle inner = GetInnerDimensions();
+            if (_maxViewSize <= _viewSize) return inner.Width;
+            // 最小宽度限制为 30，防止滑块太小
+            return Math.Max(30f, inner.Width * (_viewSize / _maxViewSize));
+        }
+
+        protected override void DrawSelf(SpriteBatch spriteBatch)
+        {
+            CalculatedStyle inner = GetInnerDimensions();
+
+            // 1. 绘制轨道背景 (更有质感的深色槽)
+            // 使用 Utils.DrawInvBG 绘制类似物品栏的背景风格
+            Rectangle trackRect = new Rectangle((int)inner.X, (int)inner.Y + 4, (int)inner.Width, 16);
+            Utils.DrawInvBG(spriteBatch, trackRect, new Color(20, 20, 30, 200));
+
+            // 如果内容不需要滚动，就不画滑块
+            if (_maxViewSize <= _viewSize) return;
+
+            // 2. 计算滑块位置
+            float trackWidth = inner.Width;
+            float handleWidth = GetHandleWidth();
+            float availableWidth = trackWidth - handleWidth;
+            float scrollPct = ViewPosition / (_maxViewSize - _viewSize);
+            float handleX = inner.X + scrollPct * availableWidth;
+
+            // 3. 绘制滑块 (仿原版风格)
+            Rectangle handleRect = new Rectangle((int)handleX, (int)inner.Y + 4, (int)handleWidth, 16);
+
+            // 滑块颜色：拖拽/悬停时变亮
+            Color handleColor = IsDragging || IsMouseHovering ? new Color(255, 255, 200) : new Color(200, 200, 200);
+
+            // 绘制主体
+            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, handleRect, handleColor);
+
+            // 绘制边框 (让它看起来立体一点)
+            Utils.DrawBorderStringFourWay(spriteBatch, FontAssets.ItemStack.Value, "", handleX, inner.Y + 6, Color.Black, Color.Transparent, Vector2.Zero);
+
+            // 或者简单地画一个带黑边的框
+            Utils.DrawInvBG(spriteBatch, handleRect, handleColor * 0.8f);
         }
     }
 }

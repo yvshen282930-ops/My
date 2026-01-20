@@ -236,6 +236,17 @@ namespace zhashi.Content
         public int despairRitualCount = 0;
         public int unagingRebirthCooldown = 0; // 重生冷却
         public const int REBIRTH_COOLDOWN_MAX = 18000; // 5分钟冷却 (60 * 60 * 5)
+        public int PetrificationGazeTimer = 0;
+        public int PetrificationGazeCD = 0;
+        public int catastropheCooldown = 0; // 灾难降临技能冷却
+        public bool isDisasterForm = false; // 是否开启灾难形态（与自然融合）
+        public int catastropheRitualCount = 0; // 仪式进度：记录制造的破坏
+        public const int CATASTROPHE_RITUAL_TARGET = 50000; // 仪式目标值 (例如造成总伤害或击杀数)
+        public int apocalypseCooldown = 0; // 末日大招冷却
+        public bool isApocalypseForm = false; // 末日形态开关 (用于视觉/无敌)
+                                              // ... 其他变量 ...
+        public bool canUseWitchBroom = false; // 是否可以使用女巫扫帚
+        private bool wasMountedBeforeUpdate = false; // 上一帧是否骑乘 (用于防冲突)
 
         // ===================================================
         // 【新增】狗的数据存储 (绑定在玩家身上)
@@ -272,6 +283,7 @@ namespace zhashi.Content
 
         public int judgmentProgress = 0;     // 序列4仪式：审判强敌
         public const int JUDGMENT_RITUAL_TARGET = 20;
+        public float screenShakeMagnitude = 0f;
 
 
         // --- 方案1: 理智值系统变量 ---
@@ -322,6 +334,7 @@ namespace zhashi.Content
             tag["Sanity"] = sanityCurrent;
             tag["AfflictionTimer"] = afflictionRitualTimer;
             tag["DespairKills"] = despairRitualCount;
+            tag["CatastropheRitual"] = catastropheRitualCount;
 
             if (DogInventory == null) DogInventory = new Item[3];
             for (int i = 0; i < 3; i++)
@@ -352,7 +365,6 @@ namespace zhashi.Content
             if (tag.ContainsKey("ConquerorRitual")) conquerorRitualComplete = tag.GetBool("ConquerorRitual");
             if (tag.ContainsKey("ResurrectionCooldown")) twilightResurrectionCooldown = tag.GetInt("ResurrectionCooldown");
             if (tag.ContainsKey("BorrowUses")) borrowUsesDaily = tag.GetInt("BorrowUses");
-            if (tag.ContainsKey("MarauderSequence")) currentMarauderSequence = tag.GetInt("MarauderSequence");
             if (tag.ContainsKey("AttendantRitual")) attendantRitualProgress = tag.GetInt("AttendantRitual");
             if (tag.ContainsKey("AttendantRitualComplete")) attendantRitualComplete = tag.GetBool("AttendantRitualComplete");
             if (tag.ContainsKey("MarauderSequence")) currentMarauderSequence = tag.GetInt("MarauderSequence");
@@ -370,6 +382,7 @@ namespace zhashi.Content
             if (tag.ContainsKey("Sanity")) sanityCurrent = tag.GetFloat("Sanity");
             if (tag.ContainsKey("AfflictionTimer")) afflictionRitualTimer = tag.GetInt("AfflictionTimer");
             if (tag.ContainsKey("DespairKills")) despairRitualCount = tag.GetInt("DespairKills");
+            if (tag.ContainsKey("CatastropheRitual")) catastropheRitualCount = tag.GetInt("CatastropheRitual");
 
 
 
@@ -782,6 +795,7 @@ namespace zhashi.Content
                     ProcessRealmOfMysteries();
                 }
             }
+            wasMountedBeforeUpdate = Player.mount.Active;
 
             base.PreUpdate();
         }
@@ -827,10 +841,12 @@ namespace zhashi.Content
             witchIceEffect = false;
             pleasureDemonessEffect = false;
             isAfflictionDemoness = false;
+            canUseWitchBroom = false; // 每帧重置，只有戴着魔女牌才会变true
 
             CalculateMaxSpirituality();
             HandleSpiritualityRegen();
             HandleDawnArmorLogic();
+
 
 
             currentGiantSequence = currentSequence;
@@ -868,6 +884,9 @@ namespace zhashi.Content
             if (mirrorSubstituteCooldown > 0) mirrorSubstituteCooldown--;
             if (spiderSilkCooldown > 0) spiderSilkCooldown--;
             if (unagingRebirthCooldown > 0) unagingRebirthCooldown--;
+            if (PetrificationGazeCD > 0) PetrificationGazeCD--;
+            if (catastropheCooldown > 0) catastropheCooldown--;
+            if (apocalypseCooldown > 0) apocalypseCooldown--;
 
             // ==========================================
             // 3. 灵之虫自动再生系统
@@ -1016,6 +1035,10 @@ namespace zhashi.Content
 
                 // 5. 削弱生命恢复
                 Player.lifeRegen /= 3;
+                if (currentDemonessSequence <= 3)
+                {
+                    Player.lifeRegen /= 2; // 再次减半
+                }
             }
 
         }
@@ -1467,43 +1490,49 @@ namespace zhashi.Content
             // --- 新增：刺客(魔女)途径 (Demoness) ---
             if (currentDemonessSequence <= 9) // 序列9 刺客
             {
+                // 削弱 75%: 30 -> 7
+                Player.statLifeMax2 += (int)(5 * worldMult);
+
                 Player.nightVision = true;      // 夜视药水效果
-                Player.detectCreature = true;   // 生物分析仪效果（看到敌人）
-                Player.dangerSense = true;      // 危险感知（看到陷阱）
+                Player.detectCreature = true;   // 生物分析仪效果
+                Player.dangerSense = true;      // 危险感知
 
-                Player.moveSpeed += 0.20f;             // 移动速度 +20%
-                Player.jumpSpeedBoost += 1.2f;         // 跳跃速度提升
-                Player.noFallDmg = true;               // 免疫摔落伤害（轻盈的体现）
-                Player.runAcceleration += 0.1f;        // 加速更快
+                Player.moveSpeed += 0.20f;
+                Player.jumpSpeedBoost += 1.2f;
+                Player.noFallDmg = true;
+                Player.runAcceleration += 0.1f;
 
-                Player.GetCritChance(DamageClass.Generic) += 10;       // 全暴击率 +10%
-                Player.GetArmorPenetration(DamageClass.Generic) += 5;  // 护甲穿透 +5 (刺破防御)
+                Player.GetCritChance(DamageClass.Generic) += 10;
+                Player.GetArmorPenetration(DamageClass.Generic) += 5;
 
                 Player.aggro -= 200;
             }
+
             if (currentDemonessSequence <= 8) // 序列8 教唆者
             {
+                // 削弱 75%: 50 -> 12
+                Player.statLifeMax2 += (int)(10 * worldMult);
+
                 instigatorEffect = true;
-
-                Player.GetDamage(DamageClass.Summon) += 0.15f; // 召唤伤害 +15%
-                Player.maxMinions += 1; // 召唤栏位 +1 (哪怕不玩召唤，多带个跟班也符合设定)
-
-                Player.aggro -= 300; // 进一步降低仇恨 (比刺客更低，躲在幕后)
+                Player.GetDamage(DamageClass.Summon) += 0.15f;
+                Player.maxMinions += 1;
+                Player.aggro -= 300;
             }
-            if (currentDemonessSequence <= 7)
+
+            if (currentDemonessSequence <= 7) // 序列7 女巫
             {
+                // 削弱 75%: 75 -> 19
+                Player.statLifeMax2 += (int)(20 * worldMult);
+
                 Player.Male = false;
                 Player.discountAvailable = true;
                 Player.aggro -= 400;
-
                 witchIceEffect = true;
 
-                // 魔法增强
                 Player.GetDamage(DamageClass.Magic) += 0.20f;
                 Player.manaCost -= 0.15f;
                 Player.statManaMax2 += 60;
 
-                // 隐身逻辑
                 if (Player.velocity.Length() < 1.5f)
                 {
                     Player.shroomiteStealth = true;
@@ -1511,48 +1540,115 @@ namespace zhashi.Content
                     Player.GetDamage(DamageClass.Generic) += 0.2f;
                 }
             }
-            if (currentDemonessSequence <= 6)
+
+            if (currentDemonessSequence <= 6) // 序列6 欢愉魔女
             {
-                pleasureDemonessEffect = true; // 核心开关！不加这句后面全都没用
+                // 削弱 75%: 125 -> 31
+                Player.statLifeMax2 += (int)(30 * worldMult);
 
+                pleasureDemonessEffect = true;
                 Player.aggro -= 500;
-                Player.GetCritChance(DamageClass.Magic) += 10; // 魔法暴击+10%
-                Player.GetDamage(DamageClass.Magic) += 0.15f;  // 魔法伤害再+15%
-
+                Player.GetCritChance(DamageClass.Magic) += 10;
+                Player.GetDamage(DamageClass.Magic) += 0.15f;
                 Player.statManaMax2 += 100;
             }
-            if (currentDemonessSequence <= 5)
+
+            if (currentDemonessSequence <= 5) // 序列5 痛苦魔女
             {
                 isAfflictionDemoness = true;
 
-                Player.statLifeMax2 += (int)(300 * demonessMult); // 血量提升
-                Player.GetDamage(DamageClass.Magic) += 0.2f;      // 魔法伤害再+20%
-                Player.lifeRegen += 3;                            // 自愈能力提升
+                // 削弱 75%: 200 -> 50
+                Player.statLifeMax2 += (int)(50 * worldMult);
+                Player.GetDamage(DamageClass.Magic) += 0.2f;
+
+                Player.lifeRegen += 2;
 
                 Player.buffImmune[BuffID.Poisoned] = true;
                 Player.buffImmune[BuffID.Venom] = true;
                 Player.buffImmune[BuffID.Rabies] = true;
             }
+
             if (currentDemonessSequence <= 4) // 序列4 绝望魔女
             {
-                Player.statLifeMax2 += (int)(500 * demonessMult); // 大幅加血
-                Player.GetDamage(DamageClass.Magic) += 0.3f;      // 30% 伤害加成
-                Player.lifeRegen += 10;                           // 极强的自愈
-                Player.endurance += 0.15f;                        // 15% 免伤 (痛苦耐受)
+                // 削弱 75%: 400 -> 100
+                Player.statLifeMax2 += (int)(100 * worldMult);
+
+                Player.lifeRegen += 3;
+
+                Player.GetDamage(DamageClass.Magic) += 0.3f;
+                Player.endurance += 0.15f;
 
                 Player.buffImmune[BuffID.OnFire] = true;
                 Player.buffImmune[BuffID.Frostburn] = true;
-                Player.buffImmune[BuffID.CursedInferno] = true; // 既然玩黑火，自然免疫诅咒火
+                Player.buffImmune[BuffID.CursedInferno] = true;
             }
-            if (currentDemonessSequence <= 3)
-            {
-                Player.statLifeMax2 += (int)(500 * demonessMult);
-                Player.lifeRegen += 20; // 极强的自然回血 (青春永驻)
-                Player.GetDamage(DamageClass.Magic) += 0.4f; // +40% 伤害
 
+            if (currentDemonessSequence <= 3) // 序列3 不老魔女
+            {
+                // 削弱 75%: 600 -> 150
+                Player.statLifeMax2 += (int)(150 * worldMult);
+
+                Player.lifeRegen += 4;
+
+                Player.GetDamage(DamageClass.Magic) += 0.4f;
                 Player.buffImmune[BuffID.Slow] = true;
                 Player.buffImmune[BuffID.Weak] = true;
                 Player.buffImmune[BuffID.Silenced] = true;
+            }
+
+            if (currentDemonessSequence <= 2) // 序列2 灾难魔女 (天使)
+            {
+                // 削弱 75%: 1000 -> 250
+                Player.statLifeMax2 += (int)(250 * worldMult);
+                Player.lifeRegen += 5;
+
+                Player.GetDamage(DamageClass.Magic) += 0.6f;
+
+                Player.buffImmune[BuffID.OnFire] = true;
+                Player.buffImmune[BuffID.OnFire3] = true;
+                Player.buffImmune[BuffID.Frostburn] = true;
+                Player.buffImmune[BuffID.Frostburn2] = true;
+                Player.buffImmune[BuffID.Electrified] = true;
+                Player.buffImmune[BuffID.Suffocation] = true;
+                Player.buffImmune[BuffID.WindPushed] = true;
+
+                if (Main.raining || Main.windSpeedCurrent > 20 || Player.ZoneSnow || Player.ZoneDesert)
+                {
+                    Player.moveSpeed += 0.5f;
+                    Player.GetDamage(DamageClass.Generic) += 0.2f;
+                }
+            }
+
+            if (currentDemonessSequence <= 1) // 序列1 末日魔女 (天使之王/从神)
+            {
+                // 削弱 75%: 1750 -> 437
+                Player.statLifeMax2 += (int)(400 * worldMult);
+
+                Player.lifeRegen += 6;
+                Player.endurance += 0.4f;
+                Player.manaCost -= 0.5f;
+
+                for (int i = 0; i < BuffID.Count; i++)
+                {
+                    if (Main.debuff[i]) Player.buffImmune[i] = true;
+                }
+                float suppressionRange = 2000f;
+                foreach (NPC npc in Main.ActiveNPCs)
+                {
+                    if (npc.active && !npc.friendly && npc.Distance(Player.Center) < suppressionRange)
+                    {
+                        if (!npc.boss)
+                        {
+                            npc.AddBuff(BuffID.Confused, 2);
+                            npc.AddBuff(BuffID.Slow, 2);
+                            npc.damage = 0;
+                        }
+                        else
+                        {
+                            npc.damage = (int)(npc.defDamage * 0.7f);
+                        }
+                    }
+                }
             }
         }
         private void ProcessRealmOfMysteries()
@@ -2132,7 +2228,7 @@ namespace zhashi.Content
                     b *= 0.5f;
                 }
             }
-            if (isCalamityGiant || isFireForm || isMercuryForm || isMoonlightized || isSunMessenger)
+            if (isCalamityGiant || isFireForm || isMercuryForm || isMoonlightized || isSunMessenger || isApocalypseForm)
             {
                 drawInfo.hideEntirePlayer = true;
                 return;
@@ -2675,8 +2771,10 @@ namespace zhashi.Content
                     }
                 }
 
+                bool isMirrorCloneActive = Player.ownedProjectileCounts[ModContent.ProjectileType<Projectiles.Demoness.MirrorCloneProjectile>()] > 0;
+
                 // 2. 【失控阶段】(逻辑保持不变)
-                bool isHighLoad = isFireForm || isMercuryForm || isCalamityGiant || isSunMessenger || isSpiritForm || isVampireWings;
+                bool isHighLoad = isFireForm || isMercuryForm || isCalamityGiant || isSunMessenger || isSpiritForm || isVampireWings || isMirrorCloneActive;
                 if (spiritualityCurrent <= 1.0f && isHighLoad)
                 {
                     isFireForm = false; isMercuryForm = false; isCalamityGiant = false;
@@ -2791,6 +2889,18 @@ namespace zhashi.Content
                     Player.statDefense *= 0f;
                     Player.statLifeMax2 = (int)(Player.statLifeMax2 * 0.6f);
                     Player.endurance -= 1.0f;
+                }
+                // 【新增】6. 刺客/魔女途径：[原初的诅咒]
+                if (currentDemonessSequence <= 9)
+                {
+                    Player.AddBuff(ModContent.BuffType<Content.Buffs.Curse.DemonessCurseBuff>(), 2);
+                    Player.statDefense *= 0.8f; // 最终防御降低 20%
+                    Player.endurance -= 0.1f;   // 受到伤害增加 10% (负免伤)
+                    Player.lifeRegen -= 2;
+                    if (Player.HasBuff(BuffID.OnFire) || Player.HasBuff(BuffID.Burning))
+                    {
+                        Player.GetDamage(DamageClass.Generic) *= 0.8f; // 着火时攻击力下降
+                    }
                 }
             }
             // ==========================================
@@ -5165,10 +5275,26 @@ namespace zhashi.Content
             {
                 UsePetrificationGaze();
             }
+            if (baseDemonessSequence <= 2 && LotMKeybinds.Demoness_Catastrophe.JustPressed)
+            {
+                CastCatastrophe();
+            }
+            if (baseDemonessSequence <= 1 && LotMKeybinds.Demoness_Apocalypse.JustPressed)
+            {
+                CastApocalypse();
+            }
         }
         public void UsePetrificationGaze()
         {
+            // 1. 【新增】检查冷却时间
+            if (PetrificationGazeCD > 0)
+            {
+                // 如果CD还没好，直接不执行，也不提示（防止刷屏）
+                return;
+            }
+
             int cost = 500;
+            // 检查灵性
             if (spiritualityCurrent < cost)
             {
                 Main.NewText("灵性不足！(需要 500)", 255, 50, 50);
@@ -5176,31 +5302,35 @@ namespace zhashi.Content
             }
             spiritualityCurrent -= cost;
 
+            // 提示文本
             Main.NewText("万物静籁，唯我不朽。", 200, 200, 200);
 
+            // 播放音效
             SoundStyle timeStopSound = new SoundStyle("zhashi/Assets/Sounds/TimeStop")
             {
-                Volume = 1.0f,       // 音量 (0.0 到 1.0)，觉得吵可以调成 0.5f
-                Pitch = 0.0f,        // 音调 (-1.0 到 1.0)，0是原声，负数低沉，正数尖锐
-                PitchVariance = 0f,  // 音调随机浮动范围 (0表示每次都一样)
-                MaxInstances = 1,    // 限制同时播放的数量 (防止连按时声音重叠太吵)
+                Volume = 1.0f,
+                Pitch = 0.0f,
+                PitchVariance = 0f,
+                MaxInstances = 1,
             };
-
-            // 2. 播放音效
             SoundEngine.PlaySound(timeStopSound, Player.Center);
 
+            // 开启特效
             TimeStopScreenEffect.Activate(Player.Center);
 
-            // --- 3. 技能实际效果 (保持不变) ---
-            float range = 1500f;
+            // 设置特效持续时间 (5秒)
+            PetrificationGazeTimer = 300;
 
+            // 【新增】设置冷却时间 (30秒 = 1800帧)
+            PetrificationGazeCD = 1800;
+
+            // 技能实际效果
+            float range = 1500f;
             foreach (NPC target in Main.ActiveNPCs)
             {
                 if (target.friendly || target.dontTakeDamage) continue;
-
                 if (target.Distance(Player.Center) > range) continue;
 
-                // 施加时间凝固 Buff
                 target.AddBuff(ModContent.BuffType<Content.Buffs.Debuffs.TimeStagnationBuff>(), 300);
 
                 if (target.boss)
@@ -5208,11 +5338,10 @@ namespace zhashi.Content
                     target.AddBuff(BuffID.Ichor, 300);
                 }
 
-                // 怪物身上的特效：改为简单的灰色静止粒子，不再大量冒烟
                 for (int i = 0; i < 5; i++)
                 {
                     int d = Dust.NewDust(target.position, target.width, target.height, DustID.GemDiamond, 0, 0, 100, Color.Gray, 1.0f);
-                    Main.dust[d].velocity *= 0.1f; // 几乎不动
+                    Main.dust[d].velocity *= 0.1f;
                     Main.dust[d].noGravity = true;
                 }
             }
@@ -5512,7 +5641,14 @@ namespace zhashi.Content
         // 8. 辅助
         public float GetSequenceMultiplier(int seq) { if (seq > 9) return 1f; return 1f + (9 - seq) * 0.3f; }
         public bool TryConsumeSpirituality(float amount, bool isMaintenance = false) { if (isCalamityGiant && !isMaintenance) return true; if (spiritualityCurrent >= amount) { spiritualityCurrent -= amount; return true; } return false; }
-        public override void ModifyScreenPosition() { if (shakeTime > 0) { Main.screenPosition += Main.rand.NextVector2Circular(shakePower, shakePower); shakeTime--; } base.ModifyScreenPosition(); }
+        public override void ModifyScreenPosition() { if (shakeTime > 0) { Main.screenPosition += Main.rand.NextVector2Circular(shakePower, shakePower); shakeTime--; }
+            if (screenShakeMagnitude > 0f)
+            {
+                Main.screenPosition += Main.rand.NextVector2Circular(screenShakeMagnitude, screenShakeMagnitude);
+                screenShakeMagnitude *= 0.9f; // 逐渐衰减
+                if (screenShakeMagnitude < 0.1f) screenShakeMagnitude = 0f;
+            }
+            base.ModifyScreenPosition(); }
         public override bool CanUseItem(Item item) { if (isFireForm || isGuardianStance || isMoonlightized || isBatSwarm) return false; return base.CanUseItem(item); }
         private void CalculateMaxSpirituality()
         {
@@ -5634,6 +5770,29 @@ namespace zhashi.Content
         {
             // 1. 调用寄生逻辑修复 (防脱战/防卡死)
             UpdateParasiteLogic();
+
+            // ----------------------------------------------------
+            // 时停特效自动关闭逻辑
+            // ----------------------------------------------------
+            if (PetrificationGazeTimer > 0)
+            {
+                PetrificationGazeTimer--; // 倒计时
+
+                // 如果倒计时结束，或者玩家死亡，强制关闭特效
+                if (PetrificationGazeTimer <= 0 || Player.dead || !Player.active)
+                {
+                    PetrificationGazeTimer = 0;
+                    TimeStopScreenEffect.Deactivate();
+                }
+            }
+
+            if (canUseWitchBroom &&
+                Terraria.GameInput.PlayerInput.Triggers.JustPressed.QuickMount &&
+                !Player.mount.Active &&
+                !wasMountedBeforeUpdate)
+            {
+                Player.mount.SetMount(MountID.WitchBroom, Player);
+            }
 
             base.PostUpdate();
         }
@@ -6163,24 +6322,146 @@ namespace zhashi.Content
                 Main.NewText(currentSunSequence <= 4 ? "污秽消散！" : "公证完成！", 255, 215, 0);
             }
         }
+
+
+        // 更新大招释放方法
+        public void CastCatastrophe()
+        {
+            // --- 冷却检查逻辑 ---
+            if (catastropheCooldown > 0)
+            {
+                // 只在本地玩家视角显示，防止联机时给别人发消息
+                if (Main.myPlayer == Player.whoAmI)
+                {
+                    // 转换为秒，保留1位小数，例如: 12.5s
+                    float secondsLeft = catastropheCooldown / 60f;
+                    Main.NewText($"天灾积蓄中... ({secondsLeft:F1}s)", 150, 150, 150);
+                }
+                return; // 直接返回，不执行后续技能
+            }
+
+            // --- 灵性检查 ---
+            if (!TryConsumeSpirituality(5000))
+            {
+                Main.NewText("灵性不足以引动天灾！(需 5000)", 255, 50, 50);
+                return;
+            }
+
+            // --- 技能释放逻辑 ---
+            catastropheCooldown = 7200; // 120秒冷却
+
+            Main.NewText("天灾降临：世界在你的意志下颤抖！", 148, 0, 211); // 深紫色文本
+
+            int baseDmg = 8000;
+            int finalDmg = (int)(Player.GetDamage(DamageClass.Magic).ApplyTo(baseDmg));
+
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                Projectile.NewProjectile(
+                    Player.GetSource_FromThis(),
+                    Player.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<CatastropheController>(),
+                    finalDmg,
+                    0f,
+                    Player.whoAmI
+                );
+            }
+        }
+        public void CastApocalypse()
+        {
+            // --- 冷却检查逻辑 ---
+            if (apocalypseCooldown > 0)
+            {
+                if (Main.myPlayer == Player.whoAmI)
+                {
+                    // 将帧数转换为 分钟:秒 的格式，因为10分钟太长了，只显示秒数不直观
+                    int totalSeconds = apocalypseCooldown / 60;
+                    int minutes = totalSeconds / 60;
+                    int seconds = totalSeconds % 60;
+
+                    // 显示为：末日权柄冷却中... (9分 30秒)
+                    Main.NewText($"末日权柄冷却中... ({minutes}分 {seconds}秒)", 150, 150, 150);
+                }
+                return; // 冷却中直接返回
+            }
+
+            // --- 灵性检查 ---
+            if (!TryConsumeSpirituality(10000))
+            {
+                Main.NewText("灵性不足以引动末日！(需 10000)", 255, 50, 50);
+                return;
+            }
+
+            // --- 技能释放逻辑 ---
+            apocalypseCooldown = 36000; // 10分钟 (600秒)
+
+            SoundEngine.PlaySound(SoundID.Item29, Player.Center);
+            SoundEngine.PlaySound(SoundID.Item122, Player.Center);
+
+            screenShakeMagnitude = 30f;
+            Main.NewText("【末日降临】", 178, 34, 34);
+            Main.NewText("旧的时代已经终结，万物归于寂静。", 255, 100, 100);
+
+            // A. 冻结时间
+            foreach (NPC target in Main.ActiveNPCs)
+            {
+                if (target.friendly || target.dontTakeDamage) continue;
+
+                target.velocity = Vector2.Zero;
+                target.AddBuff(ModContent.BuffType<global::zhashi.Content.Buffs.Debuffs.TimeStagnationBuff>(), 600);
+
+                target.AddBuff(BuffID.ShadowFlame, 1200);
+                target.AddBuff(BuffID.Frostburn2, 1200);
+                target.AddBuff(BuffID.Venom, 1200);
+                target.AddBuff(BuffID.BetsysCurse, 1200);
+                target.AddBuff(BuffID.Ichor, 1200);
+            }
+
+            // B. 清除弹幕
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                if (Main.projectile[i].active && Main.projectile[i].hostile)
+                {
+                    Main.projectile[i].Kill();
+                }
+            }
+
+            // C. 毁灭打击
+            foreach (NPC target in Main.ActiveNPCs)
+            {
+                if (target.friendly || target.dontTakeDamage) continue;
+
+                if (!target.boss || target.life < target.lifeMax * 0.3f)
+                {
+                    Player.ApplyDamageToNPC(target, 999999, 0, 0, false);
+                    for (int k = 0; k < 20; k++)
+                        Dust.NewDust(target.position, target.width, target.height, DustID.Granite, 0, 0, 0, default, 2f);
+                }
+                else
+                {
+                    int doomDamage = (int)(target.life * 0.1f);
+                    if (doomDamage > 50000) doomDamage = 50000;
+                    if (doomDamage < 10000) doomDamage = 10000;
+
+                    Player.ApplyDamageToNPC(target, doomDamage, 0, 0, true);
+                }
+            }
+
+            // D. 无敌
+            Player.SetImmuneTimeForAllTypes(600);
+        }
         // 判断是否为不死/邪恶/克制生物的通用方法
         public bool IsUndeadCreature(NPC npc)
         {
-            // 1. 基础集合检查 (原版判定的部分)
             if (NPCID.Sets.Zombies[npc.type] || NPCID.Sets.Skeletons[npc.type]) return true;
 
-            // 2. AI 特征 (鬼魂/漂浮类/诅咒头颅类)
             if (npc.aiStyle == 22 || npc.aiStyle == 23) return true;
 
-            // 3. 属性特征 (冷系生物通常也被视为阴冷之物)
             if (npc.coldDamage) return true;
 
-            // 4. 【新】声音特征判定 (绝大多数骷髅受击时都有独特的声音 HitSound 2)
-            // 这条能囊括几乎所有地牢装甲骷髅、骷髅李、蒂姆等
             if (npc.HitSound == SoundID.NPCHit2) return true;
 
-            // 5. 【新】手动补全漏网之鱼
-            // 这里填入你发现没生效的怪物 ID
             int[] extraUndead = {
         // --- 僵尸变种 ---
         NPCID.BloodZombie,       // 血腥僵尸
@@ -6215,7 +6496,7 @@ namespace zhashi.Content
             if (extraUndead.Contains(npc.type)) return true;
 
             return false;
-        }
-        public class ApothecaryCrafting : Terraria.ModLoader.GlobalItem { public override void OnCreated(Terraria.Item item, ItemCreationContext context) { if (context is RecipeItemCreationContext) { Player p = Main.LocalPlayer; if (p != null && p.active && p.GetModPlayer<LotMPlayer>().currentMoonSequence <= 9) { bool isP = item.consumable && (item.buffType > 0 || item.healLife > 0 || item.healMana > 0); if (isP) p.QuickSpawnItem(item.GetSource_FromThis(), item.type, item.stack); } } } }
+        }        
     }
+    public class ApothecaryCrafting : Terraria.ModLoader.GlobalItem { public override void OnCreated(Terraria.Item item, ItemCreationContext context) { if (context is RecipeItemCreationContext) { Player p = Main.LocalPlayer; if (p != null && p.active && p.GetModPlayer<LotMPlayer>().currentMoonSequence <= 9) { bool isP = item.consumable && (item.buffType > 0 || item.healLife > 0 || item.healMana > 0); if (isP) p.QuickSpawnItem(item.GetSource_FromThis(), item.type, item.stack); } } } }
 }

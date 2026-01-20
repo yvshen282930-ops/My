@@ -1136,7 +1136,7 @@ Mods: {
 					[c/BA55D3:✦ 致命快感：] 暴击率+20%，移动速度大幅提升
 					[c/BA55D3:✦ 寒霜之触：] 攻击附加寒霜效果，受到伤害时反击星辰(黑炎)
 					[c/BA55D3:✦ 魅惑众生：] 受到伤害有机会使敌人混乱，并获得闪避能力
-					[c/BA55D3:✦ 原初灾难：] (待觉醒) 尚未记录高序列能力...
+					[c/BA55D3:✦ 妖之翱翔：] 女巫骑扫帚，很合理对吧？（快速坐骑按键）
 
 					[c/8B0000:=== 代价与诅咒 ===]
 					你会逐渐沉迷于给他人带来痛苦，并且...你的身体会发生某种变化。
@@ -1370,43 +1370,93 @@ Mods: {
 			}
 
 			MysteryMusicBox1: {
-				// Tooltip: ""
-				// DisplayName: Mystery Music Box1
+				Tooltip: 《渡月桥思君--小提琴版》作者：龚明威
+				DisplayName: 诡秘八音盒1
 			}
 
 			AssassinPotion: {
-				// Tooltip: ""
-				// DisplayName: Assassin Potion
+				Tooltip:
+					'''
+					序列9: 刺客
+					获得夜视与生物探测能力
+					变得体态轻盈，擅长在阴影中潜伏
+					'''
+				DisplayName: 刺客魔药
 			}
 
 			InstigatorPotion: {
-				// Tooltip: ""
-				// DisplayName: Instigator Potion
+				Tooltip:
+					'''
+					序列8: 教唆者
+					擅长诱导敌人自相残杀
+					大幅降低自身仇恨，躲在幕后操纵战局
+					'''
+				DisplayName: 教唆者魔药
 			}
 
 			WitchPotion: {
-				// Tooltip: ""
-				// DisplayName: Witch Potion
+				Tooltip:
+					'''
+					序列7: 女巫
+					习得黑魔法与诅咒，能造成霜冻与暗影伤害
+					获得隐身能力，魅力大幅提升
+					'''
+				DisplayName: 女巫魔药
 			}
 
 			PleasureDemonessPotion: {
-				// DisplayName: Pleasure Demoness Potion
-				// Tooltip: ""
+				DisplayName: 欢愉魔女魔药
+				Tooltip:
+					'''
+					序列6: 欢愉魔女
+					掌握魅惑与欢愉之触，能使用镜面替身
+					'''
 			}
 
 			AfflictionDemonessPotion: {
-				// Tooltip: ""
-				// DisplayName: Affliction Demoness Potion
+				Tooltip:
+					'''
+					序列5: 痛苦魔女
+					散播疾病与痛楚，能操纵发丝与蛛网
+					'''
+				DisplayName: 痛苦魔女魔药
 			}
 
 			DespairDemonessPotion: {
-				// DisplayName: Despair Demoness Potion
-				// Tooltip: ""
+				DisplayName: 绝望魔女魔药
+				Tooltip:
+					'''
+					序列4: 绝望魔女 (半神)
+					制造黑焰与致命瘟疫，给世界带来绝望
+					'''
 			}
 
 			UnagingDemonessPotion: {
-				// Tooltip: ""
-				// DisplayName: Unaging Demoness Potion
+				Tooltip:
+					'''
+					序列3: 不老魔女 (圣者)
+					获得青春永驻与死而复生的能力
+					能石化万物
+					'''
+				DisplayName: 不老魔女魔药
+			}
+
+			CatastropheDemonessPotion: {
+				Tooltip:
+					'''
+					序列2: 灾难魔女 (天使)
+					化身为天灾，掌控风雨雷电与极寒
+					'''
+				DisplayName: 灾难魔女魔药
+			}
+
+			ApocalypseDemonessPotion: {
+				Tooltip:
+					'''
+					序列1: 末日魔女 
+					象征着真正的末日与终结
+					'''
+				DisplayName: 末日魔女魔药
 			}
 		}
 
@@ -1463,6 +1513,8 @@ Mods: {
 			// DemonessHairProjectile.DisplayName: Demoness Hair Projectile
 			// DemonessSpiderSilkProjectile.DisplayName: Demoness Spider Silk Projectile
 			// DespairIceProjectile.DisplayName: Despair Ice Projectile
+			// CatastropheDomain.DisplayName: Catastrophe Domain
+			// CatastropheController.DisplayName: Catastrophe Controller
 		}
 
 		# ==========================================
@@ -1626,6 +1678,16 @@ Mods: {
 				// Description: Mods.zhashi.Buffs.TimeStagnationBuff.Description
 				// DisplayName: Time Stagnation Buff
 			}
+
+			DemonessCurseBuff: {
+				Description:
+					'''
+					魔女的宿命：痛苦与欢愉交织
+					防御力降低20%，受到的伤害增加10%，生命回复减少
+					身处火焰中时攻击力大幅降低
+					'''
+				DisplayName: 原初的诅咒
+			}
 		}
 
 		# ==========================================
@@ -1726,6 +1788,8 @@ Mods: {
 			// "魔女: 黑焱冰晶.DisplayName": 魔女: 黑焱冰晶
 			// "魔女: 石化.DisplayName": 魔女: 石化
 			// "魔女: 时间石化.DisplayName": 魔女: 时间石化
+			// "魔女:天灾 .DisplayName": 魔女:天灾
+			// "魔女:毁灭 .DisplayName": 魔女:毁灭
 		}
 
 		# ==========================================

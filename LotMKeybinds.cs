@@ -75,6 +75,8 @@ namespace zhashi
         public static ModKeybind Demoness_SilkControl { get; private set; }  // 蛛丝控制
         public static ModKeybind Demoness_DespairSkill { get; private set; }
         public static ModKeybind Demoness_PetrifySkill { get; private set; }
+        public static ModKeybind Demoness_Catastrophe { get; private set; }
+        public static ModKeybind Demoness_Apocalypse { get; private set; }
 
         // ===================================================
         // 2. 注册按键 (Load)
@@ -148,6 +150,8 @@ namespace zhashi
             Demoness_SilkControl = KeybindLoader.RegisterKeybind(Mod, "魔女: 蛛丝控制", "C");
             Demoness_DespairSkill = KeybindLoader.RegisterKeybind(Mod, "魔女: 黑焱冰晶", "V");
             Demoness_PetrifySkill = KeybindLoader.RegisterKeybind(Mod, "魔女: 时间石化", "G");
+            Demoness_Catastrophe = KeybindLoader.RegisterKeybind(Mod, "魔女:天灾 ", "V");
+            Demoness_Apocalypse = KeybindLoader.RegisterKeybind(Mod, "魔女:毁灭 ", "B");
 
         }
 
@@ -223,6 +227,8 @@ namespace zhashi
             Demoness_SilkControl = null;
             Demoness_DespairSkill = null;
             Demoness_PetrifySkill = null;
+            Demoness_Catastrophe = null;
+            Demoness_Apocalypse = null;
         }
     }
 }
