@@ -4,9 +4,10 @@ using Terraria.WorldBuilding;
 using System.Collections.Generic;
 using Terraria.IO;
 using Terraria.ID;
-using Terraria.DataStructures;
 using Microsoft.Xna.Framework;
 using Terraria.GameContent.Generation;
+// 我们改为手动用代码生成，不再需要 StructureHelper 的引用
+// using StructureHelper; 
 
 namespace zhashi.Content.Systems
 {
@@ -14,6 +15,7 @@ namespace zhashi.Content.Systems
     {
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
+            // 在 "Shinies" (生成矿石) 之后插入我们的生成步骤
             int shinyIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Shinies"));
             if (shinyIndex != -1)
             {
@@ -25,14 +27,7 @@ namespace zhashi.Content.Systems
         {
             progress.Message = "正在具现愚者的古老教堂...";
 
-            // 检查玩家是否安装了 StructureHelper
-            // 如果没装，就不生成，防止报错崩溃
-            if (!ModLoader.TryGetMod("StructureHelper", out Mod structureHelper))
-            {
-                return;
-            }
-
-            // 在地图上随机找点
+            // 生成数量：2到4个
             int count = Main.rand.Next(2, 4);
             int placed = 0;
             int attempts = 0;
@@ -40,44 +35,95 @@ namespace zhashi.Content.Systems
             while (placed < count && attempts < 2000)
             {
                 attempts++;
+                // 随机找个位置 (避开地图两边)
                 int x = WorldGen.genRand.Next(200, Main.maxTilesX - 200);
                 int y = (int)Main.worldSurface;
 
-                while (y < Main.maxTilesY - 200 && !Main.tile[x, y].HasTile) y++;
-
-                Tile tile = Main.tile[x, y];
-                bool isValidGround = tile.TileType == TileID.Grass || tile.TileType == TileID.Stone || tile.TileType == TileID.Dirt || tile.TileType == TileID.SnowBlock;
-
-                if (isValidGround)
+                // 寻找地面 (从地表向下扫描)
+                while (y < Main.maxTilesY - 200 && !Main.tile[x, y].HasTile)
                 {
-                    // === 核心调用 ===
-                    // 这里的 "Assets/Structures/FoolCathedral" 是文件路径（不带后缀）
-                    // StructureHelper 会自动处理所有方块、墙壁、斜坡
+                    y++;
+                }
 
-                    bool success = GenerateStructureSafe(structureHelper, "Assets/Structures/FoolCathedral", x, y - 1);
+                // 检查地面是否平整适合建造 (简单的检查)
+                if (Main.tile[x, y].HasTile && Main.tileSolid[Main.tile[x, y].TileType])
+                {
+                    // === 开始用代码生成建筑 ===
+                    GenerateProceduralRuin(x, y - 1);
 
-                    if (success)
-                    {
-                        placed++;
-                        // 如果需要在生成后往箱子里塞东西，可以在这里根据坐标找附近的箱子
-                    }
+                    placed++;
+                    // 稍微把下一个建筑推远一点，防止重叠
+                    x += 200;
                 }
             }
         }
 
-        // 封装一个安全的方法来调用 StructureHelper
-        private bool GenerateStructureSafe(Mod structureHelper, string path, int x, int y)
+        // == 手写的一个简易教堂废墟生成器 ==
+        private void GenerateProceduralRuin(int centerX, int groundY)
         {
-            // StructureHelper.Generator.GenerateStructure(string filePath, Point16 position, Mod mod)
-            // 这是 Structure Helper 提供的标准生成方法
+            int width = 20;  // 建筑宽度
+            int height = 15; // 建筑高度
+            int leftX = centerX - width / 2;
+            int floorY = groundY;
 
-            // 使用 Call 方法进行跨模组调用 (最安全，不依赖强引用)
-            // 参数文档通常在 Structure Helper 的 Wiki 或源码里
-            // 常用调用格式: ["Generate", 文件路径, 坐标X, 坐标Y, 模组实例]
+            // 1. 清理空间 (把建筑范围内的树木、杂草清掉)
+            for (int i = leftX - 2; i <= leftX + width + 2; i++)
+            {
+                for (int j = floorY - height - 5; j <= floorY; j++)
+                {
+                    // 也就是把方块设为无 (false)
+                    Main.tile[i, j].ClearTile();
+                }
+            }
 
-            object result = structureHelper.Call("Generate", path, new Point16(x, y), Mod);
+            // 2. 铺地板 (黑曜石砖)
+            for (int i = leftX; i < leftX + width; i++)
+            {
+                WorldGen.PlaceTile(i, floorY, TileID.ObsidianBrick, true, true);
+                // 顺便在地板下面填点土，防止悬空
+                WorldGen.PlaceTile(i, floorY + 1, TileID.Dirt, true, true);
+            }
 
-            return result != null && (bool)result;
+            // 3. 建柱子 (左右两边的墙壁)
+            for (int j = 0; j < height; j++)
+            {
+                WorldGen.PlaceTile(leftX, floorY - j, TileID.ObsidianBrick, true, true); // 左墙
+                WorldGen.PlaceTile(leftX + width - 1, floorY - j, TileID.ObsidianBrick, true, true); // 右墙
+            }
+
+            // 4. 建屋顶 (简单的平顶)
+            for (int i = leftX; i < leftX + width; i++)
+            {
+                WorldGen.PlaceTile(i, floorY - height, TileID.ObsidianBrick, true, true);
+            }
+
+            // 5. 放置背景墙 (让它看起来像个房子)
+            for (int i = leftX + 1; i < leftX + width - 1; i++)
+            {
+                for (int j = floorY - height + 1; j < floorY; j++)
+                {
+                    WorldGen.PlaceWall(i, j, WallID.ObsidianBrickUnsafe);
+                }
+            }
+
+            // 6. 放置战利品箱子 (在屋子中间)
+            int chestX = centerX;
+            int chestY = floorY - 1;
+
+            // 放置金箱子
+            int chestIndex = WorldGen.PlaceChest(chestX, chestY, style: 1);
+
+            if (chestIndex != -1)
+            {
+                Chest chest = Main.chest[chestIndex];
+
+                // 放入一些奖励
+                chest.item[0].SetDefaults(ItemID.GoldCoin);
+                chest.item[0].stack = 10;
+
+                // 可以在这里加你Mod的物品，比如:
+                // chest.item[1].SetDefaults(ModContent.ItemType<Items.Materials.ExtraordinaryBlood>());
+            }
         }
     }
 }

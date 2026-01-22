@@ -58,6 +58,10 @@ namespace zhashi
                     modPlayer.purificationProgress = reader.ReadInt32();
                     modPlayer.judgmentProgress = reader.ReadInt32();
                     modPlayer.ironBloodRitualProgress = reader.ReadInt32();
+                    modPlayer.despairRitualCount = reader.ReadInt32();      // 序列4 仪式
+                    modPlayer.afflictionRitualTimer = reader.ReadInt32();   // 序列5 仪式
+
+                    modPlayer.despairRitualCount = reader.ReadInt32();
 
                     modPlayer.spiritWorms = reader.ReadInt32();
 
@@ -86,6 +90,7 @@ namespace zhashi
 
                     modPlayer.isSinging = reader.ReadBoolean();
                     modPlayer.isSunMessenger = reader.ReadBoolean();
+
                     modPlayer.isPassiveStealEnabled = reader.ReadBoolean();
 
                     if (Main.netMode == NetmodeID.Server)

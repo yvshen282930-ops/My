@@ -11,6 +11,8 @@ using zhashi.Content.Items.Potions.Marauder;
 using zhashi.Content.Items.Potions.Sun;
 using zhashi.Content.Items.Potions.Moon;
 using zhashi.Content.Items.Potions.Hunter;
+using zhashi.Content.Items.Potions.Demoness;
+
 
 namespace zhashi.Content.UI.Profiles
 {
@@ -50,7 +52,6 @@ namespace zhashi.Content.UI.Profiles
             var story = Main.LocalPlayer.GetModPlayer<LotMStoryPlayer>();
             var lotmPlayer = Main.LocalPlayer.GetModPlayer<LotMPlayer>();
 
-            // ★★★ 修复点2：将 0 改为 10 ★★★
             // 只有当玩家是“序列10 (凡人)”时才显示选项
             if (!story.HasReceivedStarterPotion && lotmPlayer.currentSequence == 10)
             {
@@ -99,6 +100,14 @@ namespace zhashi.Content.UI.Profiles
                     GivePotion(npc, ui, story,
                         ModContent.ItemType<HunterPotion>(),
                         "【猎人】？这也是个擅长战斗的途径，尤其是陷阱和追踪。\n只要你别像那个安德森一样到处挑衅惹事就行...\n控制好你的火焰，别把查尼斯门给烧了。"
+                    );
+                });
+
+                // 7. 魔女
+                ui.AddButton("我想成为【刺客】(魔女途径)", () => {
+                    GivePotion(npc, ui, story,
+                        ModContent.ItemType<AssassinPotion>(),
+                        "【刺客】？（他的表情有些古怪，但还是笑呵呵的）\n...很强的途径。"
                     );
                 });
             }

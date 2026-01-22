@@ -882,6 +882,11 @@ Mods: {
 				Tooltip: ""
 				DisplayName: Apocalypse Demoness Potion
 			}
+
+			SpiritWorldKey: {
+				Tooltip: ""
+				DisplayName: Spirit World Key
+			}
 		}
 
 		# ==========================================

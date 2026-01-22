@@ -10,6 +10,7 @@ using zhashi.Content.Items.Potions.Fool;
 using zhashi.Content.Items.Potions.Moon;
 using zhashi.Content.Items.Potions.Hunter;
 using zhashi.Content.Items.Potions.Marauder;
+using zhashi.Content.Items.Potions.Demoness;
 using zhashi.Content.Items.Potions;
 
 namespace zhashi.Content.Globals
@@ -27,51 +28,50 @@ namespace zhashi.Content.Globals
             {
                 int sequenceToCheck = -1;
 
-
-                // 序列 9
+                // 序列 9 (起始)
                 if (item.type == ModContent.ItemType<BardPotion>() || item.type == ModContent.ItemType<SeerPotion>() ||
                     item.type == ModContent.ItemType<HunterPotion>() || item.type == ModContent.ItemType<ApothecaryPotion>() ||
-                    item.type == ModContent.ItemType<MarauderPotion>()) sequenceToCheck = 9;
+                    item.type == ModContent.ItemType<MarauderPotion>() || item.type == ModContent.ItemType<AssassinPotion>()) sequenceToCheck = 9;
 
                 // 序列 8
                 else if (item.type == ModContent.ItemType<LightSupplicantPotion>() || item.type == ModContent.ItemType<ClownPotion>() ||
                          item.type == ModContent.ItemType<ProvokerPotion>() || item.type == ModContent.ItemType<BeastTamerPotion>() ||
-                         item.type == ModContent.ItemType<SwindlerPotion>()) sequenceToCheck = 8;
+                         item.type == ModContent.ItemType<SwindlerPotion>() || item.type == ModContent.ItemType<InstigatorPotion>()) sequenceToCheck = 8;
 
                 // 序列 7
-                else if (item.type == ModContent.ItemType<NotaryPotion>() || item.type == ModContent.ItemType<MagicianPotion>() ||
+                else if (item.type == ModContent.ItemType<SolarHighPriestPotion>() || item.type == ModContent.ItemType<MagicianPotion>() ||
                          item.type == ModContent.ItemType<PyromaniacPotion>() || item.type == ModContent.ItemType<VampirePotion>() ||
-                         item.type == ModContent.ItemType<CryptologistPotion>()) sequenceToCheck = 7;
+                         item.type == ModContent.ItemType<CryptologistPotion>() || item.type == ModContent.ItemType<WitchPotion>()) sequenceToCheck = 7;
 
                 // 序列 6
-                else if (item.type == ModContent.ItemType<PriestPotion>() || item.type == ModContent.ItemType<FacelessPotion>() ||
+                else if (item.type == ModContent.ItemType<NotaryPotion>() || item.type == ModContent.ItemType<FacelessPotion>() ||
                          item.type == ModContent.ItemType<ConspiratorPotion>() || item.type == ModContent.ItemType<PotionsProfessorPotion>() ||
-                         item.type == ModContent.ItemType<PrometheusPotion>()) sequenceToCheck = 6;
+                         item.type == ModContent.ItemType<PrometheusPotion>() || item.type == ModContent.ItemType<PleasureDemonessPotion>()) sequenceToCheck = 6;
 
                 // 序列 5 (中序列起点)
-                else if (item.type == ModContent.ItemType<UnshadowedPotion>() || item.type == ModContent.ItemType<MarionettistPotion>() ||
+                else if (item.type == ModContent.ItemType<PriestPotion>() || item.type == ModContent.ItemType<MarionettistPotion>() ||
                          item.type == ModContent.ItemType<ReaperPotion>() || item.type == ModContent.ItemType<ScarletScholarPotion>() ||
-                         item.type == ModContent.ItemType<DreamStealerPotion>()) sequenceToCheck = 5;
+                         item.type == ModContent.ItemType<DreamStealerPotion>() || item.type == ModContent.ItemType<AfflictionDemonessPotion>()) sequenceToCheck = 5;
 
                 // 序列 4 (半神 - 质变点)
-                else if (item.type == ModContent.ItemType<SolarHighPriestPotion>() || item.type == ModContent.ItemType<BizarroSorcererPotion>() ||
+                else if (item.type == ModContent.ItemType<UnshadowedPotion>() || item.type == ModContent.ItemType<BizarroSorcererPotion>() ||
                          item.type == ModContent.ItemType<IronBloodedKnightPotion>() || item.type == ModContent.ItemType<WitchKingPotion>() ||
-                         item.type == ModContent.ItemType<ParasitePotion>()) sequenceToCheck = 4;
+                         item.type == ModContent.ItemType<ParasitePotion>() || item.type == ModContent.ItemType<DespairDemonessPotion>()) sequenceToCheck = 4;
 
                 // 序列 3 (圣者)
                 else if (item.type == ModContent.ItemType<JusticeMentorPotion>() || item.type == ModContent.ItemType<ScholarOfYorePotion>() ||
                          item.type == ModContent.ItemType<WarBishopPotion>() || item.type == ModContent.ItemType<SummoningMasterPotion>() ||
-                         item.type == ModContent.ItemType<MentorPotion>()) sequenceToCheck = 3;
+                         item.type == ModContent.ItemType<MentorPotion>() || item.type == ModContent.ItemType<UnagingDemonessPotion>()) sequenceToCheck = 3;
 
                 // 序列 2 (天使 - 顶级战力)
                 else if (item.type == ModContent.ItemType<LightSeekerPotion>() || item.type == ModContent.ItemType<MiracleInvokerPotion>() ||
                          item.type == ModContent.ItemType<WeatherWarlockPotion>() || item.type == ModContent.ItemType<LifeGiverPotion>() ||
-                         item.type == ModContent.ItemType<TrojanHorsePotion>()) sequenceToCheck = 2;
+                         item.type == ModContent.ItemType<TrojanHorsePotion>() || item.type == ModContent.ItemType<CatastropheDemonessPotion>()) sequenceToCheck = 2;
 
                 // 序列 1 (天使之王 - 接近神)
                 else if (item.type == ModContent.ItemType<WhiteAngelPotion>() || item.type == ModContent.ItemType<AttendantPotion>() ||
                          item.type == ModContent.ItemType<ConquerorPotion>() || item.type == ModContent.ItemType<BeautyGoddessPotion>() ||
-                         item.type == ModContent.ItemType<WormOfTimePotion>()) sequenceToCheck = 1;
+                         item.type == ModContent.ItemType<WormOfTimePotion>() || item.type == ModContent.ItemType<ApocalypseDemonessPotion>()) sequenceToCheck = 1;
 
 
                 // 3. 核心：检查 Boss 击杀条件 (适配灾厄流程)

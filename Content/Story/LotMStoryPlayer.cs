@@ -31,7 +31,7 @@ namespace zhashi.Content
             List<Item> items = new List<Item>();
             items.Add(new Item(ModContent.ItemType<KleinsDiary>()));
             items.Add(new Item(ModContent.ItemType<GoldenGun>()));
-            items.Add(new Item(ItemID.MusketBall, 100));
+            items.Add(new Item(ItemID.MusketBall, 10));
             items.Add(new Item(ModContent.ItemType<RoselleDiary>()));
             return items;
         }

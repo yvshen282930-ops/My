@@ -24,6 +24,8 @@ using zhashi.Content.Configs;
 using Terraria.Graphics.Effects;
 using Terraria.Localization;
 using Terraria.DataStructures;
+using SubworldLibrary; // 引用子世界库
+using zhashi.Content.Dimensions; // 引用你的灵界定义
 
 
 namespace zhashi.Content
@@ -244,7 +246,7 @@ namespace zhashi.Content
         public const int CATASTROPHE_RITUAL_TARGET = 50000; // 仪式目标值 (例如造成总伤害或击杀数)
         public int apocalypseCooldown = 0; // 末日大招冷却
         public bool isApocalypseForm = false; // 末日形态开关 (用于视觉/无敌)
-                                              // ... 其他变量 ...
+        
         public bool canUseWitchBroom = false; // 是否可以使用女巫扫帚
         private bool wasMountedBeforeUpdate = false; // 上一帧是否骑乘 (用于防冲突)
 
@@ -399,7 +401,7 @@ namespace zhashi.Content
             }
         }
         // ===================================================
-        // 【核心修复】联机同步代码 (版本 3.0 - 稳定版)
+        // 【终极修复版】联机同步代码 (版本 4.0 - 全途径完整版)
         // ===================================================
 
         public override void SyncPlayer(int toWho, int fromWho, bool newPlayer)
@@ -413,8 +415,8 @@ namespace zhashi.Content
             packet.Write(baseFoolSequence);      // 愚者基础
             packet.Write(baseHunterSequence);    // 猎人基础
             packet.Write(baseMoonSequence);      // 月亮基础
-            packet.Write(baseSunSequence);       // 太阳基础 (必须有这个！)
-            packet.Write(baseDemonessSequence);   //刺客基础
+            packet.Write(baseSunSequence);       // 太阳基础
+            packet.Write(baseDemonessSequence);   // 刺客基础
 
             // --- [1] 基础数值 (7个) ---
             packet.Write(currentSequence);
@@ -426,50 +428,54 @@ namespace zhashi.Content
             packet.Write(currentDemonessSequence);
             packet.Write(spiritualityCurrent); // float
 
-            // --- [2] 寄生与仪式 (7个) ---
+            // --- [2] 寄生与仪式 (8个) ---
             packet.Write(isParasitizing);
             packet.Write(parasiteTargetIndex);
             packet.Write(parasiteIsTownNPC);
             packet.Write(parasiteIsPlayer);
-            packet.Write(purificationProgress);
-            packet.Write(judgmentProgress);
-            packet.Write(ironBloodRitualProgress);
+            packet.Write(purificationProgress);      // 太阳序列6
+            packet.Write(judgmentProgress);          // 太阳序列4
+            packet.Write(ironBloodRitualProgress);   // 猎人序列4
+            packet.Write(despairRitualCount);        // 魔女序列4
+            packet.Write(afflictionRitualTimer);
 
             // --- [3] 核心资源 (1个) ---
             packet.Write(spiritWorms);
 
             // --- [4] 愚者途径状态 (4个) ---
             packet.Write(isSpiritVisionActive);    // 灵视
-            packet.Write(isSpiritForm);            // 灵体状态 (视觉+穿墙)
-            packet.Write(graftingMode);            // 嫁接模式 (int)
-            packet.Write(spiritThreadTargetIndex); // 灵体之线目标 (int)
+            packet.Write(isSpiritForm);            // 灵体状态
+            packet.Write(graftingMode);            // 嫁接模式
+            packet.Write(spiritThreadTargetIndex); // 灵体之线目标
 
             // --- [5] 错误途径状态 (2个) ---
-            // *此前可能就是这里错位导致特效乱飞*
-            packet.Write(isDeceitDomainActive);    // 欺诈领域 (视觉)
-            packet.Write(isTimeClockActive);       // 时之虫钟表 (视觉)
+            packet.Write(isDeceitDomainActive);    // 欺诈领域
+            packet.Write(isTimeClockActive);       // 时之虫钟表
 
             // --- [6] 月亮途径状态 (6个) ---
             packet.Write(isTamingActive);          // 驯兽
-            packet.Write(isVampireWings);          // 吸血鬼翅膀 (视觉+机动)
-            packet.Write(isBatSwarm);              // 蝙蝠化身 (视觉+无敌)
-            packet.Write(isMoonlightized);         // 月光化 (视觉)
-            packet.Write(isFullMoonActive);        // 满月 (视觉)
-            packet.Write(isCreationDomain);        // 创生领域 (视觉)
+            packet.Write(isVampireWings);          // 吸血鬼翅膀
+            packet.Write(isBatSwarm);              // 蝙蝠化身
+            packet.Write(isMoonlightized);         // 月光化
+            packet.Write(isFullMoonActive);        // 满月
+            packet.Write(isCreationDomain);        // 创生领域
 
             // --- [7] 猎人途径状态 (3个) ---
-            packet.Write(isFireForm);              // 火焰形态 (视觉+伤害)
-            packet.Write(isCalamityGiant);         // 灾祸巨人 (视觉+伤害)
-            packet.Write(isFlameCloakActive);      // 火焰披风 (视觉)
+            packet.Write(isFireForm);              // 火焰形态
+            packet.Write(isCalamityGiant);         // 灾祸巨人
+            packet.Write(isFlameCloakActive);      // 火焰披风
 
             // --- [8] 巨人/战士途径状态 (3个) ---
-            packet.Write(isGuardianStance);        // 守护姿态 (减伤+仇恨)
-            packet.Write(isMercuryForm);           // 水银化 (视觉)
-            packet.Write(dawnArmorActive);         // 黎明铠甲 (视觉)
+            packet.Write(isGuardianStance);        // 守护姿态
+            packet.Write(isMercuryForm);           // 水银化
+            packet.Write(dawnArmorActive);         // 黎明铠甲
 
             // --- [9] 太阳途径状态 (2个) ---
-            packet.Write(isSinging);               // 歌颂 (Buff光环)
-            packet.Write(isSunMessenger);          // 太阳使者 (视觉)
+            packet.Write(isSinging);               // 歌颂
+            packet.Write(isSunMessenger);          // 太阳使者
+
+            // --- [10] 魔女途径状态 (3个) - 【新增补全】 ---
+
 
             packet.Write(isPassiveStealEnabled);
 
@@ -480,6 +486,7 @@ namespace zhashi.Content
         {
             LotMPlayer clone = targetCopy as LotMPlayer;
 
+            // 基础复制
             clone.baseSequence = baseSequence;
             clone.baseMarauderSequence = baseMarauderSequence;
             clone.baseFoolSequence = baseFoolSequence;
@@ -488,7 +495,7 @@ namespace zhashi.Content
             clone.baseSunSequence = baseSunSequence;
             clone.baseDemonessSequence = baseDemonessSequence;
 
-            // [1] 基础
+            // [1]
             clone.currentSequence = currentSequence;
             clone.currentMarauderSequence = currentMarauderSequence;
             clone.currentFoolSequence = currentFoolSequence;
@@ -498,7 +505,7 @@ namespace zhashi.Content
             clone.currentDemonessSequence = currentDemonessSequence;
             clone.spiritualityCurrent = spiritualityCurrent;
 
-            // [2] 寄生
+            // [2]
             clone.isParasitizing = isParasitizing;
             clone.parasiteTargetIndex = parasiteTargetIndex;
             clone.parasiteIsTownNPC = parasiteIsTownNPC;
@@ -506,21 +513,23 @@ namespace zhashi.Content
             clone.purificationProgress = purificationProgress;
             clone.judgmentProgress = judgmentProgress;
             clone.ironBloodRitualProgress = ironBloodRitualProgress;
+            clone.despairRitualCount = despairRitualCount;
+            clone.afflictionRitualTimer = afflictionRitualTimer;
 
-            // [3] 资源
+            // [3]
             clone.spiritWorms = spiritWorms;
 
-            // [4] 愚者
+            // [4]
             clone.isSpiritVisionActive = isSpiritVisionActive;
             clone.isSpiritForm = isSpiritForm;
             clone.graftingMode = graftingMode;
             clone.spiritThreadTargetIndex = spiritThreadTargetIndex;
 
-            // [5] 错误
+            // [5]
             clone.isDeceitDomainActive = isDeceitDomainActive;
             clone.isTimeClockActive = isTimeClockActive;
 
-            // [6] 月亮
+            // [6]
             clone.isTamingActive = isTamingActive;
             clone.isVampireWings = isVampireWings;
             clone.isBatSwarm = isBatSwarm;
@@ -528,19 +537,21 @@ namespace zhashi.Content
             clone.isFullMoonActive = isFullMoonActive;
             clone.isCreationDomain = isCreationDomain;
 
-            // [7] 猎人
+            // [7]
             clone.isFireForm = isFireForm;
             clone.isCalamityGiant = isCalamityGiant;
             clone.isFlameCloakActive = isFlameCloakActive;
 
-            // [8] 巨人
+            // [8]
             clone.isGuardianStance = isGuardianStance;
             clone.isMercuryForm = isMercuryForm;
             clone.dawnArmorActive = dawnArmorActive;
 
-            // [9] 太阳
+            // [9]
             clone.isSinging = isSinging;
             clone.isSunMessenger = isSunMessenger;
+
+            // [10] 魔女
 
             clone.isPassiveStealEnabled = isPassiveStealEnabled;
         }
@@ -549,16 +560,14 @@ namespace zhashi.Content
         {
             LotMPlayer clone = clientPlayer as LotMPlayer;
 
-            // 检查任何一个变量发生变化，就发送同步包
             bool changed =
-
                 clone.baseSequence != baseSequence ||
-        clone.baseMarauderSequence != baseMarauderSequence ||
-        clone.baseFoolSequence != baseFoolSequence ||
-        clone.baseHunterSequence != baseHunterSequence ||
-        clone.baseMoonSequence != baseMoonSequence ||
-        clone.baseSunSequence != baseSunSequence ||
-        clone.baseDemonessSequence != baseDemonessSequence ||
+                clone.baseMarauderSequence != baseMarauderSequence ||
+                clone.baseFoolSequence != baseFoolSequence ||
+                clone.baseHunterSequence != baseHunterSequence ||
+                clone.baseMoonSequence != baseMoonSequence ||
+                clone.baseSunSequence != baseSunSequence ||
+                clone.baseDemonessSequence != baseDemonessSequence ||
 
                 clone.currentSequence != currentSequence ||
                 clone.currentMarauderSequence != currentMarauderSequence ||
@@ -569,7 +578,6 @@ namespace zhashi.Content
                 clone.currentDemonessSequence != currentDemonessSequence ||
                 Math.Abs(clone.spiritualityCurrent - spiritualityCurrent) > 0.1f ||
 
-                // [2]
                 clone.isParasitizing != isParasitizing ||
                 clone.parasiteTargetIndex != parasiteTargetIndex ||
                 clone.parasiteIsTownNPC != parasiteIsTownNPC ||
@@ -577,21 +585,19 @@ namespace zhashi.Content
                 clone.purificationProgress != purificationProgress ||
                 clone.judgmentProgress != judgmentProgress ||
                 clone.ironBloodRitualProgress != ironBloodRitualProgress ||
+                clone.despairRitualCount != despairRitualCount ||
+                clone.afflictionRitualTimer != afflictionRitualTimer ||
 
-                // [3]
                 clone.spiritWorms != spiritWorms ||
 
-                // [4]
                 clone.isSpiritVisionActive != isSpiritVisionActive ||
                 clone.isSpiritForm != isSpiritForm ||
                 clone.graftingMode != graftingMode ||
                 clone.spiritThreadTargetIndex != spiritThreadTargetIndex ||
 
-                // [5]
                 clone.isDeceitDomainActive != isDeceitDomainActive ||
                 clone.isTimeClockActive != isTimeClockActive ||
 
-                // [6]
                 clone.isTamingActive != isTamingActive ||
                 clone.isVampireWings != isVampireWings ||
                 clone.isBatSwarm != isBatSwarm ||
@@ -599,21 +605,19 @@ namespace zhashi.Content
                 clone.isFullMoonActive != isFullMoonActive ||
                 clone.isCreationDomain != isCreationDomain ||
 
-                // [7]
                 clone.isFireForm != isFireForm ||
                 clone.isCalamityGiant != isCalamityGiant ||
                 clone.isFlameCloakActive != isFlameCloakActive ||
 
-                // [8]
                 clone.isGuardianStance != isGuardianStance ||
                 clone.isMercuryForm != isMercuryForm ||
                 clone.dawnArmorActive != dawnArmorActive ||
 
-                // [9]
                 clone.isSinging != isSinging ||
+                clone.isSunMessenger != isSunMessenger ||
+ 
 
-                clone.isPassiveStealEnabled != isPassiveStealEnabled ||
-                clone.isSunMessenger != isSunMessenger;
+                clone.isPassiveStealEnabled != isPassiveStealEnabled;
 
             if (changed)
             {
@@ -1213,7 +1217,37 @@ namespace zhashi.Content
                 Player.ignoreWater = true;
                 Player.statManaMax2 += (int)(100 * foolMult);
             }
-            if (currentFoolSequence <= 6) { Player.accCritterGuide = true; Player.accStopwatch = true; Player.accOreFinder = true; Player.GetDamage(DamageClass.Generic) += 0.15f * foolMult; Player.GetCritChance(DamageClass.Generic) += 10; Player.GetDamage(DamageClass.Magic) += 0.3f * foolMult; Player.gills = true; if (isFacelessActive) { Player.aggro -= 1000; Player.shroomiteStealth = true; Player.statDefense += 10; if (!TryConsumeSpirituality(1.0f, true)) { isFacelessActive = false; Main.NewText("灵性不足，伪装失效！", 255, 50, 50); } } Player.statManaMax2 += (int)(150 * foolMult); }
+            if (currentFoolSequence <= 6)
+            {
+                Player.accCritterGuide = true;
+                Player.accStopwatch = true;
+                Player.accOreFinder = true;
+                Player.GetDamage(DamageClass.Generic) += 0.15f * foolMult;
+                Player.GetCritChance(DamageClass.Generic) += 10;
+                Player.GetDamage(DamageClass.Magic) += 0.3f * foolMult;
+                Player.gills = true;
+                if (isFacelessActive)
+                {
+                    if (Player.itemAnimation > 0)
+                    {
+                        isFacelessActive = false;
+                        Main.NewText("攻击暴露了你的伪装！", 255, 50, 50);
+                    }
+                    if (isFacelessActive)
+                    {
+                        Player.aggro -= 1000;
+                        Player.shroomiteStealth = true;
+                        Player.statDefense += 10;
+                        if (!TryConsumeSpirituality(1.0f, true))
+                        {
+                            isFacelessActive = false;
+                            Main.NewText("灵性不足，伪装失效！", 255, 50, 50);
+                        }
+                    }
+                }
+
+                Player.statManaMax2 += (int)(150 * foolMult);
+            }
             if (currentFoolSequence <= 5) { Player.detectCreature = true; Player.dangerSense = true; Player.findTreasure = true; Player.maxMinions += 3; Player.GetDamage(DamageClass.Magic) += 0.2f * foolMult; Player.statManaMax2 += (int)(200 * foolMult); }
             if (currentFoolSequence <= 4)
             {
@@ -2258,6 +2292,29 @@ namespace zhashi.Content
             float moonMult = GetSequenceMultiplier(currentMoonSequence);
             float giantMult = GetSequenceMultiplier(currentSequence);
             float hunterMult = GetSequenceMultiplier(currentHunterSequence);
+
+            if (SubworldSystem.IsActive<SpiritWorld>())
+            {
+                // 设定每帧消耗的灵性 (60帧 = 1秒)
+                // 这里设定为每秒消耗 5 点灵性
+                float drainAmount = 5f / 60f;
+
+                if (spiritualityCurrent > 0)
+                {
+                    spiritualityCurrent -= drainAmount;
+                }
+                else
+                {
+                    spiritualityCurrent = 0;
+                    // 灵性耗尽的惩罚：扣血
+                    // 每秒扣 10 点血
+                    if (Player.whoAmI == Main.myPlayer && Main.GameUpdateCount % 60 == 0)
+                    {
+                        // 使用 NetworkText 修复之前的过时警告
+                        Player.Hurt(PlayerDeathReason.ByCustomReason(NetworkText.FromLiteral(Player.name + " 在灵界耗尽了灵性...")), 10, 0);
+                    }
+                }
+            }
 
             // --- 新增：歌唱光环逻辑 ---
             if (isSinging)

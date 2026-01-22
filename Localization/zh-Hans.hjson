@@ -1381,7 +1381,7 @@ Mods: {
 					获得夜视与生物探测能力
 					变得体态轻盈，擅长在阴影中潜伏
 					'''
-				DisplayName: 刺客魔药
+				DisplayName: 序列9: 刺客魔药
 			}
 
 			InstigatorPotion: {
@@ -1391,7 +1391,7 @@ Mods: {
 					擅长诱导敌人自相残杀
 					大幅降低自身仇恨，躲在幕后操纵战局
 					'''
-				DisplayName: 教唆者魔药
+				DisplayName: 序列8: 教唆者魔药
 			}
 
 			WitchPotion: {
@@ -1401,11 +1401,11 @@ Mods: {
 					习得黑魔法与诅咒，能造成霜冻与暗影伤害
 					获得隐身能力，魅力大幅提升
 					'''
-				DisplayName: 女巫魔药
+				DisplayName: 序列7: 女巫魔药
 			}
 
 			PleasureDemonessPotion: {
-				DisplayName: 欢愉魔女魔药
+				DisplayName: 序列6:  欢愉魔女魔药
 				Tooltip:
 					'''
 					序列6: 欢愉魔女
@@ -1419,11 +1419,11 @@ Mods: {
 					序列5: 痛苦魔女
 					散播疾病与痛楚，能操纵发丝与蛛网
 					'''
-				DisplayName: 痛苦魔女魔药
+				DisplayName: 序列5: 痛苦魔女魔药
 			}
 
 			DespairDemonessPotion: {
-				DisplayName: 绝望魔女魔药
+				DisplayName: 序列4: 绝望魔女魔药
 				Tooltip:
 					'''
 					序列4: 绝望魔女 (半神)
@@ -1438,7 +1438,7 @@ Mods: {
 					获得青春永驻与死而复生的能力
 					能石化万物
 					'''
-				DisplayName: 不老魔女魔药
+				DisplayName: 序列3: 不老魔女魔药
 			}
 
 			CatastropheDemonessPotion: {
@@ -1447,7 +1447,7 @@ Mods: {
 					序列2: 灾难魔女 (天使)
 					化身为天灾，掌控风雨雷电与极寒
 					'''
-				DisplayName: 灾难魔女魔药
+				DisplayName: 序列2: 灾难魔女魔药
 			}
 
 			ApocalypseDemonessPotion: {
@@ -1456,7 +1456,17 @@ Mods: {
 					序列1: 末日魔女 
 					象征着真正的末日与终结
 					'''
-				DisplayName: 末日魔女魔药
+				DisplayName: 序列1: 末日魔女魔药
+			}
+
+			SpiritWorldKey: {
+				Tooltip:
+					'''
+					向未知的存在祈求，打开通往灵界的大门
+					需长按右键以举行仪式
+					“凡涉足灵界者，必先献祭不属于这个世界的魔力与血肉……”
+					'''
+				DisplayName: 灵界之匙
 			}
 		}
 
