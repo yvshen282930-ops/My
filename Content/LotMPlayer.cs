@@ -35,10 +35,10 @@ namespace zhashi.Content
         public override IEnumerable<Item> AddStartingItems(bool mediumCoreDeath)
         {
             return new[] {
-                // 确保 RoselleDiary 这个类名和 Content/Items/RoselleDiary.cs 里的类名一致
                 new Item(ModContent.ItemType<RoselleDiary>())
             };
         }
+        public override void OnEnterWorld() {string name = Player.name;bool isGehrman = name.Contains("格尔曼") && name.Contains("斯帕罗");if (!isGehrman) isGehrman = name.ToLower().Contains("gehrman") && name.ToLower().Contains("sparrow");if (isGehrman){if (!Player.HasItem(ModContent.ItemType<CreepingHunger>())){Player.QuickSpawnItem(Player.GetSource_GiftOrReward(), ModContent.ItemType<CreepingHunger>());Main.NewText(NetworkText.FromLiteral("疯狂的冒险家，你的手套归来了。"), new Microsoft.Xna.Framework.Color(180, 80, 255));}}}
 
         // ===================================================
         // 1. 核心变量定义
@@ -165,7 +165,6 @@ namespace zhashi.Content
         public int graftingCooldown = 0;          // 嫁接冷却
         public int realmRange = 1500;             // 诡秘之境范围
         public bool waitingForTeleport = false; // 标记：是否正在等待点击传送
-        // 灵之虫系统
         public int spiritWorms = 50;              // 当前灵之虫数量
         public const int MAX_SPIRIT_WORMS = 50;
         public int wormRegenTimer = 0;            // 回复计时器
@@ -177,6 +176,7 @@ namespace zhashi.Content
         public int miracleCooldown = 0;           // 愿望/奇迹冷却
         public bool fateDisturbanceActive = false;// 干扰命运开关
         public int wishCastTimer = 0;             // 按键长按计时
+        public bool isRealmOfMysteriesActive = true; // 诡秘之境开关，默认开启
 
         // --- 错误途径技能状态 ---
         public bool isPassiveStealEnabled = true;
@@ -337,6 +337,7 @@ namespace zhashi.Content
             tag["AfflictionTimer"] = afflictionRitualTimer;
             tag["DespairKills"] = despairRitualCount;
             tag["CatastropheRitual"] = catastropheRitualCount;
+            tag["RealmActive"] = isRealmOfMysteriesActive;
 
             if (DogInventory == null) DogInventory = new Item[3];
             for (int i = 0; i < 3; i++)
@@ -385,6 +386,7 @@ namespace zhashi.Content
             if (tag.ContainsKey("AfflictionTimer")) afflictionRitualTimer = tag.GetInt("AfflictionTimer");
             if (tag.ContainsKey("DespairKills")) despairRitualCount = tag.GetInt("DespairKills");
             if (tag.ContainsKey("CatastropheRitual")) catastropheRitualCount = tag.GetInt("CatastropheRitual");
+            if (tag.ContainsKey("RealmActive")) isRealmOfMysteriesActive = tag.GetBool("RealmActive");
 
 
 
@@ -447,6 +449,7 @@ namespace zhashi.Content
             packet.Write(isSpiritForm);            // 灵体状态
             packet.Write(graftingMode);            // 嫁接模式
             packet.Write(spiritThreadTargetIndex); // 灵体之线目标
+            packet.Write(isRealmOfMysteriesActive);
 
             // --- [5] 错误途径状态 (2个) ---
             packet.Write(isDeceitDomainActive);    // 欺诈领域
@@ -475,6 +478,8 @@ namespace zhashi.Content
             packet.Write(isSunMessenger);          // 太阳使者
 
             // --- [10] 魔女途径状态 (3个) - 【新增补全】 ---
+            packet.Write(isApocalypseForm); // 末日形态 (关键！影响隐身)
+            packet.Write(isDisasterForm);   // 灾难形态 (如果这是个持续开关状态，也建议同步)
 
 
             packet.Write(isPassiveStealEnabled);
@@ -524,6 +529,7 @@ namespace zhashi.Content
             clone.isSpiritForm = isSpiritForm;
             clone.graftingMode = graftingMode;
             clone.spiritThreadTargetIndex = spiritThreadTargetIndex;
+            clone.isRealmOfMysteriesActive = isRealmOfMysteriesActive;
 
             // [5]
             clone.isDeceitDomainActive = isDeceitDomainActive;
@@ -552,6 +558,8 @@ namespace zhashi.Content
             clone.isSunMessenger = isSunMessenger;
 
             // [10] 魔女
+            clone.isApocalypseForm = isApocalypseForm; // 新增
+            clone.isDisasterForm = isDisasterForm;     // 新增
 
             clone.isPassiveStealEnabled = isPassiveStealEnabled;
         }
@@ -594,6 +602,7 @@ namespace zhashi.Content
                 clone.isSpiritForm != isSpiritForm ||
                 clone.graftingMode != graftingMode ||
                 clone.spiritThreadTargetIndex != spiritThreadTargetIndex ||
+                clone.isRealmOfMysteriesActive != isRealmOfMysteriesActive ||
 
                 clone.isDeceitDomainActive != isDeceitDomainActive ||
                 clone.isTimeClockActive != isTimeClockActive ||
@@ -615,7 +624,9 @@ namespace zhashi.Content
 
                 clone.isSinging != isSinging ||
                 clone.isSunMessenger != isSunMessenger ||
- 
+                clone.isApocalypseForm != isApocalypseForm ||
+                clone.isDisasterForm != isDisasterForm ||
+
 
                 clone.isPassiveStealEnabled != isPassiveStealEnabled;
 
@@ -794,9 +805,21 @@ namespace zhashi.Content
             }
             if (currentFoolSequence <= 1)
             {
-                if (Main.GameUpdateCount % 30 == 0)
+                if (LotMKeybinds.Fool_RealmSwitch.JustPressed)
                 {
-                    ProcessRealmOfMysteries();
+                    isRealmOfMysteriesActive = !isRealmOfMysteriesActive;
+                    if (isRealmOfMysteriesActive)
+                        Main.NewText("诡秘之境：[c/00FF00:开启] (吞噬万物)", 255, 255, 255);
+                    else
+                        Main.NewText("诡秘之境：[c/FF0000:关闭] (收敛气息)", 255, 255, 255);
+                }
+
+                if (isRealmOfMysteriesActive)
+                {
+                    if (Main.GameUpdateCount % 30 == 0)
+                    {
+                        ProcessRealmOfMysteries();
+                    }
                 }
             }
             wasMountedBeforeUpdate = Player.mount.Active;
@@ -5712,7 +5735,7 @@ namespace zhashi.Content
             // 基础灵性
             int max = 100;
 
-            // --- 1. 愚者途径 (Fool) ---
+            // 1. 愚者途径
             if (currentFoolSequence <= 9) max = Math.Max(max, 200);
             if (currentFoolSequence <= 8) max = Math.Max(max, 300);
             if (currentFoolSequence <= 7) max = Math.Max(max, 500);
@@ -5721,9 +5744,8 @@ namespace zhashi.Content
             if (currentFoolSequence <= 3) max = Math.Max(max, 20000);
             if (currentFoolSequence <= 2) max = Math.Max(max, 100000);
             if (currentFoolSequence <= 1) max = Math.Max(max, 200000);
-            // 未来更高序列可继续添加...
 
-            // --- 2. 月亮途径 (Moon) ---
+            // 2.月亮途径
             if (currentMoonSequence <= 9) max = Math.Max(max, 150); 
             if (currentMoonSequence <= 8) max = Math.Max(max, 250);
             if (currentMoonSequence <= 7) max = Math.Max(max, 600); 
@@ -5734,31 +5756,29 @@ namespace zhashi.Content
             if (currentMoonSequence <= 2) max = Math.Max(max, 50000);
             if (currentMoonSequence <= 1) max = Math.Max(max, 100000);
 
-            // --- 3. 猎人途径 (Hunter) ---
-            // 猎人主要靠体术，灵性成长较慢，直到高序列
+            // 3.猎人途径
             if (currentHunterSequence <= 9) max = Math.Max(max, 120);
             if (currentHunterSequence <= 8) max = Math.Max(max, 150);
-            if (currentHunterSequence <= 7) max = Math.Max(max, 300); // 纵火家
+            if (currentHunterSequence <= 7) max = Math.Max(max, 300); 
             if (currentHunterSequence <= 6) max = Math.Max(max, 500);
             if (currentHunterSequence <= 5) max = Math.Max(max, 800);
             if (currentHunterSequence <= 4) max = Math.Max(max, 1500);
             if (currentHunterSequence <= 3) max = Math.Max(max, 3000);
-            if (currentHunterSequence <= 2) max = Math.Max(max, 10000); // 天气术士
-            if (currentHunterSequence <= 1) max = Math.Max(max, 100000); // 征服者
+            if (currentHunterSequence <= 2) max = Math.Max(max, 10000); 
+            if (currentHunterSequence <= 1) max = Math.Max(max, 100000); 
 
-            // --- 4. 巨人途径 (Giant) ---
-            // 战士途径灵性最低，主要靠体力
+            //4. 巨人途径
             if (currentSequence <= 9) max = Math.Max(max, 100);
             if (currentSequence <= 8) max = Math.Max(max, 150);
             if (currentSequence <= 7) max = Math.Max(max, 250);
-            if (currentSequence <= 6) max = Math.Max(max, 400); // 黎明骑士
+            if (currentSequence <= 6) max = Math.Max(max, 400); 
             if (currentSequence <= 5) max = Math.Max(max, 700);
             if (currentSequence <= 4) max = Math.Max(max, 1200);
-            if (currentSequence <= 3) max = Math.Max(max, 3000); // 银骑士
-            if (currentSequence <= 2) max = Math.Max(max, 10000); // 荣耀战神 (神性质变)
+            if (currentSequence <= 3) max = Math.Max(max, 3000); 
+            if (currentSequence <= 2) max = Math.Max(max, 10000); 
             if (currentSequence <= 1) max = Math.Max(max, 30000);
 
-            // --- 5. 错误途径 (灵性专长，成长较高)---
+            //5.错误途径
             if (currentMarauderSequence <= 9) max = Math.Max(max, 100);
             if (currentMarauderSequence <= 8) max = Math.Max(max, 200);
             if (currentMarauderSequence <= 7) max = Math.Max(max, 500);
@@ -5769,7 +5789,7 @@ namespace zhashi.Content
             if (currentMarauderSequence <= 2) max = Math.Max(max, 50000);
             if (currentMarauderSequence <= 1) max = Math.Max(max, 100000);
 
-            // --- 6. 太阳途径 (Sun) ---
+            //6.太阳途径
             if (currentSunSequence <= 9) max = Math.Max(max, 100);
             if (currentSunSequence <= 8) max = Math.Max(max, 200);
             if (currentSunSequence <= 7) max = Math.Max(max, 500);
@@ -5780,7 +5800,7 @@ namespace zhashi.Content
             if (currentSunSequence <= 2) max = Math.Max(max, 20000);
             if (currentSunSequence <= 1) max = Math.Max(max, 60000);
 
-            // --- 7. 魔女途径 (Sun) ---
+            //7.魔女途径
             if (currentDemonessSequence <= 9) max = Math.Max(max, 120);
             if (currentDemonessSequence <= 8) max = Math.Max(max, 200);
             if (currentDemonessSequence <= 7) max = Math.Max(max, 500);

@@ -20,12 +20,15 @@ namespace zhashi.Content.Dimensions
             {
                 // ==== 生物加强 ====
                 npc.lifeMax = (int)(npc.lifeMax * 2.5f); // 血量 2.5 倍
+                // ★★★ 新增：由 maxLife 变化后，需要补满当前血量 ★★★
+                npc.life = npc.lifeMax;
+
                 npc.damage = (int)(npc.damage * 1.5f);   // 伤害 1.5 倍
                 npc.defense = (int)(npc.defense * 1.2f); // 防御 1.2 倍
                 npc.knockBackResist *= 0.5f;             // 更难被击退
 
                 // ==== 战利品翻倍 (钱币) ====
-                npc.value *= 2; // 掉落的钱币翻倍
+                npc.value *= 2;
             }
         }
 
@@ -37,7 +40,7 @@ namespace zhashi.Content.Dimensions
             if (!npc.friendly && !npc.townNPC)
             {
                 // 举例：必掉一个金币作为“灵界奖励”
-                // Item.NewItem(npc.GetSource_Death(), npc.getRect(), ItemID.GoldCoin, 1);
+                Item.NewItem(npc.GetSource_Death(), npc.getRect(), ItemID.GoldCoin, 1);
             }
         }
     }

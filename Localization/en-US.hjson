@@ -887,6 +887,16 @@ Mods: {
 				Tooltip: ""
 				DisplayName: Spirit World Key
 			}
+
+			MirrorKey: {
+				DisplayName: Mirror Key
+				Tooltip: ""
+			}
+
+			CreepingHunger: {
+				Tooltip: ""
+				DisplayName: Creeping Hunger
+			}
 		}
 
 		# ==========================================
@@ -1184,6 +1194,7 @@ Mods: {
 			"魔女: 时间石化.DisplayName": 魔女: 时间石化
 			"魔女:天灾 .DisplayName": 魔女:天灾
 			"魔女:毁灭 .DisplayName": 魔女:毁灭
+			"愚者: 诡秘之境开关.DisplayName": 愚者: 诡秘之境开关
 		}
 
 		# ==========================================

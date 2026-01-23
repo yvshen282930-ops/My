@@ -10,11 +10,12 @@ namespace zhashi.Content.Projectiles
 {
     public class MarionetteMinion : ModProjectile
     {
-        public override string Texture => "Terraria/Images/NPC_" + NPCID.TargetDummy;
+        // 指向你的新图片路径
+        public override string Texture => "zhashi/Content/Projectiles/MarionetteMinion";
 
         public override void SetStaticDefaults()
         {
-            Main.projFrames[Projectile.type] = 1;
+            Main.projFrames[Projectile.type] = 1; // 如果后续想加动画，记得改这里的帧数
 
             ProjectileID.Sets.MinionTargettingFeature[Projectile.type] = true;
             Main.projPet[Projectile.type] = true;
@@ -26,6 +27,7 @@ namespace zhashi.Content.Projectiles
         {
             Projectile.width = 30;
             Projectile.height = 50;
+
             Projectile.tileCollide = true;
             Projectile.ignoreWater = false;
             Projectile.friendly = true;
@@ -35,11 +37,10 @@ namespace zhashi.Content.Projectiles
             Projectile.timeLeft = 18000;
             Projectile.DamageType = DamageClass.Summon;
 
-            // 使用原版史莱姆 AI (保证跳跃能力)
+            // 使用原版史莱姆 AI
             Projectile.aiStyle = 26;
             AIType = ProjectileID.BabySlime;
 
-            // 独立无敌帧
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 20;
         }
@@ -49,11 +50,10 @@ namespace zhashi.Content.Projectiles
             Player player = Main.player[Projectile.owner];
             if (!player.active || player.dead) { Projectile.Kill(); return; }
 
-            // 1. 强制修正属性 (对抗原版AI的自动重置)
             Projectile.friendly = true;
             Projectile.minion = true;
             Projectile.DamageType = DamageClass.Summon;
-            Projectile.rotation = 0f; // 禁止旋转
+            Projectile.rotation = 0f;
 
             // 处理朝向
             if (Projectile.velocity.X > 0.1f) Projectile.spriteDirection = -1;
@@ -73,48 +73,32 @@ namespace zhashi.Content.Projectiles
                 Projectile.velocity = Vector2.Zero;
             }
 
-            // ========================================================
-            // 【核心修复】手动强行检测伤害
-            // 既然原版 AI 可能会关闭伤害，我们就在这里手动打人
-            // ========================================================
             CheckContactDamage(player);
+            Projectile.frame = 0;
         }
 
-        // 手动伤害判定函数
         private void CheckContactDamage(Player player)
         {
-            // 获取自己的碰撞箱
             Rectangle myRect = Projectile.getRect();
-
-            // 遍历所有 NPC
             foreach (NPC target in Main.ActiveNPCs)
             {
-                // 如果是敌人，且接触到了，且敌人不无敌
                 if (!target.friendly && !target.dontTakeDamage && target.lifeMax > 5 && myRect.Intersects(target.getRect()))
                 {
-                    // 检查是否处于无敌帧中 (防止一秒打60次)
                     if (target.immune[Projectile.owner] == 0 && Projectile.localNPCImmunity[target.whoAmI] == 0)
                     {
-                        // 计算伤害
                         int damage = Projectile.damage;
-
-                        // 应用伤害 (这也是 ApplyDamageToNPC 的底层逻辑)
                         target.SimpleStrikeNPC(damage, 0, Main.rand.NextBool(4), 0, DamageClass.Summon, true, player.luck);
-
-                        // 设置无敌帧
                         target.immune[Projectile.owner] = 20;
                         Projectile.localNPCImmunity[target.whoAmI] = 20;
 
-                        // 视觉反馈：撞击效果
                         Projectile.velocity.X *= -0.5f;
                         Projectile.velocity.Y = -4f;
-                        Terraria.Audio.SoundEngine.PlaySound(SoundID.Item10, target.Center); // 打击声
+                        Terraria.Audio.SoundEngine.PlaySound(SoundID.Item10, target.Center);
                     }
                 }
             }
         }
 
-        // 墙壁碰撞微调
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
             if (Projectile.velocity.X != oldVelocity.X)
@@ -124,24 +108,48 @@ namespace zhashi.Content.Projectiles
             return false;
         }
 
-        // 贴图绘制 (保持不变)
+        // ========================================================
+        // 【新增】绘制函数：将新贴图染成银白色
+        // ========================================================
         public override bool PreDraw(ref Color lightColor)
         {
-            int shaderId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.BrightSilverDye);
+            // 1. 获取贴图资源
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
-            int frameHeight = texture.Height / Main.npcFrameCount[NPCID.TargetDummy];
-            Rectangle sourceRect = new Rectangle(0, 0, texture.Width, frameHeight);
+
+            // 2. 获取“光亮银染料”的着色器 ID (Bright Silver Dye)
+            // 如果你觉得太亮了，可以改成 ItemID.SilverDye (普通银染料)
+            int shaderId = GameShaders.Armor.GetShaderIdFromItemId(ItemID.BrightSilverDye);
+
+            // 3. 计算绘制区域 (处理动画帧，虽然目前只有1帧)
+            int frameHeight = texture.Height / Main.projFrames[Projectile.type];
+            int startY = frameHeight * Projectile.frame;
+            Rectangle sourceRect = new Rectangle(0, startY, texture.Width, frameHeight);
+
+            // 4. 计算绘制中心点
+            Vector2 origin = sourceRect.Size() / 2f;
+
+            // 5. 计算绘制位置 (修正屏幕坐标)
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
-            Vector2 origin = new Vector2(texture.Width / 2f, frameHeight / 2f + 18f);
+            drawPos.Y += Projectile.gfxOffY; // 加上这个可以让贴图在斜坡上移动更平滑
+
+            // 6. 确定翻转方向
             SpriteEffects effects = Projectile.spriteDirection == 1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
 
+            // 7. 开启特殊的绘制模式 (Shader模式)
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.Default, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
+
+            // 8. 应用银色 Shader
             GameShaders.Armor.GetSecondaryShader(shaderId, Main.LocalPlayer).Apply(null);
-            Main.EntitySpriteDraw(texture, drawPos, sourceRect, Color.White, 0f, origin, Projectile.scale, effects, 0);
+
+            // 9. 绘制本体 (注意：这里颜色传 Color.White 以保证最大亮度，或者传 lightColor 让它受环境光影响)
+            Main.EntitySpriteDraw(texture, drawPos, sourceRect, Color.White, Projectile.rotation, origin, Projectile.scale, effects, 0);
+
+            // 10. 结束 Shader 绘制，恢复默认绘制模式 (非常重要，否则后续UI会乱掉)
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.ZoomMatrix);
 
+            // 返回 false 告诉系统：“我已经画完了，你不要再用默认方式画一遍了”
             return false;
         }
     }

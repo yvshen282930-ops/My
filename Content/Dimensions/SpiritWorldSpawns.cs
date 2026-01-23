@@ -48,12 +48,8 @@ namespace zhashi.Content.Dimensions
                 // 3. 随机 Boss 生成
                 if (currentBossCount < 5)
                 {
-                    float bossWeight = 0.005f; // 0.5% 的生成权重
+                    float bossWeight = 0.001f; // 0.1% 的生成权重
 
-                    // === 本 Mod Boss ===
-                    pool.Add(ModContent.NPCType<Aurmir>(), bossWeight);
-
-                    // ★ 已删除 TestBoss ★
 
                     // === 原版 Boss ===
                     pool.Add(NPCID.KingSlime, bossWeight);

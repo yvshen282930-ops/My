@@ -9,7 +9,7 @@ using zhashi.Content.Systems;
 
 namespace zhashi
 {
-    // ★★★ 修复点：将枚举移到 Class 外面，直接放在 Namespace 下 ★★★
+    // 网络消息类型枚举
     public enum LotMNetMsg : byte
     {
         PlayerSync = 0,
@@ -27,77 +27,168 @@ namespace zhashi
 
             switch (msgType)
             {
-                // Case 0: 战斗玩家数据同步
+                // =================================================================
+                // Case 0: 战斗玩家数据同步 (修复读取不足错误)
+                // =================================================================
                 case LotMNetMsg.PlayerSync:
                     byte playernumber = reader.ReadByte();
-                    if (playernumber >= Main.maxPlayers || !Main.player[playernumber].active) return;
-                    LotMPlayer modPlayer = Main.player[playernumber].GetModPlayer<LotMPlayer>();
 
-                    // 读取数据
-                    modPlayer.baseSequence = reader.ReadInt32();
-                    modPlayer.baseMarauderSequence = reader.ReadInt32();
-                    modPlayer.baseFoolSequence = reader.ReadInt32();
-                    modPlayer.baseHunterSequence = reader.ReadInt32();
-                    modPlayer.baseMoonSequence = reader.ReadInt32();
-                    modPlayer.baseSunSequence = reader.ReadInt32();
-                    modPlayer.baseDemonessSequence = reader.ReadInt32();
+                    // 【重要修复】即使玩家不活跃，也不能直接 return，必须把数据读完！
+                    // 我们先获取 ModPlayer，如果 playernumber 合法，GetModPlayer 总是安全的
+                    LotMPlayer modPlayer = null;
+                    if (playernumber < Main.maxPlayers)
+                    {
+                        modPlayer = Main.player[playernumber].GetModPlayer<LotMPlayer>();
+                    }
 
-                    modPlayer.currentSequence = reader.ReadInt32();
-                    modPlayer.currentMarauderSequence = reader.ReadInt32();
-                    modPlayer.currentFoolSequence = reader.ReadInt32();
-                    modPlayer.currentHunterSequence = reader.ReadInt32();
-                    modPlayer.currentMoonSequence = reader.ReadInt32();
-                    modPlayer.currentSunSequence = reader.ReadInt32();
-                    modPlayer.currentDemonessSequence = reader.ReadInt32();
-                    modPlayer.spiritualityCurrent = reader.ReadSingle();
+                    // --- [0] 读取基础序列等级 (7个 int) ---
+                    int baseSeq = reader.ReadInt32();
+                    int baseMarauder = reader.ReadInt32();
+                    int baseFool = reader.ReadInt32();
+                    int baseHunter = reader.ReadInt32();
+                    int baseMoon = reader.ReadInt32();
+                    int baseSun = reader.ReadInt32();
+                    int baseDemoness = reader.ReadInt32();
 
-                    modPlayer.isParasitizing = reader.ReadBoolean();
-                    modPlayer.parasiteTargetIndex = reader.ReadInt32();
-                    modPlayer.parasiteIsTownNPC = reader.ReadBoolean();
-                    modPlayer.parasiteIsPlayer = reader.ReadBoolean();
-                    modPlayer.purificationProgress = reader.ReadInt32();
-                    modPlayer.judgmentProgress = reader.ReadInt32();
-                    modPlayer.ironBloodRitualProgress = reader.ReadInt32();
-                    modPlayer.despairRitualCount = reader.ReadInt32();      // 序列4 仪式
-                    modPlayer.afflictionRitualTimer = reader.ReadInt32();   // 序列5 仪式
+                    // --- [1] 读取当前序列等级 (7个 int) + 灵性 (1个 float) ---
+                    int currSeq = reader.ReadInt32();
+                    int currMarauder = reader.ReadInt32();
+                    int currFool = reader.ReadInt32();
+                    int currHunter = reader.ReadInt32();
+                    int currMoon = reader.ReadInt32();
+                    int currSun = reader.ReadInt32();
+                    int currDemoness = reader.ReadInt32();
+                    float spiritCurr = reader.ReadSingle();
 
-                    modPlayer.despairRitualCount = reader.ReadInt32();
+                    // --- [2] 读取寄生与仪式状态 ---
+                    bool isParasitizing = reader.ReadBoolean();
+                    int parasiteTarget = reader.ReadInt32();
+                    bool parasiteNPC = reader.ReadBoolean();
+                    bool parasitePlayer = reader.ReadBoolean();
+                    int purifyProg = reader.ReadInt32();
+                    int judgeProg = reader.ReadInt32();
+                    int ironProg = reader.ReadInt32();
+                    int despairCount = reader.ReadInt32();
+                    int afflictTimer = reader.ReadInt32();
 
-                    modPlayer.spiritWorms = reader.ReadInt32();
+                    // --- [3] 核心资源 ---
+                    int spiritWorms = reader.ReadInt32();
 
-                    modPlayer.isSpiritVisionActive = reader.ReadBoolean();
-                    modPlayer.isSpiritForm = reader.ReadBoolean();
-                    modPlayer.graftingMode = reader.ReadInt32();
-                    modPlayer.spiritThreadTargetIndex = reader.ReadInt32();
+                    // --- [4] 愚者途径状态 ---
+                    bool spiritVis = reader.ReadBoolean();
+                    bool spiritForm = reader.ReadBoolean();
+                    int graftMode = reader.ReadInt32();
+                    int threadTarget = reader.ReadInt32();
 
-                    modPlayer.isDeceitDomainActive = reader.ReadBoolean();
-                    modPlayer.isTimeClockActive = reader.ReadBoolean();
+                    // --- [5] 错误途径状态 ---
+                    bool deceitDom = reader.ReadBoolean();
+                    bool timeClock = reader.ReadBoolean();
 
-                    modPlayer.isTamingActive = reader.ReadBoolean();
-                    modPlayer.isVampireWings = reader.ReadBoolean();
-                    modPlayer.isBatSwarm = reader.ReadBoolean();
-                    modPlayer.isMoonlightized = reader.ReadBoolean();
-                    modPlayer.isFullMoonActive = reader.ReadBoolean();
-                    modPlayer.isCreationDomain = reader.ReadBoolean();
+                    // --- [6] 月亮途径状态 ---
+                    bool taming = reader.ReadBoolean();
+                    bool vWings = reader.ReadBoolean();
+                    bool batSwarm = reader.ReadBoolean();
+                    bool moonLight = reader.ReadBoolean();
+                    bool fullMoon = reader.ReadBoolean();
+                    bool createDom = reader.ReadBoolean();
 
-                    modPlayer.isFireForm = reader.ReadBoolean();
-                    modPlayer.isCalamityGiant = reader.ReadBoolean();
-                    modPlayer.isFlameCloakActive = reader.ReadBoolean();
+                    // --- [7] 猎人途径状态 ---
+                    bool fireForm = reader.ReadBoolean();
+                    bool calGiant = reader.ReadBoolean();
+                    bool flameCloak = reader.ReadBoolean();
 
-                    modPlayer.isGuardianStance = reader.ReadBoolean();
-                    modPlayer.isMercuryForm = reader.ReadBoolean();
-                    modPlayer.dawnArmorActive = reader.ReadBoolean();
+                    // --- [8] 巨人/战士途径状态 ---
+                    bool guardStance = reader.ReadBoolean();
+                    bool mercForm = reader.ReadBoolean();
+                    bool dawnArmor = reader.ReadBoolean();
 
-                    modPlayer.isSinging = reader.ReadBoolean();
-                    modPlayer.isSunMessenger = reader.ReadBoolean();
+                    // --- [9] 太阳途径状态 ---
+                    bool singing = reader.ReadBoolean();
+                    bool sunMsg = reader.ReadBoolean();
 
-                    modPlayer.isPassiveStealEnabled = reader.ReadBoolean();
+                    // --- [10] 其他/魔女 ---
+                    bool passSteal = reader.ReadBoolean();
 
-                    if (Main.netMode == NetmodeID.Server)
-                        modPlayer.SyncPlayer(-1, whoAmI, false);
+                    // 【新增补全】配合 LotMPlayer.cs 的补全建议（如果 LotMPlayer 没改这里可以不加，但建议加上）
+                    // 只要你之前的 SyncPlayer 里加了下面三行，这里就必须加，否则会再次报错。
+                    // 鉴于你上传的 LotMPlayer 还没有加那三行，我先把它们注释掉，以免不匹配。
+                    // bool apoForm = reader.ReadBoolean(); 
+                    // bool disForm = reader.ReadBoolean();
+
+                    // --- 赋值阶段 ---
+                    // 数据全部读完后，再检查 modPlayer 是否有效进行赋值
+                    // 只要玩家ID不越界，我们都进行赋值，这样可以保证数据同步，即使 active 暂时为 false
+                    if (modPlayer != null)
+                    {
+                        modPlayer.baseSequence = baseSeq;
+                        modPlayer.baseMarauderSequence = baseMarauder;
+                        modPlayer.baseFoolSequence = baseFool;
+                        modPlayer.baseHunterSequence = baseHunter;
+                        modPlayer.baseMoonSequence = baseMoon;
+                        modPlayer.baseSunSequence = baseSun;
+                        modPlayer.baseDemonessSequence = baseDemoness;
+
+                        modPlayer.currentSequence = currSeq;
+                        modPlayer.currentMarauderSequence = currMarauder;
+                        modPlayer.currentFoolSequence = currFool;
+                        modPlayer.currentHunterSequence = currHunter;
+                        modPlayer.currentMoonSequence = currMoon;
+                        modPlayer.currentSunSequence = currSun;
+                        modPlayer.currentDemonessSequence = currDemoness;
+                        modPlayer.spiritualityCurrent = spiritCurr;
+
+                        modPlayer.isParasitizing = isParasitizing;
+                        modPlayer.parasiteTargetIndex = parasiteTarget;
+                        modPlayer.parasiteIsTownNPC = parasiteNPC;
+                        modPlayer.parasiteIsPlayer = parasitePlayer;
+                        modPlayer.purificationProgress = purifyProg;
+                        modPlayer.judgmentProgress = judgeProg;
+                        modPlayer.ironBloodRitualProgress = ironProg;
+                        modPlayer.despairRitualCount = despairCount;
+                        modPlayer.afflictionRitualTimer = afflictTimer;
+
+                        modPlayer.spiritWorms = spiritWorms;
+
+                        modPlayer.isSpiritVisionActive = spiritVis;
+                        modPlayer.isSpiritForm = spiritForm;
+                        modPlayer.graftingMode = graftMode;
+                        modPlayer.spiritThreadTargetIndex = threadTarget;
+
+                        modPlayer.isDeceitDomainActive = deceitDom;
+                        modPlayer.isTimeClockActive = timeClock;
+
+                        modPlayer.isTamingActive = taming;
+                        modPlayer.isVampireWings = vWings;
+                        modPlayer.isBatSwarm = batSwarm;
+                        modPlayer.isMoonlightized = moonLight;
+                        modPlayer.isFullMoonActive = fullMoon;
+                        modPlayer.isCreationDomain = createDom;
+
+                        modPlayer.isFireForm = fireForm;
+                        modPlayer.isCalamityGiant = calGiant;
+                        modPlayer.isFlameCloakActive = flameCloak;
+
+                        modPlayer.isGuardianStance = guardStance;
+                        modPlayer.isMercuryForm = mercForm;
+                        modPlayer.dawnArmorActive = dawnArmor;
+
+                        modPlayer.isSinging = singing;
+                        modPlayer.isSunMessenger = sunMsg;
+
+                        modPlayer.isApocalypseForm = reader.ReadBoolean(); // 新增读取
+                        modPlayer.isDisasterForm = reader.ReadBoolean();   // 新增读取
+
+                        modPlayer.isPassiveStealEnabled = passSteal;
+
+                        // 如果是服务器收到包，转发给其他客户端
+                        if (Main.netMode == NetmodeID.Server)
+                            modPlayer.SyncPlayer(-1, whoAmI, false);
+                    }
                     break;
 
-                // Case 1: 太阳压制
+                // =================================================================
+                // Case 1: 太阳压制 (未变动)
+                // =================================================================
                 case LotMNetMsg.ApplySunSuppression:
                     int targetWho = reader.ReadByte();
                     int duration = reader.ReadInt32();
@@ -111,7 +202,9 @@ namespace zhashi
                     }
                     break;
 
-                // Case 2: 好感度
+                // =================================================================
+                // Case 2: 好感度 (未变动)
+                // =================================================================
                 case LotMNetMsg.SyncFavorability:
                     int npcID = reader.ReadInt32();
                     int score = reader.ReadInt32();
@@ -129,24 +222,45 @@ namespace zhashi
                     }
                     break;
 
-                // Case 3: 剧情
+                // =================================================================
+                // Case 3: 剧情数据同步 (修复读取不足错误)
+                // =================================================================
                 case LotMNetMsg.StoryDataSync:
                     byte storyPlayerNum = reader.ReadByte();
-                    if (storyPlayerNum >= Main.maxPlayers || !Main.player[storyPlayerNum].active) return;
-                    LotMStoryPlayer storyPlayer = Main.player[storyPlayerNum].GetModPlayer<LotMStoryPlayer>();
 
-                    storyPlayer.StoryStage = reader.ReadInt32();
-                    storyPlayer.DaysSinceJoined = reader.ReadInt32();
-                    storyPlayer.HasDailyQuest = reader.ReadBoolean();
-                    storyPlayer.QuestCompletedToday = reader.ReadBoolean();
-                    storyPlayer.QuestType = reader.ReadInt32();
-                    storyPlayer.QuestTargetID = reader.ReadInt32();
-                    storyPlayer.QuestRequiredAmount = reader.ReadInt32();
-                    storyPlayer.QuestCurrentAmount = reader.ReadInt32();
-                    storyPlayer.HasReceivedStarterPotion = reader.ReadBoolean();
+                    LotMStoryPlayer storyPlayer = null;
+                    if (storyPlayerNum < Main.maxPlayers)
+                    {
+                        storyPlayer = Main.player[storyPlayerNum].GetModPlayer<LotMStoryPlayer>();
+                    }
 
-                    if (Main.netMode == NetmodeID.Server)
-                        storyPlayer.SyncPlayer(-1, whoAmI, false);
+                    // 必须先读完所有数据
+                    int sStage = reader.ReadInt32();
+                    int sDays = reader.ReadInt32();
+                    bool sDaily = reader.ReadBoolean();
+                    bool sComp = reader.ReadBoolean();
+                    int sType = reader.ReadInt32();
+                    int sTarget = reader.ReadInt32();
+                    int sReq = reader.ReadInt32();
+                    int sCurr = reader.ReadInt32();
+                    bool sPotion = reader.ReadBoolean();
+
+                    // 再赋值
+                    if (storyPlayer != null)
+                    {
+                        storyPlayer.StoryStage = sStage;
+                        storyPlayer.DaysSinceJoined = sDays;
+                        storyPlayer.HasDailyQuest = sDaily;
+                        storyPlayer.QuestCompletedToday = sComp;
+                        storyPlayer.QuestType = sType;
+                        storyPlayer.QuestTargetID = sTarget;
+                        storyPlayer.QuestRequiredAmount = sReq;
+                        storyPlayer.QuestCurrentAmount = sCurr;
+                        storyPlayer.HasReceivedStarterPotion = sPotion;
+
+                        if (Main.netMode == NetmodeID.Server)
+                            storyPlayer.SyncPlayer(-1, whoAmI, false);
+                    }
                     break;
             }
         }

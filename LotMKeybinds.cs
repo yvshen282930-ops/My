@@ -52,6 +52,7 @@ namespace zhashi
         public static ModKeybind Fool_Miracle { get; private set; }      // 奇迹愿望 (V - 序列2)
         public static ModKeybind Fool_Grafting { get; private set; }     // 嫁接 (G - 序列1)
         public static ModKeybind Fool_SpiritForm { get; private set; }   // 灵肉转化 (V - 序列1)
+        public static ModKeybind Fool_RealmSwitch { get; private set; } // 新增：诡秘之境开关
 
         // --- 错误途径 (Fool) [新增] ---
         public static ModKeybind Marauder_StealToggle { get; private set; }
@@ -127,6 +128,7 @@ namespace zhashi
             Fool_Miracle = KeybindLoader.RegisterKeybind(Mod, "愚者: 奇迹愿望", "V"); // 默认也设为 V
             Fool_Grafting = KeybindLoader.RegisterKeybind(Mod, "愚者: 嫁接", "G");    // 默认设为 G
             Fool_SpiritForm = KeybindLoader.RegisterKeybind(Mod, "愚者: 灵肉转化", "V"); // 默认设为 V
+            Fool_RealmSwitch = KeybindLoader.RegisterKeybind(Mod, "愚者: 诡秘之境开关", "L");
 
             // Marauder [新增]
             Marauder_StealToggle = KeybindLoader.RegisterKeybind(Mod, "错误: 窃取被动开关", "I");
