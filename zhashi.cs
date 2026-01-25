@@ -79,6 +79,7 @@ namespace zhashi
                     bool spiritForm = reader.ReadBoolean();
                     int graftMode = reader.ReadInt32();
                     int threadTarget = reader.ReadInt32();
+                    bool realmActive = reader.ReadBoolean();
 
                     // --- [5] 错误途径状态 ---
                     bool deceitDom = reader.ReadBoolean();
@@ -109,15 +110,6 @@ namespace zhashi
                     // --- [10] 其他/魔女 ---
                     bool passSteal = reader.ReadBoolean();
 
-                    // 【新增补全】配合 LotMPlayer.cs 的补全建议（如果 LotMPlayer 没改这里可以不加，但建议加上）
-                    // 只要你之前的 SyncPlayer 里加了下面三行，这里就必须加，否则会再次报错。
-                    // 鉴于你上传的 LotMPlayer 还没有加那三行，我先把它们注释掉，以免不匹配。
-                    // bool apoForm = reader.ReadBoolean(); 
-                    // bool disForm = reader.ReadBoolean();
-
-                    // --- 赋值阶段 ---
-                    // 数据全部读完后，再检查 modPlayer 是否有效进行赋值
-                    // 只要玩家ID不越界，我们都进行赋值，这样可以保证数据同步，即使 active 暂时为 false
                     if (modPlayer != null)
                     {
                         modPlayer.baseSequence = baseSeq;

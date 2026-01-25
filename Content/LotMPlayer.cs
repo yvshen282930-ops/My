@@ -38,7 +38,30 @@ namespace zhashi.Content
                 new Item(ModContent.ItemType<RoselleDiary>())
             };
         }
-        public override void OnEnterWorld() {string name = Player.name;bool isGehrman = name.Contains("格尔曼") && name.Contains("斯帕罗");if (!isGehrman) isGehrman = name.ToLower().Contains("gehrman") && name.ToLower().Contains("sparrow");if (isGehrman){if (!Player.HasItem(ModContent.ItemType<CreepingHunger>())){Player.QuickSpawnItem(Player.GetSource_GiftOrReward(), ModContent.ItemType<CreepingHunger>());Main.NewText(NetworkText.FromLiteral("疯狂的冒险家，你的手套归来了。"), new Microsoft.Xna.Framework.Color(180, 80, 255));}}}
+        public override void OnEnterWorld()
+        {
+            string name = Player.name;
+            bool isGehrman = name.Contains("格尔曼") && name.Contains("斯帕罗");
+            if (!isGehrman) isGehrman = name.ToLower().Contains("gehrman") && name.ToLower().Contains("sparrow");
+            if (isGehrman)
+            {
+                if (!Player.HasItem(ModContent.ItemType<CreepingHunger>()))
+                {
+                    Player.QuickSpawnItem(Player.GetSource_GiftOrReward(), ModContent.ItemType<CreepingHunger>());
+                    Main.NewText(Terraria.Localization.NetworkText.FromLiteral("疯狂的冒险家，你的手套归来了。"), new Microsoft.Xna.Framework.Color(180, 80, 255));
+                }
+            }
+            if (name == "周明瑞" || name == "Klein Moretti")
+            {
+                if (!Player.HasItem(ModContent.ItemType<Items.Consumables.LuckEnhancementRitual>()))
+                {
+                    Player.QuickSpawnItem(Player.GetSource_GiftOrReward(), ModContent.ItemType<Items.Consumables.LuckEnhancementRitual>());
+
+                    Main.NewText(Terraria.Localization.NetworkText.FromLiteral("一段古老的记忆在你脑海中苏醒..."), Color.LightGray);
+                    Main.NewText(Terraria.Localization.NetworkText.FromLiteral("获得了 [i:" + ModContent.ItemType<Items.Consumables.LuckEnhancementRitual>() + "] 转运仪式"), Color.Gold);
+                }
+            }
+        }
 
         // ===================================================
         // 1. 核心变量定义

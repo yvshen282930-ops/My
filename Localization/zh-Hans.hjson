@@ -1491,7 +1491,18 @@ Mods: {
 					'''
 				DisplayName: 蠕动的饥饿（测试版）
 			}
-		}
+
+			LuckEnhancementRitual: {
+        DisplayName: 转运仪式
+        Tooltip: 
+            '''
+            "福生玄黄仙尊..."
+            "福生玄黄天君..."
+            "福生玄黄上帝..."
+            "福生玄黄天尊..."
+            长按以迈出逆时针的四步，并在最后一步进入灰雾之上。
+            '''
+    }		}
 
 		# ==========================================
 		#              Projectiles
@@ -1922,5 +1933,12 @@ Mods: {
 		}
 
 		// Tiles.MysteryMusicBox1Tile.MapEntry: Mystery Music Box1 Tile
+
+		Biomes: {
+			OriginCastleBiome: {
+				// DisplayName: Origin Castle Biome
+				// TownNPCDialogueName: the Origin Castle Biome
+			}
+		}
 	}
 }

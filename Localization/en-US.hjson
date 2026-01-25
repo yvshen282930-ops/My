@@ -897,6 +897,11 @@ Mods: {
 				Tooltip: ""
 				DisplayName: Creeping Hunger
 			}
+
+			LuckEnhancementRitual: {
+				DisplayName: Luck Enhancement Ritual
+				Tooltip: ""
+			}
 		}
 
 		# ==========================================
@@ -1281,5 +1286,12 @@ Mods: {
 		}
 
 		Tiles.MysteryMusicBox1Tile.MapEntry: Mystery Music Box1 Tile
+
+		Biomes: {
+			OriginCastleBiome: {
+				DisplayName: Origin Castle Biome
+				TownNPCDialogueName: the Origin Castle Biome
+			}
+		}
 	}
 }
