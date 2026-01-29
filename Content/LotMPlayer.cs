@@ -26,6 +26,7 @@ using Terraria.Localization;
 using Terraria.DataStructures;
 using SubworldLibrary; // 引用子世界库
 using zhashi.Content.Dimensions; // 引用你的灵界定义
+using zhashi.Content.DaqianLu;
 
 
 namespace zhashi.Content
@@ -199,7 +200,7 @@ namespace zhashi.Content
         public int miracleCooldown = 0;           // 愿望/奇迹冷却
         public bool fateDisturbanceActive = false;// 干扰命运开关
         public int wishCastTimer = 0;             // 按键长按计时
-        public bool isRealmOfMysteriesActive = true; // 诡秘之境开关，默认开启
+        public bool isRealmOfMysteriesActive = false; // 诡秘之境开关
 
         // --- 错误途径技能状态 ---
         public bool isPassiveStealEnabled = true;
@@ -3234,7 +3235,6 @@ namespace zhashi.Content
                         if (isLoversCardEquipped)
                         {
                             finalChance = 1.0f; // 强制几率为 100% (必定掉落)
-                            // 注意：对于 Boss，强制掉落可能会过于变态，如果想平衡可以改为 finalChance = 0.1f;
                         }
                         // ===========================
 
@@ -4014,6 +4014,12 @@ namespace zhashi.Content
             float hunterMult = GetSequenceMultiplier(currentHunterSequence);
             float giantMult = GetSequenceMultiplier(currentSequence);
             float foolMult = GetSequenceMultiplier(currentFoolSequence);
+
+            //大千录
+            if (DaqianLuKeybinds.UseDaqianLu.JustPressed)
+            {
+                DaqianLuActions.ExecuteSkillWithDice(Player);
+            }
 
             if (LotMKeybinds.Moon_Wings.JustPressed && currentMoonSequence <= 7) { isVampireWings = !isVampireWings; if (isVampireWings) { isBatSwarm = false; SoundEngine.PlaySound(SoundID.Item103, Player.position); Main.NewText("黑暗之翼：展开", 180, 0, 0); } else Main.NewText("黑暗之翼：收起", 200, 200, 200); }
             if (LotMKeybinds.Moon_BatSwarm.JustPressed && currentMoonSequence <= 4) { isBatSwarm = !isBatSwarm; if (isBatSwarm) { isVampireWings = false; isMoonlightized = false; SoundEngine.PlaySound(SoundID.Item103, Player.position); Main.NewText("化身为蝙蝠群...", 100, 0, 200); } else Main.NewText("解除化身", 200, 200, 200); }
@@ -6548,9 +6554,9 @@ namespace zhashi.Content
                 }
             }
 
-            // D. 无敌
             Player.SetImmuneTimeForAllTypes(600);
         }
+
         // 判断是否为不死/邪恶/克制生物的通用方法
         public bool IsUndeadCreature(NPC npc)
         {
@@ -6596,7 +6602,8 @@ namespace zhashi.Content
             if (extraUndead.Contains(npc.type)) return true;
 
             return false;
-        }        
+        }
     }
+
     public class ApothecaryCrafting : Terraria.ModLoader.GlobalItem { public override void OnCreated(Terraria.Item item, ItemCreationContext context) { if (context is RecipeItemCreationContext) { Player p = Main.LocalPlayer; if (p != null && p.active && p.GetModPlayer<LotMPlayer>().currentMoonSequence <= 9) { bool isP = item.consumable && (item.buffType > 0 || item.healLife > 0 || item.healMana > 0); if (isP) p.QuickSpawnItem(item.GetSource_FromThis(), item.type, item.stack); } } } }
 }

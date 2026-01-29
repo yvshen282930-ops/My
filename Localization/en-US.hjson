@@ -902,6 +902,21 @@ Mods: {
 				DisplayName: Luck Enhancement Ritual
 				Tooltip: ""
 			}
+
+			Monocle: {
+				Tooltip: ""
+				DisplayName: Monocle
+			}
+
+			DaqianLuItem: {
+				DisplayName: Daqian Lu Item
+				Tooltip: ""
+			}
+
+			CopperCoinMask: {
+				Tooltip: ""
+				DisplayName: Copper Coin Mask
+			}
 		}
 
 		# ==========================================
@@ -1200,6 +1215,7 @@ Mods: {
 			"魔女:天灾 .DisplayName": 魔女:天灾
 			"魔女:毁灭 .DisplayName": 魔女:毁灭
 			"愚者: 诡秘之境开关.DisplayName": 愚者: 诡秘之境开关
+			大千录：祭.DisplayName: 大千录：祭
 		}
 
 		# ==========================================
