@@ -15,7 +15,9 @@ namespace zhashi
         PlayerSync = 0,
         ApplySunSuppression = 1,
         SyncFavorability = 2,
-        StoryDataSync = 3
+        StoryDataSync = 3,
+        WheelStateSync = 4,      // 命运途径状态同步(独立包,避免污染原PlayerSync)
+        ProphetActiveSkill = 5   // 先知主动技能广播(对NPC的命运操作)
     }
 
     public class zhashi : Mod
@@ -41,7 +43,7 @@ namespace zhashi
                         modPlayer = Main.player[playernumber].GetModPlayer<LotMPlayer>();
                     }
 
-                    // --- [0] 读取基础序列等级 (7个 int) ---
+                    // --- [0] 读取基础序列等级 (8个 int) ---
                     int baseSeq = reader.ReadInt32();
                     int baseMarauder = reader.ReadInt32();
                     int baseFool = reader.ReadInt32();
@@ -49,8 +51,9 @@ namespace zhashi
                     int baseMoon = reader.ReadInt32();
                     int baseSun = reader.ReadInt32();
                     int baseDemoness = reader.ReadInt32();
+                    int baseWheel = reader.ReadInt32();          // <修复> 命运基础序列
 
-                    // --- [1] 读取当前序列等级 (7个 int) + 灵性 (1个 float) ---
+                    // --- [1] 读取当前序列等级 (8个 int) + 灵性 (1个 float) ---
                     int currSeq = reader.ReadInt32();
                     int currMarauder = reader.ReadInt32();
                     int currFool = reader.ReadInt32();
@@ -58,6 +61,7 @@ namespace zhashi
                     int currMoon = reader.ReadInt32();
                     int currSun = reader.ReadInt32();
                     int currDemoness = reader.ReadInt32();
+                    int currWheel = reader.ReadInt32();           // <修复> 命运当前序列
                     float spiritCurr = reader.ReadSingle();
 
                     // --- [2] 读取寄生与仪式状态 ---
@@ -107,7 +111,9 @@ namespace zhashi
                     bool singing = reader.ReadBoolean();
                     bool sunMsg = reader.ReadBoolean();
 
-                    // --- [10] 其他/魔女 ---
+                    // --- [10] 其他/魔女 (顺序与 SyncPlayer 写入一致) ---
+                    bool apocalypseForm = reader.ReadBoolean();
+                    bool disasterForm = reader.ReadBoolean();
                     bool passSteal = reader.ReadBoolean();
 
                     if (modPlayer != null)
@@ -119,6 +125,7 @@ namespace zhashi
                         modPlayer.baseMoonSequence = baseMoon;
                         modPlayer.baseSunSequence = baseSun;
                         modPlayer.baseDemonessSequence = baseDemoness;
+                        modPlayer.baseWheelSequence = baseWheel;       // <修复>
 
                         modPlayer.currentSequence = currSeq;
                         modPlayer.currentMarauderSequence = currMarauder;
@@ -127,6 +134,7 @@ namespace zhashi
                         modPlayer.currentMoonSequence = currMoon;
                         modPlayer.currentSunSequence = currSun;
                         modPlayer.currentDemonessSequence = currDemoness;
+                        modPlayer.currentWheelSequence = currWheel;    // <修复>
                         modPlayer.spiritualityCurrent = spiritCurr;
 
                         modPlayer.isParasitizing = isParasitizing;
@@ -145,6 +153,7 @@ namespace zhashi
                         modPlayer.isSpiritForm = spiritForm;
                         modPlayer.graftingMode = graftMode;
                         modPlayer.spiritThreadTargetIndex = threadTarget;
+                        modPlayer.isRealmOfMysteriesActive = realmActive;  // <修复:之前丢弃了>
 
                         modPlayer.isDeceitDomainActive = deceitDom;
                         modPlayer.isTimeClockActive = timeClock;
@@ -167,8 +176,8 @@ namespace zhashi
                         modPlayer.isSinging = singing;
                         modPlayer.isSunMessenger = sunMsg;
 
-                        modPlayer.isApocalypseForm = reader.ReadBoolean(); // 新增读取
-                        modPlayer.isDisasterForm = reader.ReadBoolean();   // 新增读取
+                        modPlayer.isApocalypseForm = apocalypseForm;   // <修复>
+                        modPlayer.isDisasterForm = disasterForm;       // <修复>
 
                         modPlayer.isPassiveStealEnabled = passSteal;
 

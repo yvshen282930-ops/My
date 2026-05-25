@@ -94,7 +94,7 @@ namespace zhashi.Content.UI
 
                 // 连线
                 if (isSelected)
-                    Utils.DrawLine(spriteBatch, center, pos, Color.Red, Color.Transparent, 2f);
+                    Terraria.Utils.DrawLine(spriteBatch, center, pos, Color.Red, Color.Transparent, 2f);
 
                 // 绘制头像
                 Main.instance.LoadNPC(npcId);
@@ -116,14 +116,14 @@ namespace zhashi.Content.UI
                     if (npcId == 0) name = "无";
 
                     Vector2 textSize = FontAssets.MouseText.Value.MeasureString(name);
-                    Utils.DrawBorderString(spriteBatch, name, pos + new Vector2(0, 40) - textSize / 2f, Color.Gold);
+                    Terraria.Utils.DrawBorderString(spriteBatch, name, pos + new Vector2(0, 40) - textSize / 2f, Color.Gold);
 
                     // 【新增】提示可以删除
                     if (npcId != 0)
                     {
                         string tip = "[左键点击以释放]";
                         Vector2 tipSize = FontAssets.MouseText.Value.MeasureString(tip);
-                        Utils.DrawBorderString(spriteBatch, tip, pos + new Vector2(0, 65) - tipSize / 2f, Color.Gray, 0.8f);
+                        Terraria.Utils.DrawBorderString(spriteBatch, tip, pos + new Vector2(0, 65) - tipSize / 2f, Color.Gray, 0.8f);
                     }
                 }
             }

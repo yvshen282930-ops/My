@@ -61,12 +61,13 @@ namespace zhashi.Content.Items
 
                 // 检查并降低所有途径 (传入 base 和 current)
                 DowngradePathway(ref modPlayer.baseSequence, ref modPlayer.currentSequence, "巨人");
-                DowngradePathway(ref modPlayer.baseHunterSequence, ref modPlayer.currentHunterSequence, "猎人");
+                DowngradePathway(ref modPlayer.baseHunterSequence, ref modPlayer.currentHunterSequence, "红祭司");
                 DowngradePathway(ref modPlayer.baseMoonSequence, ref modPlayer.currentMoonSequence, "月亮");
                 DowngradePathway(ref modPlayer.baseFoolSequence, ref modPlayer.currentFoolSequence, "愚者");
                 DowngradePathway(ref modPlayer.baseMarauderSequence, ref modPlayer.currentMarauderSequence, "错误");
                 DowngradePathway(ref modPlayer.baseSunSequence, ref modPlayer.currentSunSequence, "太阳");
                 DowngradePathway(ref modPlayer.baseDemonessSequence, ref modPlayer.currentDemonessSequence, "魔女");
+                DowngradePathway(ref modPlayer.baseWheelSequence, ref modPlayer.currentWheelSequence, "命运");
 
                 // 如果有变化
                 if (loweredAny)

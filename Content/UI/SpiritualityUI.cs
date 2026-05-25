@@ -198,7 +198,7 @@ namespace zhashi.Content.UI
             Vector2 textPos = new Vector2(frameTexture.Width / 2 - textSize.X / 2, frameTexture.Height / 2 - textSize.Y / 2);
             Color textColor = (isHovering || dragging) ? Color.Gold : Color.White;
 
-            Utils.DrawBorderString(spriteBatch, text, textPos, textColor);
+            Terraria.Utils.DrawBorderString(spriteBatch, text, textPos, textColor);
 
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.UIScaleMatrix);

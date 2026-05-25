@@ -69,7 +69,7 @@ namespace zhashi
         public static ModKeybind Sun_Notarize { get; private set; } // 公证人技能键
         public static ModKeybind Sun_Messenger { get; private set; } // 公证人技能键
 
-        // --- 魔女途径  [新增] ---
+        // --- 魔女途径 ---
         public static ModKeybind Demoness_Mirror { get; private set; }   // 核心技能：镜子替身
         public static ModKeybind Demoness_MirrorSwitch { get; private set; }
         public static ModKeybind Demoness_HairAttack { get; private set; }   // 头发攻击
@@ -79,6 +79,16 @@ namespace zhashi
         public static ModKeybind Demoness_Catastrophe { get; private set; }
         public static ModKeybind Demoness_Apocalypse { get; private set; }
 
+        // --- 命运途径 ---
+        public static ModKeybind Wheel_PsychicStorm { get; private set; }
+        public static ModKeybind Wheel_Domain { get; private set; }
+        public static ModKeybind Wheel_Blessing { get; private set; }
+        public static ModKeybind Wheel_Dice { get; private set; }              // 序列3 命运骰子
+        public static ModKeybind Wheel_WordsOfFortune { get; private set; }    // 序列2 福祸之言-福(给友军)
+        public static ModKeybind Wheel_WordsOfMisfortune { get; private set; } // 序列2 福祸之言-祸(给敌人)
+        public static ModKeybind Wheel_Revelation { get; private set; }        // 序列2 命运启示
+        public static ModKeybind Wheel_FateLoop { get; private set; }          // 序列1 命运循环
+        public static ModKeybind Wheel_Restart { get; private set; }           // 序列1 主动重启
         // ===================================================
         // 2. 注册按键 (Load)
         // ===================================================
@@ -116,7 +126,7 @@ namespace zhashi
 
             // Fool [新增]
             Fool_SpiritVision = KeybindLoader.RegisterKeybind(Mod, "愚者: 灵视开关", "C");
-            Fool_Divination = KeybindLoader.RegisterKeybind(Mod, "愚者: 占卜术", "J");
+            Fool_Divination = KeybindLoader.RegisterKeybind(Mod, "愚者,命运: 占卜术", "J");
             Fool_FlameJump = KeybindLoader.RegisterKeybind(Mod, "愚者: 火焰跳跃", "F");
             Fool_Faceless = KeybindLoader.RegisterKeybind(Mod, "愚者: 无面伪装", "V");
             Fool_Distort = KeybindLoader.RegisterKeybind(Mod, "愚者: 干扰直觉", "G");
@@ -155,6 +165,16 @@ namespace zhashi
             Demoness_Catastrophe = KeybindLoader.RegisterKeybind(Mod, "魔女:天灾 ", "V");
             Demoness_Apocalypse = KeybindLoader.RegisterKeybind(Mod, "魔女:毁灭 ", "B");
 
+            // Wheel
+            Wheel_PsychicStorm = KeybindLoader.RegisterKeybind(Mod, "命运：精神风暴", "N");
+            Wheel_Domain = KeybindLoader.RegisterKeybind(Mod, "命运：灾祸光环/厄运领域", "V");
+            Wheel_Blessing = KeybindLoader.RegisterKeybind(Mod, "命运：命运赐福", "B");
+            Wheel_Dice = KeybindLoader.RegisterKeybind(Mod, "命运：投掷命运骰子", "M");
+            Wheel_WordsOfFortune = KeybindLoader.RegisterKeybind(Mod, "命运：福祸之言-福（给友军）", "K");
+            Wheel_WordsOfMisfortune = KeybindLoader.RegisterKeybind(Mod, "命运：福祸之言-祸（给敌人）", "L");
+            Wheel_Revelation = KeybindLoader.RegisterKeybind(Mod, "命运：命运启示", "U");
+            Wheel_FateLoop = KeybindLoader.RegisterKeybind(Mod, "命运：命运循环（巨蛇）", "Y");
+            Wheel_Restart = KeybindLoader.RegisterKeybind(Mod, "命运：重启循环（巨蛇）", "H");
         }
 
         // ===================================================
@@ -231,6 +251,17 @@ namespace zhashi
             Demoness_PetrifySkill = null;
             Demoness_Catastrophe = null;
             Demoness_Apocalypse = null;
+
+            //命运
+            Wheel_PsychicStorm = null;
+            Wheel_Domain = null;
+            Wheel_Blessing = null;
+            Wheel_Dice = null;
+            Wheel_WordsOfFortune = null;
+            Wheel_WordsOfMisfortune = null;
+            Wheel_Revelation = null;
+            Wheel_FateLoop = null;
+            Wheel_Restart = null;
         }
     }
 }

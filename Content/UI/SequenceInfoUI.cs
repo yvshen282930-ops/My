@@ -18,6 +18,7 @@ using zhashi.Content.Items.Potions.Fool;
 using zhashi.Content.Items.Potions.Marauder;
 using zhashi.Content.Items.Potions.Sun;
 using zhashi.Content.Items.Potions.Demoness;
+using zhashi.Content.Items.Potions.Wheel;
 
 namespace zhashi.Content.UI
 {
@@ -120,7 +121,7 @@ namespace zhashi.Content.UI
             Vector2 drawPos = new Vector2(LEFT_MARGIN, TOP_MARGIN);
             Rectangle iconRect = new Rectangle((int)drawPos.X, (int)drawPos.Y, ICON_SIZE, ICON_SIZE);
 
-            Utils.DrawInvBG(spriteBatch, iconRect, new Color(20, 20, 40, 200));
+            Terraria.Utils.DrawInvBG(spriteBatch, iconRect, new Color(20, 20, 40, 200));
 
             Rectangle frame = texture.Frame();
             float scale = 1f;
@@ -320,6 +321,23 @@ namespace zhashi.Content.UI
                     case 2: return ModContent.ItemType<CatastropheDemonessPotion>();
                     case 1: return ModContent.ItemType<ApocalypseDemonessPotion>();
                     default: return ModContent.ItemType<AssassinPotion>();
+                }
+            }
+            // 8. 命运途径 (Wheel)
+            if (p.currentWheelSequence <= 9)
+            {
+                switch (p.currentWheelSequence)
+                {
+                    case 9: return ModContent.ItemType<MonsterPotion>();
+                    case 8: return ModContent.ItemType<RobotPotion>();
+                    case 7: return ModContent.ItemType<LuckyPotion>();
+                    case 6: return ModContent.ItemType<CalamityPriestPotion>();
+                    case 5: return ModContent.ItemType<WinnerPotion>();
+                    case 4: return ModContent.ItemType<MisfortuneMagePotion>();
+                    case 3: return ModContent.ItemType<AnomalyPotion>();
+                    case 2: return ModContent.ItemType<ProphetPotion>();
+                    case 1: return ModContent.ItemType<SerpentPotion>();
+                    default: return ModContent.ItemType<MonsterPotion>();
                 }
             }
             return 0;
@@ -1244,7 +1262,6 @@ namespace zhashi.Content.UI
 
                     if (currentCD > 0)
                     {
-                        // 【优化】保留1位小数，实时显示
                         skillStatus = $"[c/FF0000:冷却中: {(currentCD / 60f):F1}s]";
                     }
                     else
@@ -1266,28 +1283,22 @@ namespace zhashi.Content.UI
                 }
                 if (p.currentDemonessSequence <= 1) // 末日魔女
                 {
-                    // 真正的神性颜色 (暗紫/黑红)
                     text += $"序列一: [c/800080:末日魔女 (从神)]\n";
 
-                    // 获取按键
                     string keyName = "未绑定";
                     if (LotMKeybinds.Demoness_Apocalypse != null && LotMKeybinds.Demoness_Apocalypse.GetAssignedKeys().Count > 0)
                     {
                         keyName = LotMKeybinds.Demoness_Apocalypse.GetAssignedKeys()[0];
                     }
 
-                    // 被动
                     text += "- [被动] 神性之躯: 免疫几乎所有负面状态\n";
                     text += "- [被动] 末日威压: 普通敌人无法行动，Boss攻击力大幅削减\n";
                     text += "- [被动] 终结: 魔法消耗减半，受到伤害减免40%\n";
-
-                    // 大招 CD 显示
                     int currentCD = p.apocalypseCooldown;
                     string skillStatus;
                     if (currentCD > 0)
                     {
                         int minutes = currentCD / 3600;
-                        // 这里虽然没有小数，但秒数每秒都在变，所以也是实时的
                         int seconds = (currentCD % 3600) / 60;
                         skillStatus = $"[c/FF0000:冷却中: {minutes}m {seconds}s]";
                     }
@@ -1300,6 +1311,146 @@ namespace zhashi.Content.UI
                     }
 
                     text += $"- [权柄] 末日降临 ({keyName}键): 冻结时空，抹除弹幕，处决众生 {skillStatus}\n";
+                }
+            }
+            // 8. 命运途径 (Wheel)
+            else if (p.currentWheelSequence <= 9)
+            {
+                // 标题颜色：银色/水银色
+                text += $"[c/C0C0C0:命运途径 序列{p.currentWheelSequence}]\n";
+
+                if (p.currentWheelSequence <= 9) // 怪物
+                {
+                    text += $"序列九: [c/D3D3D3:怪物]\n"; // 浅灰色
+                    text += "- [被动] 危险直觉: 获得危险感知与生物探测视野\n";
+                    text += "- [被动] 命运眷顾: 暴击率+5% / 运气和生命上限小幅提升\n";
+                    text += "- [被动] 怪物感官: 获得夜视能力 / 移动速度提升\n";
+                }
+                if (p.currentWheelSequence <= 8) // 机器
+                {
+                    text += $"序列八: [c/A9A9A9:机器]\n"; // 深灰色
+                    text += "- [被动] 精准计算: 暴击率+10% / 挖掘距离+2\n";
+                    text += "- [被动] 格斗射击: 近战/远程伤害+20% / 防御+5\n";
+                    text += "- [能力] 占卜: 按 J 键使用占卜术（与愚者途径共用按键）\n";
+                    text += "- [被动] 反占卜: 拥有概率闪避攻击的能力\n";
+                }
+                if (p.currentWheelSequence <= 7)
+                {
+                    text += $"序列七: [c/00FF00:幸运儿]\n";
+                    text += $"- [状态] 当前运气: {Main.LocalPlayer.luck:F2}\n";
+                    text += "- [被动] 意外之财: 移动时偶尔会在脚边捡到钱\n";
+                    text += "- [被动] 人体描边: 受到攻击时有几率幸运地毫发无伤\n";
+                    string sign = p.luckFluctuation >= 0 ? "+" : "";
+                    text += $"- [被动] 命运骰子: 暴击率波动 {sign}{p.luckFluctuation:F1}%\n";
+                }
+                if (p.currentWheelSequence <= 6) // 灾祸教士
+                {
+                    text += $"序列六: [c/FF4500:灾祸教士]\n";
+                    text += "- [被动] 灾祸光环: 自动引来陨石与雷电攻击周围敌人\n";
+                    text += "- [被动] 厄运规避: 大幅提升防御与免伤\n";
+                    string cdText = "";
+                    if (p.psychicStormCooldown > 0)
+                    {
+                        float cdSeconds = p.psychicStormCooldown / 60f;
+                        cdText = $" [c/FF0000:(冷却中: {cdSeconds:F1}s)]"; // 红色显示冷却
+                    }
+                    else
+                    {
+                        cdText = " [c/00FF00:(就绪)]"; // 绿色显示就绪
+                    }
+                    text += $"- [主动] 精神风暴: 按 [c/FFFF00:精神风暴键(V)] 触发{cdText}\n";
+                    text += "  消耗50灵性，使周围敌人混乱并造成伤害\n";
+                }
+                if (p.currentWheelSequence <= 5) // 赢家
+                {
+                    text += $"序列五: [c/FFD700:赢家]\n"; // 金色
+
+                    text += $"- [核心] 命运主宰: 幸运值大幅提升 (当前: {Main.LocalPlayer.luck:F2})\n";
+                    float saveChance = 0.20f + (Main.LocalPlayer.luck * 0.1f);
+                    if (saveChance > 0.6f) saveChance = 0.6f;
+                    if (Main.LocalPlayer.luck <= 0) saveChance = 0f;
+                    text += $"- [被动] 赢家效率: {saveChance:P0} 几率不消耗弹药\n"; // :P0 格式化为百分比
+
+                    text += "- [被动] 戏剧逆转: 致命危机时有几率触发剧情杀闪避\n";
+                    text += "- [被动] 自动追击: 幸运时子弹会自动追踪敌人\n";
+                    text += "- [攻击] 厄运赋予: 攻击导致敌人炸膛、手滑或弱点暴露\n";
+                }
+                if (p.currentWheelSequence <= 4) // 厄运法师
+                {
+                    text += $"序列四: [c/8A2BE2:厄运法师 (半神)]\n"; // 紫色
+                    text += "- [被动] 水银之躯: 防御大幅增加，获得15%绝对免伤\n";
+                    text += "- [被动] 绝对灵感: 对Boss级敌人暴击率飙升 (+20%)\n";
+                    text += $"- [被动] 厄运领域: 随幸运值扩大范围，自动诅咒并概率秒杀周围敌人\n";
+                    text += "- [升级] 精神风暴: 范围翻倍，附带“疯狂”腐蚀\n";
+                    string blessCD = p.fateBlessingCooldown > 0 ? $"[c/FF0000:({p.fateBlessingCooldown / 60f:F1}s)]" : "[c/00FF00:(就绪)]";
+                    text += $"- [主动] 命运赐福: 按 [c/FFFF00:命运赐福键(B)]，透支自身运气为全队加上六种Buff {blessCD}\n";
+                }
+                if (p.currentWheelSequence <= 3) // 怪人
+                {
+                    text += $"\n序列三: [c/9932CC:怪人 (圣者)]\n";
+                    text += "- [被动] 怪人之躯: 生命+600 / 通用伤+10% / 暴击率+10% / 防御+15 / 免伤+15%\n";
+                    text += "- [被动] 怪人之眼: 暴击伤害 +30%\n";
+                    string nullifyCD = p.fateNullifyCooldown > 0 ? $"[c/FF0000:({p.fateNullifyCooldown / 60f:F1}s)]" : "[c/00FF00:(就绪)]";
+                    text += $"- [被动] 不可定数: 致命伤30%几率被命运抹除 {nullifyCD}\n";
+                    text += $"- [被动] 概率反噬: 每持有一个减益, 运气+0.2 (上限+1.0)  当前堆叠: {p.anomalyDebuffStack}\n";
+                    text += "- [被动] 厄运链: 厄运领域暴毙的敌人会向邻近最多3个传染厄运 (30%血量真伤)\n";
+                    text += "- [升级] 厄运暴毙: 概率×3 (敌人更易被命运反噬)\n";
+                    string diceCD = p.fateDiceCooldown > 0 ? $"[c/FF0000:({p.fateDiceCooldown / 60f:F1}s)]" : "[c/00FF00:(就绪)]";
+                    text += $"- [主动] 命运骰子 (M): 消耗200灵性投出1-6点, 触发不同的命运效果 {diceCD}\n";
+                    if (p.fateBlessingActiveTimer > 0)
+                        text += $"  [c/FFD700:✦ 命运庇护激活中: {p.fateBlessingActiveTimer / 60f:F1}s (额外50%减伤)]\n";
+                }
+                if (p.currentWheelSequence <= 2) // 先知
+                {
+                    text += $"\n序列二: [c/B080FF:先知 (半神 - 命运的宠儿)]\n";
+                    text += "- [被动] 完整神话生物形态: 生命+900 / 通用伤+15% / 暴击率+15% / 防御+25 / 免伤+20%\n";
+                    text += "- [被动] 命运洞察: 暴击伤害再+20% (累积+50%)\n";
+                    text += "- [被动] 命运的宠儿: 幸运+2.0, 水银CD结束时再+1.0\n";
+                    string mercuryState;
+                    if (p.mercuryDodgeTimer > 0)
+                        mercuryState = $"[c/C0C0C0:✦ 回避激活中 {p.mercuryDodgeTimer / 60f:F1}s]";
+                    else if (p.mercuryDodgeCooldown > 0)
+                        mercuryState = $"[c/FF0000:冷却 {p.mercuryDodgeCooldown / 60f:F1}s]";
+                    else
+                        mercuryState = "[c/00FF00:就绪]";
+                    text += $"- [被动] 水银之躯: 受伤后10秒免疫一切伤害和减益 {mercuryState}\n";
+                    text += "- [被动] 预言术: 杀敌时15%几率(启示中30%)预言下一击, 命中即秒杀\n";
+                    if (p.prophecyMarked)
+                        text += $"  [c/B080FF:✦ 已预言下一击: 剩 {p.prophecyDuration / 60f:F1}s]\n";
+                    string fortuneCD = p.wordsOfFortuneCooldown > 0 ? $"[c/FF0000:({p.wordsOfFortuneCooldown / 60f:F1}s)]" : "[c/00FF00:(就绪)]";
+                    string misfortuneCD = p.wordsOfMisfortuneCooldown > 0 ? $"[c/FF0000:({p.wordsOfMisfortuneCooldown / 60f:F1}s)]" : "[c/00FF00:(就绪)]";
+                    string revelCD = p.revelationCooldown > 0 ? $"[c/FF0000:({p.revelationCooldown / 60f:F1}s)]" : "[c/00FF00:(就绪)]";
+                    text += $"- [主动] 福祸之言-福 ([c/FFFF00:福祸之福键(K)]): 消耗300灵性,4000范围友军获60秒10种Buff+治愈+灵性满 {fortuneCD}\n";
+                    text += $"- [主动] 福祸之言-祸 ([c/FFFF00:福祸之祸键(L)]): 消耗300灵性,4000范围敌人受当前血25%真伤+60秒8种厄运(Boss削10%) {misfortuneCD}\n";
+                    text += $"- [主动] 命运启示 ([c/FFFF00:命运启示键(U)]): 消耗500灵性,10秒内所有概率事件极致偏向最优解 {revelCD}\n";
+                    if (p.revelationActiveTimer > 0)
+                        text += $"  [c/B080FF:✦ 命运启示激活中: {p.revelationActiveTimer / 60f:F1}s (暴击率+50/伤害+25%/减伤+30%)]\n";
+                    else if (p.revelationBackfireTimer > 0)
+                        text += $"  [c/AA88BB:✱ 启示反噬期: {p.revelationBackfireTimer / 60f:F1}s (-5%伤害)]\n";
+                }
+                if (p.currentWheelSequence <= 1) // 巨蛇
+                {
+                    text += $"\n序列一: [c/C0C0FF:巨蛇 (从神 - 水银/吞尾/命运之蛇)]\n";
+                    text += "- [被动] 命运之蛇之躯: 生命+2500 / 通用伤+50% / 暴击+35 / 防御+80 / 免伤+20% / 攻速+40% / 移速+50%\n";
+                    text += "- [被动] 万物之蛇: 暴击伤害再+30% (累积+80%)\n";
+                    text += "- [被动] 命运的化身: 幸运+5.0\n";
+                    text += "- [被动] 隐藏命运: 免疫几乎所有 debuff (灵液/诅咒/燃烧/虚弱/破甲/混乱/眩晕/沉默/冰冻等)\n";
+                    string phaseState;
+                    if (p.mercuryPhaseTimer > 0)
+                        phaseState = $"[c/C0C0FF:✦ 相位中 {p.mercuryPhaseTimer / 60f:F1}s (无敌)]";
+                    else
+                        phaseState = $"[c/AAAAFF:下次 {p.mercuryPhaseCooldown / 60f:F1}s]";
+                    text += $"- [被动] 水银相位: 每10秒进入3秒完全无敌 {phaseState}\n";
+                    string loopCD = p.fateLoopCooldown > 0 ? $"[c/FF0000:({p.fateLoopCooldown / 60f:F1}s)]" : "[c/00FF00:(就绪)]";
+                    text += $"- [主动] 命运循环 ([c/FFFF00:Y]): 消耗1000灵性,800范围5秒后回滚NPC位置(Boss除外) {loopCD}\n";
+                    if (p.fateLoopActiveTimer > 0)
+                        text += $"  [c/C880FF:✦ 命运循环激活中: {p.fateLoopActiveTimer / 60f:F1}s]\n";
+                    string autoState = p.restartAutoCooldown > 0
+                        ? $"[c/FF8888:CD {p.restartAutoCooldown / 60f:F0}s]" : "[c/00FF00:(就绪)]";
+                    string manState = p.restartManualCooldown > 0
+                        ? $"[c/FF8888:CD {p.restartManualCooldown / 60f:F0}s]" : "[c/00FF00:(就绪)]";
+                    text += $"- [被动] 重启循环: 死亡瞬间消耗5000灵性,回到10秒前(满血+清debuff) {autoState}\n";
+                    text += $"- [主动] 主动重启 ([c/FFFF00:H]): 消耗3000灵性主动撤退至10秒前 {manState}\n";
                 }
             }
 
@@ -1401,9 +1552,9 @@ namespace zhashi.Content.UI
             CalculatedStyle inner = GetInnerDimensions();
 
             // 1. 绘制轨道背景 (更有质感的深色槽)
-            // 使用 Utils.DrawInvBG 绘制类似物品栏的背景风格
+            // 使用 Terraria.Utils.DrawInvBG 绘制类似物品栏的背景风格
             Rectangle trackRect = new Rectangle((int)inner.X, (int)inner.Y + 4, (int)inner.Width, 16);
-            Utils.DrawInvBG(spriteBatch, trackRect, new Color(20, 20, 30, 200));
+            Terraria.Utils.DrawInvBG(spriteBatch, trackRect, new Color(20, 20, 30, 200));
 
             // 如果内容不需要滚动，就不画滑块
             if (_maxViewSize <= _viewSize) return;
@@ -1425,10 +1576,10 @@ namespace zhashi.Content.UI
             Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, handleRect, handleColor);
 
             // 绘制边框 (让它看起来立体一点)
-            Utils.DrawBorderStringFourWay(spriteBatch, FontAssets.ItemStack.Value, "", handleX, inner.Y + 6, Color.Black, Color.Transparent, Vector2.Zero);
+            Terraria.Utils.DrawBorderStringFourWay(spriteBatch, FontAssets.ItemStack.Value, "", handleX, inner.Y + 6, Color.Black, Color.Transparent, Vector2.Zero);
 
             // 或者简单地画一个带黑边的框
-            Utils.DrawInvBG(spriteBatch, handleRect, handleColor * 0.8f);
+            Terraria.Utils.DrawInvBG(spriteBatch, handleRect, handleColor * 0.8f);
         }
     }
 }

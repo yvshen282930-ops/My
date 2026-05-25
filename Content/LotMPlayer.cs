@@ -13,6 +13,7 @@ using Terraria.ModLoader.IO;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.Audio;
 using zhashi;
+using zhashi.Content;
 using zhashi.Content.Projectiles;
 using zhashi.Content.Items.Weapons;
 using zhashi.Content.Buffs;
@@ -24,9 +25,10 @@ using zhashi.Content.Configs;
 using Terraria.Graphics.Effects;
 using Terraria.Localization;
 using Terraria.DataStructures;
-using SubworldLibrary; // 引用子世界库
-using zhashi.Content.Dimensions; // 引用你的灵界定义
+using SubworldLibrary; 
+using zhashi.Content.Dimensions; 
 using zhashi.Content.DaqianLu;
+using zhashi.Content.Buffs.Debuffs; 
 
 
 namespace zhashi.Content
@@ -64,6 +66,34 @@ namespace zhashi.Content
             }
         }
 
+        // ==================== 仪式职业系统 ====================
+
+        // 恢复计时器
+        public bool ConsumePixels(int amount)
+        {
+
+            if (spiritualityCurrent >= amount)
+            {
+                spiritualityCurrent -= amount;
+                return true;
+            }
+            return false;
+        }
+
+        public void AddPixels(int amount)
+        {
+            spiritualityCurrent += amount;
+
+            if (spiritualityCurrent > spiritualityMax)
+                spiritualityCurrent = spiritualityMax;
+
+            if (amount > 0)
+            {
+                CombatText.NewText(Player.getRect(), new Color(180, 80, 255), $"+{amount}");
+            }
+        }
+        // ======================================================
+
         // ===================================================
         // 1. 核心变量定义
         // ===================================================
@@ -74,10 +104,11 @@ namespace zhashi.Content
         public int baseFoolSequence = 10;
         public int baseMarauderSequence = 10;
         public int baseSunSequence = 10;
-        public int baseDemonessSequence = 10; 
+        public int baseDemonessSequence = 10;
+        public int baseWheelSequence = 10;
 
 
-        public int currentSequence = 10;       // 巨人/战士途径 
+        public int currentSequence = 10;       // 巨人途径 
         public int currentGiantSequence = 10;
         public int currentHunterSequence = 10; // 猎人途径 (9-1)
         public int currentMoonSequence = 10;   // 月亮途径 (9-1)
@@ -85,11 +116,12 @@ namespace zhashi.Content
         public int currentMarauderSequence = 10; // 错误途径 (9-1)
         public int currentSunSequence = 10;    // 太阳途径 (9-1)
         public int currentDemonessSequence = 10; // 刺客途径
+        public int currentWheelSequence = 10; // 命运途径
 
         //亵渎之牌
         public bool isFoolCardEquipped = false;
         public bool isStrengthCardEquipped = false;
-        public bool isAntiDivinationActive = false; // 反占卜状态
+        public bool isAntiDivinationActive = false;
         public int blasphemyCardEquippedCount = 0;
         public bool isLoversCardEquipped = false;
         public bool isRedPriestCardEquipped = false;
@@ -114,12 +146,12 @@ namespace zhashi.Content
 
 
 
-        public bool IsBeyonder => currentSequence < 10 || currentHunterSequence < 10 || currentMoonSequence < 10 || currentFoolSequence < 10 || currentMarauderSequence < 10 || currentSunSequence < 10 || currentDemonessSequence < 10;
+        public bool IsBeyonder => currentSequence < 10 || currentHunterSequence < 10 || currentMoonSequence < 10 || currentFoolSequence < 10 || currentMarauderSequence < 10 || currentSunSequence < 10 || currentDemonessSequence < 10 || currentWheelSequence < 10;
 
         // 灵性系统
         public float spiritualityCurrent = 100;
         public int spiritualityMax = 100;
-        public int spiritualityRegenTimer = 0; // 改为 public 供外部访问
+        public int spiritualityRegenTimer = 0; 
 
         // --- 巨人途径技能状态 ---
         public bool dawnArmorActive = false;
@@ -146,8 +178,7 @@ namespace zhashi.Content
         public bool isCalamityGiant = false;
         public int glacierCooldown = 0;
         public override void Kill(double damage, int hitDirection, bool pvp, PlayerDeathReason damageSource)
-        {
-            // 如果正在进行序列5的仪式，死亡会导致前功尽弃
+        { 
             if (currentHunterSequence == 5)
             {
                 if (ironBloodRitualProgress > 0)
@@ -274,6 +305,107 @@ namespace zhashi.Content
         public bool canUseWitchBroom = false; // 是否可以使用女巫扫帚
         private bool wasMountedBeforeUpdate = false; // 上一帧是否骑乘 (用于防冲突)
 
+        // --- 命运途径 ---
+        public int luckyEventTimer = 0;
+        public float luckFluctuation = 0f;
+        public int calamityTimer = 0;
+        public int psychicStormCooldown = 0;
+        public int misfortuneRitualTimer = 0;
+        public const int MISFORTUNE_RITUAL_TARGET = 86400;
+        public bool hasGrayClover = false;
+        public bool misfortuneMageRitualComplete = false;
+        public int fateBlessingCooldown = 0; // 赐福CD
+        public bool isMisfortuneDomainActive = false; // 厄运领域/灾祸光环 开关
+
+        // --- 序列3 怪人 ---
+        public int anomalyRitualProgress = 0;           // "见证三次绝境逆转" 仪式进度
+        public const int ANOMALY_RITUAL_TARGET = 3;     // 需要3次低血翻盘
+        public bool anomalyRitualComplete = false;      // 仪式是否完成 (持久化保存)
+        public int fateNullifyCooldown = 0;             // "不可定数" - 致命伤抹除冷却 (30秒)
+        public const int FATE_NULLIFY_CD_MAX = 1800;    // 60帧 * 30秒
+        public int fateDiceCooldown = 0;                // 命运骰子冷却 (30秒)
+        public const int FATE_DICE_CD_MAX = 1800;       // 60帧 * 30秒
+        public int fateBlessingActiveTimer = 0;         // 骰子点数4 - 命运庇护剩余时间
+        public int anomalyDebuffStack = 0;              // 缓存当前减益数量(用于Luck计算)
+        // 记录玩家上一帧血量百分比，用于检测"绝境逆转"仪式
+        public float lastLifePercent = 1f;
+        public bool wasInDeepDanger = false;            // 是否曾在<10%血量时与boss/强敌交战
+
+        // === 命运OnHitNPC的节流计时器(防多发武器卡顿/崩溃) ===
+        public int wheelOnHitCooldown = 0;              // 命运OnHit触发节流(15帧间隔)
+
+        // --- 序列2 先知 ---
+        // 仪式: 在序列3时, "不可定数" 成功触发5次
+        public int prophetRitualProgress = 0;           // "见证5次必死之劫"进度
+        public const int PROPHET_RITUAL_TARGET = 5;     // 需要5次不可定数触发
+        public bool prophetRitualComplete = false;      // 仪式完成(持久化)
+
+        // 福祸之言/命运启示 独立CD (各自独立, 不互相影响)
+        public int wordsOfFortuneCooldown = 0;          // 福祸之福CD (30秒)
+        public const int FORTUNE_CD_MAX = 1800;
+        public int wordsOfMisfortuneCooldown = 0;       // 福祸之祸CD (30秒)
+        public const int MISFORTUNE_CD_MAX = 1800;
+        public int revelationCooldown = 0;              // 命运启示CD (60秒, 因为效果强)
+        public const int REVELATION_CD_MAX = 3600;
+        // 保留旧字段名以避免其它地方编译错误 (deprecated, 实际不再使用)
+        public int prophecyCooldown = 0;
+        public const int PROPHECY_CD_MAX = 2700;
+
+        // 命运启示状态(持续10秒,所有概率事件极度偏向最优)
+        public int revelationActiveTimer = 0;           // 启示状态剩余时间
+        public int revelationBackfireTimer = 0;         // 启示状态后的反噬(60秒无加成)
+
+        // 预言术: 标记下一击秒杀
+        public bool prophecyMarked = false;             // 是否有"预言"待发动
+        public int prophecyDuration = 0;                // 预言剩余有效时间
+
+        // 水银之躯: 受伤后10秒"命运回避"
+        public int mercuryDodgeTimer = 0;               // 命运回避剩余时间(10秒)
+        public int mercuryDodgeCooldown = 0;            // 命运回避CD(60秒)
+        public const int MERCURY_DODGE_DURATION = 600;  // 10秒
+        public const int MERCURY_DODGE_CD_MAX = 3600;   // 60秒
+
+        // 福祸之言键长按检测
+        public int diceKeyHoldFrames = 0;               // 骰子键按住的帧数
+
+        // --- 序列1 巨蛇 (水银之蛇 / 吞尾之蛇 / 命运之蛇) ---
+        // 仪式: 在序列2状态下击败月亮领主 + 触发命运启示5次
+        public int serpentRitualProgress = 0;           // 启示触发次数(用于序列1仪式)
+        public const int SERPENT_RITUAL_TARGET = 5;     // 需要5次命运启示
+        public bool serpentRitualBeatMoonLord = false;  // 是否在序列2状态下击败过月亮领主
+        public bool serpentRitualComplete = false;      // 仪式完成(持久化)
+
+        // [水银相位] 每10秒进入一次3秒无敌
+        public int mercuryPhaseCooldown = 0;            // 距下次相位剩余帧数
+        public int mercuryPhaseTimer = 0;               // 当前相位剩余帧数(3秒=180)
+        public const int MERCURY_PHASE_INTERVAL = 600;  // 10秒间隔
+        public const int MERCURY_PHASE_DURATION = 180;  // 3秒持续
+
+        // [命运循环] 主动技能 - 5秒后回滚位置
+        public int fateLoopCooldown = 0;                // 循环CD (90秒)
+        public const int FATE_LOOP_CD_MAX = 5400;       // 90秒
+        public int fateLoopActiveTimer = 0;             // 循环激活剩余(5秒=300)
+        public const int FATE_LOOP_DURATION = 300;      // 5秒
+        public uint fateLoopExpireTick = 0;             // 命运循环到期时的 GameUpdateCount (取代依赖计时器)
+        public bool fateLoopActive = false;             // 是否处于激活状态(显式标记)
+        public Vector2 fateLoopCenter = Vector2.Zero;   // 循环领域中心
+        // 用于回滚的快照: NPC ID → (起始位置)
+        private Dictionary<int, Vector2> _loopedNpcStartPos = new Dictionary<int, Vector2>();
+
+        // [重启循环] 自动复活 + 主动撤退
+        public int restartAutoCooldown = 0;             // 自动复活CD (10分钟=36000)
+        public const int RESTART_AUTO_CD_MAX = 36000;
+        public int restartManualCooldown = 0;           // 主动撤退CD (3分钟=10800)
+        public const int RESTART_MANUAL_CD_MAX = 10800;
+        // 历史位置记录用于"回到10秒前"
+        public Vector2[] positionHistory = new Vector2[600]; // 10秒位置历史(60fps×10)
+        public int positionHistoryIdx = 0;
+        public bool positionHistoryFilled = false;
+        // [命运多面骰] 投掷动画结束(60帧)后才执行效果
+        public int polyhedronDelayTimer = 0;
+        public int polyhedronQueuedFaces = 0;
+        public int polyhedronQueuedResult = 0;
+
         // ===================================================
         // 【新增】狗的数据存储 (绑定在玩家身上)
         // ===================================================
@@ -325,13 +457,14 @@ namespace zhashi.Content
         {
 
 
-            tag["BaseSequence"] = baseSequence;          // 建议改个名区分，或者保持原样但心里要清楚存的是Base
+            tag["BaseSequence"] = baseSequence;         
             tag["HunterSequence"] = baseHunterSequence;
             tag["MoonSequence"] = baseMoonSequence;
             tag["FoolSequence"] = baseFoolSequence;
-            tag["MarauderSequence"] = baseMarauderSequence; // 只存这一行！
-            tag["SunSequence"] = baseSunSequence;           // 太阳途径存的是 Base，这是对的
+            tag["MarauderSequence"] = baseMarauderSequence; 
+            tag["SunSequence"] = baseSunSequence;          
             tag["DemonessSequence"] = baseDemonessSequence;
+            tag["WheelSequence"] = baseWheelSequence;
 
 
             tag["Spirituality"] = spiritualityCurrent;
@@ -363,6 +496,19 @@ namespace zhashi.Content
             tag["CatastropheRitual"] = catastropheRitualCount;
             tag["RealmActive"] = isRealmOfMysteriesActive;
 
+            // 序列3 怪人 仪式
+            tag["AnomalyRitual"] = anomalyRitualProgress;
+            tag["AnomalyRitualComplete"] = anomalyRitualComplete;
+
+            // 序列2 先知 仪式
+            tag["ProphetRitual"] = prophetRitualProgress;
+            tag["ProphetRitualComplete"] = prophetRitualComplete;
+
+            // 序列1 巨蛇 仪式
+            tag["SerpentRitual"] = serpentRitualProgress;
+            tag["SerpentRitualBeatMoonLord"] = serpentRitualBeatMoonLord;
+            tag["SerpentRitualComplete"] = serpentRitualComplete;
+
             if (DogInventory == null) DogInventory = new Item[3];
             for (int i = 0; i < 3; i++)
             {
@@ -374,7 +520,6 @@ namespace zhashi.Content
         public override void LoadData(TagCompound tag)
         {
             if (tag.ContainsKey("BaseSequence")) baseSequence = tag.GetInt("BaseSequence");
-            // 兼容旧存档的键名 "CurrentSequence"
             else if (tag.ContainsKey("CurrentSequence")) baseSequence = tag.GetInt("CurrentSequence");
 
             if (tag.ContainsKey("HunterSequence")) baseHunterSequence = tag.GetInt("HunterSequence");
@@ -383,6 +528,7 @@ namespace zhashi.Content
             if (tag.ContainsKey("MarauderSequence")) baseMarauderSequence = tag.GetInt("MarauderSequence");
             if (tag.ContainsKey("SunSequence")) baseSunSequence = tag.GetInt("SunSequence");
             if (tag.ContainsKey("DemonessSequence")) baseDemonessSequence = tag.GetInt("DemonessSequence");
+            if (tag.ContainsKey("WheelSequence")) baseWheelSequence = tag.GetInt("WheelSequence");
 
             if (tag.ContainsKey("Spirituality")) spiritualityCurrent = tag.GetFloat("Spirituality");
             if (tag.ContainsKey("GuardianRitual")) guardianRitualProgress = tag.GetInt("GuardianRitual");
@@ -411,6 +557,19 @@ namespace zhashi.Content
             if (tag.ContainsKey("DespairKills")) despairRitualCount = tag.GetInt("DespairKills");
             if (tag.ContainsKey("CatastropheRitual")) catastropheRitualCount = tag.GetInt("CatastropheRitual");
             if (tag.ContainsKey("RealmActive")) isRealmOfMysteriesActive = tag.GetBool("RealmActive");
+
+            // 序列3 怪人 仪式
+            if (tag.ContainsKey("AnomalyRitual")) anomalyRitualProgress = tag.GetInt("AnomalyRitual");
+            if (tag.ContainsKey("AnomalyRitualComplete")) anomalyRitualComplete = tag.GetBool("AnomalyRitualComplete");
+
+            // 序列2 先知 仪式
+            if (tag.ContainsKey("ProphetRitual")) prophetRitualProgress = tag.GetInt("ProphetRitual");
+            if (tag.ContainsKey("ProphetRitualComplete")) prophetRitualComplete = tag.GetBool("ProphetRitualComplete");
+
+            // 序列1 巨蛇 仪式
+            if (tag.ContainsKey("SerpentRitual")) serpentRitualProgress = tag.GetInt("SerpentRitual");
+            if (tag.ContainsKey("SerpentRitualBeatMoonLord")) serpentRitualBeatMoonLord = tag.GetBool("SerpentRitualBeatMoonLord");
+            if (tag.ContainsKey("SerpentRitualComplete")) serpentRitualComplete = tag.GetBool("SerpentRitualComplete");
 
 
 
@@ -443,6 +602,7 @@ namespace zhashi.Content
             packet.Write(baseMoonSequence);      // 月亮基础
             packet.Write(baseSunSequence);       // 太阳基础
             packet.Write(baseDemonessSequence);   // 刺客基础
+            packet.Write(baseWheelSequence);      // 命运基础
 
             // --- [1] 基础数值 (7个) ---
             packet.Write(currentSequence);
@@ -452,6 +612,7 @@ namespace zhashi.Content
             packet.Write(currentMoonSequence);
             packet.Write(currentSunSequence);
             packet.Write(currentDemonessSequence);
+            packet.Write(currentWheelSequence);
             packet.Write(spiritualityCurrent); // float
 
             // --- [2] 寄生与仪式 (8个) ---
@@ -501,9 +662,9 @@ namespace zhashi.Content
             packet.Write(isSinging);               // 歌颂
             packet.Write(isSunMessenger);          // 太阳使者
 
-            // --- [10] 魔女途径状态 (3个) - 【新增补全】 ---
-            packet.Write(isApocalypseForm); // 末日形态 (关键！影响隐身)
-            packet.Write(isDisasterForm);   // 灾难形态 (如果这是个持续开关状态，也建议同步)
+            // --- [10] 魔女途径状态 (3个) ---
+            packet.Write(isApocalypseForm); 
+            packet.Write(isDisasterForm);   
 
 
             packet.Write(isPassiveStealEnabled);
@@ -523,6 +684,7 @@ namespace zhashi.Content
             clone.baseMoonSequence = baseMoonSequence;
             clone.baseSunSequence = baseSunSequence;
             clone.baseDemonessSequence = baseDemonessSequence;
+            clone.baseWheelSequence = baseWheelSequence;
 
             // [1]
             clone.currentSequence = currentSequence;
@@ -532,6 +694,7 @@ namespace zhashi.Content
             clone.currentMoonSequence = currentMoonSequence;
             clone.currentSunSequence = currentSunSequence;
             clone.currentDemonessSequence = currentDemonessSequence;
+            clone.currentWheelSequence = currentWheelSequence;
             clone.spiritualityCurrent = spiritualityCurrent;
 
             // [2]
@@ -582,8 +745,8 @@ namespace zhashi.Content
             clone.isSunMessenger = isSunMessenger;
 
             // [10] 魔女
-            clone.isApocalypseForm = isApocalypseForm; // 新增
-            clone.isDisasterForm = isDisasterForm;     // 新增
+            clone.isApocalypseForm = isApocalypseForm; 
+            clone.isDisasterForm = isDisasterForm;     
 
             clone.isPassiveStealEnabled = isPassiveStealEnabled;
         }
@@ -600,6 +763,7 @@ namespace zhashi.Content
                 clone.baseMoonSequence != baseMoonSequence ||
                 clone.baseSunSequence != baseSunSequence ||
                 clone.baseDemonessSequence != baseDemonessSequence ||
+                clone.baseWheelSequence != baseWheelSequence ||
 
                 clone.currentSequence != currentSequence ||
                 clone.currentMarauderSequence != currentMarauderSequence ||
@@ -608,6 +772,7 @@ namespace zhashi.Content
                 clone.currentMoonSequence != currentMoonSequence ||
                 clone.currentSunSequence != currentSunSequence ||
                 clone.currentDemonessSequence != currentDemonessSequence ||
+                clone.currentWheelSequence != currentWheelSequence ||
                 Math.Abs(clone.spiritualityCurrent - spiritualityCurrent) > 0.1f ||
 
                 clone.isParasitizing != isParasitizing ||
@@ -665,44 +830,564 @@ namespace zhashi.Content
         // ===================================================
         public override void PreUpdate()
         {
+            if (psychicStormCooldown > 0)
+            {
+                psychicStormCooldown--;
+            }
+            if (fateBlessingCooldown > 0)
+            {
+                fateBlessingCooldown--;
+            }
+
+            // === 序列3 怪人 冷却递减 + 仪式检测 ===
+            if (fateNullifyCooldown > 0) fateNullifyCooldown--;
+            if (fateDiceCooldown > 0) fateDiceCooldown--;
+            if (wheelOnHitCooldown > 0) wheelOnHitCooldown--;
+
+            // 命运庇护(骰子点数4)持续与到期处理
+            if (fateBlessingActiveTimer > 0)
+            {
+                fateBlessingActiveTimer--;
+                // 视觉:金色环绕粒子
+                if (Main.GameUpdateCount % 4 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(
+                        Player.Center + Main.rand.NextVector2CircularEdge(40, 40),
+                        DustID.GoldCoin, Vector2.Zero, 0, default, 1.2f);
+                    d.noGravity = true;
+                }
+                if (fateBlessingActiveTimer == 0)
+                {
+                    Main.NewText("命运庇护消散。", 200, 200, 200);
+                }
+            }
+
+            // "见证三次绝境逆转" 仪式检测 (只在序列4且仪式未完成时记录)
+            // 思路: 进入 <10% 血量 (deepDanger) 后, 若血量恢复回 60%+ 则计 1 次
+            if (baseWheelSequence == 4 && !anomalyRitualComplete && Player.statLifeMax2 > 0)
+            {
+                float lifePercent = (float)Player.statLife / Player.statLifeMax2;
+
+                // 进入濒死状态
+                if (lifePercent <= 0.10f && lifePercent > 0f)
+                {
+                    wasInDeepDanger = true;
+                }
+                // 从濒死翻盘回到60%以上
+                else if (wasInDeepDanger && lifePercent >= 0.60f)
+                {
+                    wasInDeepDanger = false;
+                    anomalyRitualProgress++;
+                    if (Main.myPlayer == Player.whoAmI)
+                    {
+                        CombatText.NewText(Player.getRect(), new Color(255, 215, 0),
+                            $"绝境逆转 ({anomalyRitualProgress}/{ANOMALY_RITUAL_TARGET})", true);
+                        Main.NewText($"命运的偏离记录在案... ({anomalyRitualProgress}/{ANOMALY_RITUAL_TARGET})",
+                            255, 215, 0);
+                        if (anomalyRitualProgress >= ANOMALY_RITUAL_TARGET)
+                        {
+                            anomalyRitualComplete = true;
+                            Main.NewText("【怪人仪式完成】你已三度从命运的咽喉中逃出，现在可以服用怪人魔药了。",
+                                255, 100, 255);
+                        }
+                    }
+                }
+                lastLifePercent = lifePercent;
+            }
+
+            // === 序列2 先知 - 计时器与状态 ===
+            if (wordsOfFortuneCooldown > 0) wordsOfFortuneCooldown--;
+            if (wordsOfMisfortuneCooldown > 0) wordsOfMisfortuneCooldown--;
+            if (revelationCooldown > 0) revelationCooldown--;
+            if (prophecyCooldown > 0) prophecyCooldown--; // 保留兼容
+            if (mercuryDodgeCooldown > 0) mercuryDodgeCooldown--;
+
+            // === 序列1 巨蛇 - 计时器+位置历史+水银相位+命运循环 ===
+            if (currentWheelSequence <= 1)
+            {
+                // [位置历史] 每帧记录玩家位置(用于"重启"回滚)
+                positionHistory[positionHistoryIdx] = Player.Center;
+                positionHistoryIdx = (positionHistoryIdx + 1) % positionHistory.Length;
+                if (positionHistoryIdx == 0) positionHistoryFilled = true;
+
+                // [水银相位] 每10秒自动进入3秒无敌
+                if (mercuryPhaseTimer > 0)
+                {
+                    mercuryPhaseTimer--;
+                    if (mercuryPhaseTimer == 0)
+                    {
+                        mercuryPhaseCooldown = MERCURY_PHASE_INTERVAL;
+                        if (Main.myPlayer == Player.whoAmI)
+                            Main.NewText("水银相位结束。", 200, 200, 220);
+                    }
+                }
+                else if (mercuryPhaseCooldown > 0)
+                {
+                    mercuryPhaseCooldown--;
+                    if (mercuryPhaseCooldown == 0)
+                    {
+                        mercuryPhaseTimer = MERCURY_PHASE_DURATION;
+                        if (Main.myPlayer == Player.whoAmI)
+                        {
+                            Main.NewText("水银相位激活: 3秒无敌。", 220, 220, 255);
+                            // 银色光环
+                            for (int k = 0; k < 60; k++)
+                            {
+                                float angle = (k / 60f) * MathHelper.TwoPi;
+                                Vector2 pos = Player.Center + new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * 80f;
+                                Dust d = Dust.NewDustPerfect(pos, DustID.SilverCoin, Vector2.Zero, 0, default, 2f);
+                                d.noGravity = true;
+                                d.fadeIn = 1.5f;
+                            }
+                        }
+                    }
+                }
+
+                // [命运循环] CD与激活计时 - 改用时间戳, 不依赖计时器递减
+                if (fateLoopCooldown > 0) fateLoopCooldown--;
+
+                if (fateLoopActive)
+                {
+                    // 持续视觉: 领域边界齿轮纹
+                    if (Main.myPlayer == Player.whoAmI && Main.GameUpdateCount % 2 == 0)
+                    {
+                        for (int k = 0; k < 16; k++)
+                        {
+                            float angle = (k / 16f) * MathHelper.TwoPi + Main.GameUpdateCount * 0.02f;
+                            Vector2 pos = fateLoopCenter + new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * 800f;
+                            Dust d = Dust.NewDustPerfect(pos, DustID.GoldCoin, Vector2.Zero, 0, default, 1.4f);
+                            d.noGravity = true;
+                        }
+                        for (int k = 0; k < 12; k++)
+                        {
+                            float angle = (k / 12f) * MathHelper.TwoPi - Main.GameUpdateCount * 0.03f;
+                            Vector2 pos = fateLoopCenter + new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * 600f;
+                            Dust d = Dust.NewDustPerfect(pos, DustID.PurpleCrystalShard, Vector2.Zero, 0, default, 1.3f);
+                            d.noGravity = true;
+                        }
+                    }
+
+                    // 计算剩余时间用于反馈
+                    long remainingTicks = (long)fateLoopExpireTick - (long)Main.GameUpdateCount;
+                    if (remainingTicks < 0) remainingTicks = 0;
+                    fateLoopActiveTimer = (int)remainingTicks; // 同步给UI显示
+
+                    // 每秒提示倒计时
+                    if (Main.myPlayer == Player.whoAmI && remainingTicks > 0 && remainingTicks % 60 == 0)
+                    {
+                        Main.NewText($"命运循环倒计时: {remainingTicks / 60}s (已记录 {_loopedNpcStartPos.Count} 个目标)", 200, 150, 255);
+                    }
+
+                    // 到期: 用时间戳判定, 不依赖递减
+                    if (Main.GameUpdateCount >= fateLoopExpireTick)
+                    {
+                        fateLoopActive = false;
+                        fateLoopActiveTimer = 0;
+
+                        if (Main.netMode != NetmodeID.MultiplayerClient)
+                        {
+                            int rolledBack = 0;
+                            foreach (var kv in _loopedNpcStartPos)
+                            {
+                                int npcIdx = kv.Key;
+                                if (npcIdx >= 0 && npcIdx < Main.maxNPCs)
+                                {
+                                    NPC npc = Main.npc[npcIdx];
+                                    if (npc.active && !npc.boss)
+                                    {
+                                        npc.position = kv.Value;
+                                        npc.velocity = Vector2.Zero;
+                                        npc.netUpdate = true;
+                                        for (int k = 0; k < 15; k++)
+                                        {
+                                            Dust d = Dust.NewDustPerfect(npc.Center, DustID.GoldCoin,
+                                                Main.rand.NextVector2Circular(4, 4), 0, default, 1.5f);
+                                            d.noGravity = true;
+                                        }
+                                        CombatText.NewText(npc.getRect(), Color.MediumPurple, "循环回滚!", true);
+                                        rolledBack++;
+                                    }
+                                }
+                            }
+                            if (Main.myPlayer == Player.whoAmI)
+                                Main.NewText($"【命运循环·闭合】 {rolledBack} 个敌人被回滚到5秒前的位置。", 200, 150, 255);
+                        }
+                        _loopedNpcStartPos.Clear();
+                    }
+                }
+
+                // [重启] CD递减
+                if (restartAutoCooldown > 0) restartAutoCooldown--;
+                if (restartManualCooldown > 0) restartManualCooldown--;
+
+                // [命运多面骰] 等动画结束执行实际效果
+                if (polyhedronDelayTimer > 0)
+                {
+                    polyhedronDelayTimer--;
+                    if (polyhedronDelayTimer == 0 && polyhedronQueuedFaces > 0)
+                    {
+                        ExecutePolyhedronEffect();
+                    }
+                }
+            }
+            if (mercuryDodgeTimer > 0)
+            {
+                mercuryDodgeTimer--;
+                // 命运回避激活: 视觉表现+无敌帧维持
+                Player.immune = true;
+                if (Player.immuneTime < 2) Player.immuneTime = 2;
+                // 银色粒子环绕
+                if (Main.GameUpdateCount % 3 == 0 && Main.myPlayer == Player.whoAmI)
+                {
+                    Dust d = Dust.NewDustPerfect(
+                        Player.Center + Main.rand.NextVector2CircularEdge(35, 35),
+                        DustID.SilverCoin, Vector2.Zero, 0, default, 1.4f);
+                    d.noGravity = true;
+                }
+                if (mercuryDodgeTimer == 0 && Main.myPlayer == Player.whoAmI)
+                {
+                    Main.NewText("水银之躯回避结束。", 200, 200, 220);
+                }
+            }
+            if (revelationActiveTimer > 0)
+            {
+                revelationActiveTimer--;
+
+                if (Main.myPlayer == Player.whoAmI)
+                {
+                    // [视觉1] 命运齿轮 - 玩家头顶3个金色齿轮按各自速率旋转
+                    // 三个齿轮代表"过去/现在/未来"
+                    Vector2 gearCenter = Player.Center + new Vector2(0, -90);
+                    for (int gearIdx = 0; gearIdx < 3; gearIdx++)
+                    {
+                        float radius = 18 + gearIdx * 12;
+                        float speed = (gearIdx % 2 == 0) ? 0.04f : -0.05f; // 交替正反转
+                        int teeth = 6 + gearIdx * 2; // 齿轮齿数
+                        for (int t = 0; t < teeth; t++)
+                        {
+                            float angle = (t / (float)teeth) * MathHelper.TwoPi
+                                          + Main.GameUpdateCount * speed;
+                            Vector2 pos = gearCenter + new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * radius;
+                            if (Main.GameUpdateCount % 3 == 0)
+                            {
+                                Dust d = Dust.NewDustPerfect(pos, DustID.GoldCoin,
+                                    Vector2.Zero, 0, default, 1.3f);
+                                d.noGravity = true;
+                                d.fadeIn = 1.2f;
+                            }
+                        }
+                    }
+
+                    // [视觉2] 命运符文环 - 玩家身体周围3层符文环绕(交替方向)
+                    if (Main.GameUpdateCount % 2 == 0)
+                    {
+                        for (int ring = 0; ring < 3; ring++)
+                        {
+                            float r = 70 + ring * 25;
+                            float baseAngle = Main.GameUpdateCount * (ring % 2 == 0 ? 0.025f : -0.025f);
+                            int dustOnRing = 16;
+                            for (int k = 0; k < dustOnRing; k++)
+                            {
+                                float angle = (k / (float)dustOnRing) * MathHelper.TwoPi + baseAngle;
+                                Vector2 pos = Player.Center + new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * r;
+                                // 交替金/紫: 内圈紫,外圈金
+                                int dustType = (ring == 0) ? DustID.PurpleCrystalShard
+                                            : (ring == 1) ? DustID.GoldCoin : DustID.YellowTorch;
+                                Dust d = Dust.NewDustPerfect(pos, dustType, Vector2.Zero, 0, default, 1f);
+                                d.noGravity = true;
+                                d.fadeIn = 1.1f;
+                            }
+                        }
+                    }
+
+                    // [视觉3] 命运之线 - 每30帧扫描一次, 向附近敌人连出金色丝线
+                    if (Main.GameUpdateCount % 30 == 0)
+                    {
+                        int lineCount = 0;
+                        foreach (NPC npc in Main.ActiveNPCs)
+                        {
+                            if (lineCount >= 8) break; // 最多同时8条线避免爆炸
+                            if (npc.friendly || npc.dontTakeDamage) continue;
+                            if (npc.Distance(Player.Center) > 1200f) continue;
+
+                            // 沿线绘制粒子
+                            int segments = (int)(npc.Distance(Player.Center) / 30);
+                            if (segments > 40) segments = 40;
+                            for (int s = 0; s < segments; s++)
+                            {
+                                float t = s / (float)segments;
+                                Vector2 pos = Vector2.Lerp(Player.Center, npc.Center, t)
+                                    + new Vector2(Main.rand.NextFloat(-3, 3), Main.rand.NextFloat(-3, 3));
+                                Dust d = Dust.NewDustPerfect(pos, DustID.GoldCoin,
+                                    Vector2.Zero, 100, default, 0.9f);
+                                d.noGravity = true;
+                                d.fadeIn = 0.8f;
+                            }
+                            lineCount++;
+                        }
+                    }
+
+                    // [视觉4] 玩家脚下持续涌出的紫色长河水波
+                    if (Main.GameUpdateCount % 4 == 0)
+                    {
+                        Vector2 footPos = Player.Bottom + new Vector2(Main.rand.NextFloat(-30, 30), 0);
+                        Dust d = Dust.NewDustPerfect(footPos, DustID.PurpleCrystalShard,
+                            new Vector2(Main.rand.NextFloat(-2, 2), -Main.rand.NextFloat(0.5f, 2f)), 0, default, 1.2f);
+                        d.noGravity = true;
+                    }
+
+                    // [视觉5 玩法层] 未来轨迹标记 - 每个敌人当前位置紫光,90帧后位置金光
+                    if (Main.GameUpdateCount % 8 == 0)
+                    {
+                        foreach (NPC npc in Main.ActiveNPCs)
+                        {
+                            if (npc.friendly || npc.dontTakeDamage) continue;
+                            if (npc.Distance(Player.Center) > 1500f) continue;
+
+                            // 当前位置: 紫光
+                            Dust now = Dust.NewDustPerfect(npc.Center, DustID.PurpleCrystalShard,
+                                Vector2.Zero, 0, default, 1f);
+                            now.noGravity = true;
+                            now.fadeIn = 1.3f;
+
+                            // 90帧后预测位置 (用当前velocity线性预测)
+                            Vector2 futurePos = npc.Center + npc.velocity * 90f;
+                            Dust future = Dust.NewDustPerfect(futurePos, DustID.GoldCoin,
+                                Vector2.Zero, 0, default, 1.2f);
+                            future.noGravity = true;
+                            future.fadeIn = 1.5f;
+                        }
+                    }
+
+                    // [光照] 玩家周围金紫色光照
+                    Lighting.AddLight(Player.Center, 0.7f, 0.55f, 0.9f);
+                }
+
+                // 启示结束的提示与反噬开启
+                if (revelationActiveTimer == 0)
+                {
+                    revelationBackfireTimer = 3600; // 启示结束后60秒反噬期
+                    if (Main.myPlayer == Player.whoAmI)
+                    {
+                        Main.NewText("命运启示褪去，认知重归凡尘 (60秒反噬期)", 150, 100, 200);
+                        // 视觉收束: 大量粒子向玩家中心聚拢
+                        for (int k = 0; k < 60; k++)
+                        {
+                            float angle = Main.rand.NextFloat() * MathHelper.TwoPi;
+                            Vector2 startPos = Player.Center + new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * 200;
+                            Vector2 vel = (Player.Center - startPos) / 12f;
+                            Dust d = Dust.NewDustPerfect(startPos, DustID.GoldCoin, vel, 0, default, 1.5f);
+                            d.noGravity = true;
+                        }
+                    }
+                }
+            }
+            if (revelationBackfireTimer > 0) revelationBackfireTimer--;
+            if (prophecyDuration > 0)
+            {
+                prophecyDuration--;
+                if (prophecyDuration == 0)
+                {
+                    prophecyMarked = false;
+                    if (Main.myPlayer == Player.whoAmI)
+                        Main.NewText("预言未应验，命运嘲笑了你...", 150, 150, 150);
+                }
+            }
+
+            // (废弃) 长按检测已废弃, 改为独立按键 Wheel_Revelation/WordsOfFortune/WordsOfMisfortune
+
+            // "见证5次必死之劫"仪式: 不可定数触发计数 (由FreeDodge 里递增)
+            // 自动判定完成
+            if (baseWheelSequence == 3 && !prophetRitualComplete && prophetRitualProgress >= PROPHET_RITUAL_TARGET)
+            {
+                prophetRitualComplete = true;
+                if (Main.myPlayer == Player.whoAmI)
+                {
+                    Main.NewText("【先知仪式完成】你已五次见证命运拒绝死亡，可服用先知魔药。", 200, 100, 255);
+                }
+            }
+
+            // 巨蛇仪式自动完成: 启示5次 且 击败过月亮领主
+            if (baseWheelSequence == 2 && !serpentRitualComplete
+                && serpentRitualProgress >= SERPENT_RITUAL_TARGET
+                && serpentRitualBeatMoonLord)
+            {
+                serpentRitualComplete = true;
+                if (Main.myPlayer == Player.whoAmI)
+                {
+                    Main.NewText("【巨蛇仪式完成】 你已凝视命运长河五次,且终结了月之主的存在。命运之蛇向你显形。", 220, 220, 255);
+                }
+            }
+
+            if (currentWheelSequence <= 7)
+            {
+                luckyEventTimer++;
+                if (luckyEventTimer % 60 == 0) luckFluctuation = Main.rand.NextFloat(-5f, 15f);
+
+                // 核心：幸运值大于0才能捡钱，且幸运值越高，触发间隔越短
+                float moneyChance = 2000f - (Player.luck * 500f);
+                if (moneyChance < 500f) moneyChance = 500f; // 封顶几率
+
+                if (Player.luck > 0 && Math.Abs(Player.velocity.X) > 0.1f && Main.rand.NextBool((int)moneyChance))
+                {
+                    if (Main.myPlayer == Player.whoAmI)
+                    {
+                        int coinType = Main.rand.NextBool(10) ? ItemID.GoldCoin : ItemID.SilverCoin;
+                        int amount = Main.rand.Next(1, 5);
+                        Item.NewItem(Player.GetSource_FromThis(), Player.Center + new Vector2(0, -50), coinType, amount);
+                        CombatText.NewText(Player.getRect(), Color.Gold, "出门捡钱!", true);
+                    }
+                }
+            }
+
+            // 【主动领域】：灾祸光环(序列6) -> 厄运领域(序列4)
+            if (isMisfortuneDomainActive)
+            {
+                // 维持领域需要消耗灵性 (半神消耗更大)
+                float cost = (currentWheelSequence <= 4) ? 5.0f : 2.0f;
+
+                if (!TryConsumeSpirituality(cost / 60f, true))
+                {
+                    isMisfortuneDomainActive = false;
+                    Main.NewText("灵性枯竭，领域被迫收起。", 255, 50, 50);
+                }
+                else
+                {
+                    // 【进阶版】序列4：厄运领域 (范围诅咒 + 暴毙)
+                    if (currentWheelSequence <= 4)
+                    {
+                        if (Main.GameUpdateCount % 60 == 0)
+                        {
+                            // 范围与幸运值强关联：基础1600像素，幸运+1再加1600
+                            float domainRadius = 1600f + (Player.luck > 0 ? Player.luck * 1600f : 0);
+                            if (domainRadius > 4800f) domainRadius = 4800f; // 上限
+
+                            foreach (NPC npc in Main.ActiveNPCs)
+                            {
+                                if (!npc.friendly && !npc.dontTakeDamage && npc.Distance(Player.Center) < domainRadius)
+                                {
+                                    // 随机上高阶Debuff
+                                    int choice = Main.rand.Next(3);
+                                    if (choice == 0) npc.AddBuff(BuffID.BetsysCurse, 120);
+                                    if (choice == 1) npc.AddBuff(BuffID.ShadowFlame, 120);
+                                    if (choice == 2) npc.AddBuff(BuffID.Ichor, 120);
+
+                                    // 厄运暴毙：基础1%几率，每点运气增加1%
+                                    float killChance = 0.01f + (Player.luck * 0.01f);
+                                    if (killChance < 0) killChance = 0f;
+                                    // 序列3 怪人 - 概率翻倍
+                                    if (currentWheelSequence <= 3) killChance *= 3f;
+
+                                    if (!npc.boss && Main.rand.NextFloat() < killChance)
+                                    {
+                                        npc.SimpleStrikeNPC(npc.lifeMax, 0, false, 0, DamageClass.Default, true);
+                                        npc.netUpdate = true;
+                                        CombatText.NewText(npc.getRect(), Color.DarkRed, "厄运暴毙!", true);
+
+                                        // 序列3 怪人 "厄运链"：连锁感染邻近敌人
+                                        if (currentWheelSequence <= 3)
+                                        {
+                                            int chainCount = 0;
+                                            foreach (NPC near in Main.ActiveNPCs)
+                                            {
+                                                if (chainCount >= 3) break;
+                                                if (near.whoAmI == npc.whoAmI) continue;
+                                                if (near.friendly || near.dontTakeDamage || near.boss) continue;
+                                                if (near.Distance(npc.Center) < 400f)
+                                                {
+                                                    int chainDmg = (int)(near.life * 0.30f);
+                                                    near.SimpleStrikeNPC(chainDmg, 0, false, 0, DamageClass.Default, true);
+                                                    if (!near.HasBuff(BuffID.ShadowFlame)) near.AddBuff(BuffID.ShadowFlame, 180);
+                                                    near.netUpdate = true;
+                                                    CombatText.NewText(near.getRect(), new Color(148, 0, 211), "厄运链!", true);
+                                                    chainCount++;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // 【基础版】序列6：灾祸光环 (天降异象)
+                    else if (currentWheelSequence <= 6)
+                    {
+                        calamityTimer++;
+                        // 频率与幸运值强关联：默认120帧一次，运气+1变成约80帧
+                        int calamityFreq = 120 - (int)(Player.luck * 40);
+                        if (calamityFreq < 40) calamityFreq = 40; // 最快40帧
+                        if (Player.luck < 0) calamityFreq = 240;  // 倒霉时很慢
+
+                        if (calamityTimer >= calamityFreq)
+                        {
+                            calamityTimer = 0;
+                            SpawnCalamity(); // 生成陨石/炸弹
+                        }
+                    }
+                }
+            }
+
+            // 【序列5：赢家】莫名其妙的好事 (随幸运值浮动)
+            if (currentWheelSequence <= 5)
+            {
+                // 只有幸运大于0才会发生好事，且幸运越高几率越大
+                float goodEventChance = 3600f - (Player.luck * 600f);
+                if (goodEventChance < 600f) goodEventChance = 600f;
+
+                if (Player.luck > 0 && Main.rand.NextBool((int)goodEventChance))
+                {
+                    int eventType = Main.rand.Next(3);
+                    if (eventType == 0)
+                    {
+                        Item.NewItem(Player.GetSource_FromThis(), Player.Center, ItemID.PlatinumCoin, 1);
+                        CombatText.NewText(Player.getRect(), Color.Gold, "意外遗产!", true);
+                    }
+                    else if (eventType == 1)
+                    {
+                        bool hit = false;
+                        foreach (NPC npc in Main.npc)
+                        {
+                            if (npc.active && !npc.friendly && npc.Distance(Player.Center) < 800f)
+                            {
+                                npc.AddBuff(BuffID.Confused, 300);
+                                npc.AddBuff(BuffID.Stoned, 60);
+                                hit = true;
+                            }
+                        }
+                        if (hit) CombatText.NewText(Player.getRect(), Color.LightBlue, "敌人迷路了!", true);
+                    }
+                    else
+                    {
+                        Player.Heal(50);
+                        Player.AddBuff(BuffID.Regeneration, 600);
+                        CombatText.NewText(Player.getRect(), Color.Pink, "心情愉悦!", true);
+                    }
+                }
+            }
             if (Player.dead) waitingForTeleport = false;
             if (waitingForTeleport)
             {
-                // 视觉提示：玩家身边产生一些空间波纹，提示处于技能状态中
                 if (Main.rand.NextBool(5))
                     Dust.NewDust(Player.position, Player.width, Player.height, DustID.Vortex, 0, 0, 0, default, 1f);
-
-                // 检测鼠标左键点击 (按下并释放的一瞬间触发)
                 if (Main.mouseLeft && Main.mouseLeftRelease)
                 {
                     Vector2 targetPos = Main.MouseWorld;
-
-                    // 核心逻辑：如果大地图(Map)是打开的，计算地图坐标
                     if (Main.mapFullscreen)
                     {
-                        // 获取地图缩放比例
                         float scale = Main.mapFullscreenScale;
-                        // 计算鼠标相对于屏幕中心的偏移量 (Pixel)
                         float dx = (Main.mouseX - Main.screenWidth / 2f) / scale;
                         float dy = (Main.mouseY - Main.screenHeight / 2f) / scale;
-
-                        // Main.mapFullscreenPos 是地图中心的 Tile 坐标 (1 Tile = 16 Pixels)
-                        // 目标世界坐标 = (地图中心Tile坐标 + 鼠标偏移Tile量) * 16
                         targetPos = new Vector2(
                             (Main.mapFullscreenPos.X + dx) * 16f,
                             (Main.mapFullscreenPos.Y + dy) * 16f
                         );
-
-                        // 传送后自动关闭地图，方便玩家立刻看到位置
                         Main.mapFullscreen = false;
                     }
 
-                    // 执行传送
                     Player.Teleport(targetPos, 1);
                     Terraria.Audio.SoundEngine.PlaySound(SoundID.Item4, Player.position); // 播放传送音效
                     Main.NewText("空间跨越成功！", 0, 255, 255);
 
-                    // 消耗完成，关闭状态
                     waitingForTeleport = false;
                 }
             }
@@ -710,7 +1395,6 @@ namespace zhashi.Content
             
             if (isDeceitDomainActive)
             {
-                // 持续消耗灵性
                 if (!TryConsumeSpirituality(1.5f, true))
                 {
                     isDeceitDomainActive = false;
@@ -718,36 +1402,27 @@ namespace zhashi.Content
                 }
                 else
                 {
-                    // 视觉特效：扭曲的空气
                     if (Main.GameUpdateCount % 10 == 0)
                     {
                         Vector2 pos = Player.Center + Main.rand.NextVector2Circular(400, 400);
                         Dust d = Dust.NewDustPerfect(pos, DustID.Vortex, Vector2.Zero, 150, default, 0.5f);
                         d.noGravity = true;
                     }
-
-                    // 1. 误导生物 (混乱)
                     foreach (NPC npc in Main.ActiveNPCs)
                     {
                         if (!npc.friendly && !npc.dontTakeDamage && npc.Distance(Player.Center) < 500f)
                         {
-                            npc.AddBuff(BuffID.Confused, 60); // 强行误导
-                            // 欺诈规则：让敌人防御力由于“判断错误”而失效
+                            npc.AddBuff(BuffID.Confused, 60); 
                             npc.defense = (int)(npc.defDefense * 0.5f);
                         }
                     }
-
-                    // 2. 误导攻击 (弹幕偏转)
-                    // 遍历敌对弹幕，使其偏离玩家
                     for (int i = 0; i < Main.maxProjectiles; i++)
                     {
                         Projectile p = Main.projectile[i];
                         if (p.active && p.hostile && p.Distance(Player.Center) < 200f)
                         {
-                            // 给一个与玩家方向相反的力
                             Vector2 push = (p.Center - Player.Center).SafeNormalize(Vector2.Zero) * 2f;
                             p.velocity += push;
-                            // 甚至可能直接把弹幕“骗”成友军 (仅限非Boss弹幕)
                             if (currentMarauderSequence <= 2 && Main.rand.NextBool(50))
                             {
                                 p.hostile = false;
@@ -763,7 +1438,6 @@ namespace zhashi.Content
                     {
                         wormRitualTimer++;
 
-                        // 视觉提示：每60秒提示一次
                         if (wormRitualTimer % 3600 == 0)
                         {
                             int minutes = wormRitualTimer / 3600;
@@ -805,26 +1479,19 @@ namespace zhashi.Content
                 }
             }
 
-            // =================================================
-            // 3. 【核心修复】灵体化穿墙逻辑 (Noclip)
-            // =================================================
+            // 3.灵体化穿墙逻辑 
             if (isSpiritForm)
             {
-                // 消除重力和惯性
                 Player.gravity = 0f;
                 Player.velocity = Vector2.Zero;
                 Player.fallStart = (int)(Player.position.Y / 16f); // 防止解除时受到摔落伤害
 
-                // 手动控制移动 (无视墙壁)
                 float speed = 12f; // 灵体飞行速度
 
-                // 检测按键
                 if (Player.controlLeft) Player.position.X -= speed;
                 if (Player.controlRight) Player.position.X += speed;
                 if (Player.controlUp) Player.position.Y -= speed;
                 if (Player.controlDown) Player.position.Y += speed;
-
-                // 既然是灵体，就不要受其他物理效果影响了
                 Player.noKnockback = true;
             }
             if (currentFoolSequence <= 1)
@@ -887,12 +1554,15 @@ namespace zhashi.Content
             currentMarauderSequence = baseMarauderSequence;
             currentSunSequence = baseSunSequence;
             currentDemonessSequence = baseDemonessSequence;
+            currentWheelSequence = baseWheelSequence;
 
             instigatorEffect = false;
             witchIceEffect = false;
             pleasureDemonessEffect = false;
             isAfflictionDemoness = false;
-            canUseWitchBroom = false; // 每帧重置，只有戴着魔女牌才会变true
+            canUseWitchBroom = false;
+            hasGrayClover = false;
+            anomalyDebuffStack = 0; // 每帧重置(在PostUpdateEquips里重新统计)
 
             CalculateMaxSpirituality();
             HandleSpiritualityRegen();
@@ -1121,6 +1791,7 @@ namespace zhashi.Content
             float marauderMult = GetSequenceMultiplier(currentMarauderSequence);
             float sunMult = GetSequenceMultiplier(currentSunSequence);
             float demonessMult = GetSequenceMultiplier(currentDemonessSequence);
+            float wheelMult = GetSequenceMultiplier(currentWheelSequence);
 
             // 2. 动态调整血量、伤害、防御的基础倍率
             // 原来的逻辑是直接 +5000 血，现在改为：世界越强，加成越高
@@ -1137,10 +1808,6 @@ namespace zhashi.Content
             // ==========================================
             // 动态数值应用 (替换原版死数值)
             // ==========================================
-
-            // 举例：如果您是序列1 (mult约为3.0)，且世界刚开局 (worldMult=0.2)
-            // 最终加成 = 3.0 * 0.2 = 0.6倍，不会太离谱
-            // 如果打完灾厄 (worldMult=5.0)，最终加成 = 15.0倍，足以抗衡神吞
 
             // --- 巨人/战士 ---
             if (currentSequence <= 9) { Player.statDefense += (int)(8 * giantMult * worldMult); Player.GetDamage(DamageClass.Melee) += 0.12f * giantMult; Player.GetCritChance(DamageClass.Melee) += 5; Player.statLifeMax2 += (int)(100 * giantMult * worldMult); }
@@ -1426,7 +2093,6 @@ namespace zhashi.Content
 
             if (currentSunSequence <= 8)
             {
-                // 祈光人：白昼 (被动光照)
                 Lighting.AddLight(Player.Center, 1.2f, 1.1f, 0.9f);
 
                 Player.statLifeMax2 += (int)(40 * worldMult);
@@ -1434,19 +2100,15 @@ namespace zhashi.Content
             }
             if (currentSunSequence <= 7)
             {
-                // 1. 免疫恐惧 (Prompt: 温暖的力量)
                 Player.buffImmune[BuffID.Horrified] = true;
                 Player.buffImmune[BuffID.TheTongue] = true;
 
-                // 2. 抵抗恶劣环境 (疾病/寒冷)
                 Player.buffImmune[BuffID.Chilled] = true;
                 Player.buffImmune[BuffID.Frozen] = true;
                 Player.buffImmune[BuffID.Darkness] = true;
                 Player.buffImmune[BuffID.Blackout] = true;
                 Player.buffImmune[BuffID.Bleeding] = true; // 疾病抵抗
                 Player.buffImmune[BuffID.Poisoned] = true;
-
-                // 3. 净化之斩 (常驻附魔)
                 isCleansingSlash = true;
             }
             else
@@ -1505,8 +2167,6 @@ namespace zhashi.Content
             }
             if (currentSunSequence <= 2)
             {
-                // 1. 光之权柄：对负面状态的绝对抗性
-                // 免疫黑暗、寒冷、污秽、衰败
                 Player.buffImmune[BuffID.Darkness] = true;
                 Player.buffImmune[BuffID.Blackout] = true;
                 Player.buffImmune[BuffID.Chilled] = true;
@@ -1542,8 +2202,6 @@ namespace zhashi.Content
             }
             if (currentSunSequence <= 1)
             {
-                // 1. 神圣之国 (被动)
-                // 免疫绝大部分伤害来源的Debuff
                 Player.buffImmune[BuffID.OnFire] = true;
                 Player.buffImmune[BuffID.OnFire3] = true;
                 Player.buffImmune[BuffID.CursedInferno] = true;
@@ -1552,19 +2210,15 @@ namespace zhashi.Content
                 Player.buffImmune[BuffID.Burning] = true;
                 Player.buffImmune[BuffID.Suffocation] = true; // 不需要呼吸
 
-                // 秩序化身：根据城镇NPC数量增加回血和防御
                 int townCount = 0;
                 for (int i = 0; i < Main.maxNPCs; i++) if (Main.npc[i].active && Main.npc[i].townNPC) townCount++;
 
                 Player.statDefense += (int)(townCount * 2 * worldMult); // 每个NPC提供额外防御
                 Player.lifeRegen += townCount; // 每个NPC提供回血
-
-                // 基础属性神性化
                 Player.statLifeMax2 += (int)(5000 * worldMult);
                 Player.statDefense += (int)(150 * worldMult);
                 Player.endurance += 0.3f; // 30% 免伤
 
-                // 攻击附带纯白净化 (Daybreak)
                 Player.GetDamage(DamageClass.Generic) += 0.5f;
             }
 
@@ -1730,6 +2384,245 @@ namespace zhashi.Content
                         }
                     }
                 }
+            }
+            // --- 新增：怪物(命运)途径 (Demoness) ---
+            if (currentWheelSequence <= 9)
+            {
+                Player.dangerSense = true;
+                Player.detectCreature = true;
+
+                Player.GetCritChance(DamageClass.Generic) += 5;
+
+                Player.statLifeMax2 += (int)(20 * worldMult); // 血量小幅提升
+                Player.moveSpeed += 0.1f; // 动作稍微灵敏一点
+
+                Player.nightVision = true;
+            }
+            if (currentWheelSequence <= 8)
+            {
+                Player.GetCritChance(DamageClass.Generic) += 10;
+                Player.GetDamage(DamageClass.Melee) += 0.20f;
+                Player.GetDamage(DamageClass.Ranged) += 0.20f;
+                Player.statDefense += 5;       // 机器之躯，防御增加
+                Player.moveSpeed += 0.15f;     // 动作更精准迅速
+                Player.tileRangeX += 2;
+                Player.tileRangeY += 2;
+            }
+            if (currentWheelSequence <= 7)
+            {
+                Player.GetCritChance(DamageClass.Generic) += (10 + luckFluctuation);
+                Player.moveSpeed += 0.2f;
+            }
+            if (currentWheelSequence <= 6)
+            {
+
+                Player.statDefense += 10; // 护甲提升
+                Player.endurance += 0.1f; // 10% 免伤
+            }
+            if (currentWheelSequence <= 5)
+            {
+                Player.statLifeMax2 += 100; // 赢家血厚一点，命硬
+                Player.GetCritChance(DamageClass.Generic) += 15;
+                spiritualityMax += 300;
+                if (Player.luck > 0)
+                {
+                    Player.GetCritChance(DamageClass.Generic) += (int)(Player.luck * 5);
+                    Player.moveSpeed += 0.01f * Player.luck;
+                }
+            }
+            if (currentWheelSequence <= 4)
+            {
+                Player.statDefense += 25;       // 高额护甲
+                Player.endurance += 0.15f;      // 15% 绝对免伤
+                Player.moveSpeed += 0.3f;       // 极快移速
+                Player.statLifeMax2 += 150;     // 半神血量质变
+                Player.dangerSense = true;      // 察觉危险
+                Player.detectCreature = true;   // 察觉生灵
+                Player.nightVision = true;      // 穿透黑暗
+                Player.GetCritChance(DamageClass.Generic) += 20;
+            }
+            // --- 序列3：怪人 (Anomaly) ---
+            // 命运扭曲的诡异存在；几率事件全部偏向你，敌人则被概率链反噬
+            if (currentWheelSequence <= 3)
+            {
+                Player.statLifeMax2 += (int)(600 * worldMult);   // 与其它途径序列3对齐
+                Player.GetDamage(DamageClass.Generic) += 0.10f;  // +10% 通用伤
+                Player.GetCritChance(DamageClass.Generic) += 10; // 累加到序列4，共 +30%
+                // 暴击伤害+30% (怪人之眼) 在 ModifyHitNPC / ModifyHitNPCWithProj 钩子里实现
+                Player.statDefense += 15;                         // 累加到 +40
+                Player.endurance += 0.15f;                        // 累加到 30%
+
+                // 命运骰子-命运庇护：30秒内额外50%伤害减免
+                if (fateBlessingActiveTimer > 0)
+                {
+                    // endurance是乘法叠加，0.5代表减伤50%
+                    // 注意:与原有endurance叠加方式是(1-e1)*(1-e2)，所以这里加0.5意味着再衰减50%剩余伤害
+                    Player.endurance += 0.50f;
+                }
+
+                // 概率反噬：身上每一个减益让幸运 +0.2（最高+1.0）
+                int debuffCount = 0;
+                for (int i = 0; i < Player.MaxBuffs; i++)
+                {
+                    int buffType = Player.buffType[i];
+                    if (buffType > 0 && Main.debuff[buffType] && !Main.buffNoTimeDisplay[buffType])
+                    {
+                        debuffCount++;
+                    }
+                }
+                if (debuffCount > 5) debuffCount = 5;
+                // 注：实际luck在ModifyLuck里处理；此处仅缓存，下方Luck钩子里读
+                anomalyDebuffStack = debuffCount;
+            }
+            // --- 序列2：先知 (Prophet) ---
+            // 命运的宠儿，完整的神话生物形态，三大下位权柄已成
+            if (currentWheelSequence <= 2)
+            {
+                Player.statLifeMax2 += (int)(900 * worldMult);    // 累加到+1500
+                Player.GetDamage(DamageClass.Generic) += 0.15f;   // 累加到+25%
+                Player.GetCritChance(DamageClass.Generic) += 15;  // 累加到+45
+                Player.statDefense += 25;                          // 累加到+65
+                Player.endurance += 0.20f;                         // 累加到约50%
+
+                // 命运启示激活期间的极致BUFF
+                if (revelationActiveTimer > 0)
+                {
+                    Player.GetCritChance(DamageClass.Generic) += 100;   // 暴击率拉满
+                    Player.GetDamage(DamageClass.Generic) += 0.50f;     // 启示中伤害+50%
+                    Player.endurance += 0.50f;                          // 额外50%减伤
+                    Player.GetAttackSpeed(DamageClass.Generic) += 0.50f;// 攻速+50%
+                    Player.moveSpeed += 0.5f;                            // 移速+50% (你看到了最优路径)
+
+                    // 命运庇护期间持续无敌帧
+                    Player.SetImmuneTimeForAllTypes(2);
+                }
+                // 反噬期: 略微衰弱(代表预言代价)
+                else if (revelationBackfireTimer > 0)
+                {
+                    Player.GetDamage(DamageClass.Generic) -= 0.05f;
+                }
+
+                // 水银之躯CD结束后,持续+1幸运(由ModifyLuck处理)
+            }
+
+            // --- 序列1：巨蛇 (Serpent of Mercury / 吞尾之蛇) ---
+            // 从神级 - 命运的化身, 拥有循环 / 保存 / 选择 三大下位权柄
+            if (currentWheelSequence <= 1)
+            {
+                Player.statLifeMax2 += (int)(2500 * worldMult);     // 累计 ~+6500+
+                Player.GetDamage(DamageClass.Generic) += 0.50f;     // 累计 ~+90%
+                Player.GetCritChance(DamageClass.Generic) += 35;    // 累计 ~+95
+                Player.statDefense += 80;                            // 累计 ~+145
+                Player.endurance += 0.20f;                           // 累计 ~70%
+                Player.GetAttackSpeed(DamageClass.Generic) += 0.40f; // +40% 攻速
+                Player.moveSpeed += 0.5f;                             // +50% 移速
+                Player.lifeRegen += 20;                               // +10 hp/s
+
+                // [隐藏命运] 免疫所有"标记/诅咒/追踪"类debuff
+                Player.buffImmune[BuffID.Ichor] = true;
+                Player.buffImmune[BuffID.CursedInferno] = true;
+                Player.buffImmune[BuffID.BetsysCurse] = true;
+                Player.buffImmune[BuffID.Daybreak] = true;
+                Player.buffImmune[BuffID.ShadowFlame] = true;
+                Player.buffImmune[BuffID.Frostburn] = true;
+                Player.buffImmune[BuffID.OnFire] = true;
+                Player.buffImmune[BuffID.OnFire3] = true;
+                Player.buffImmune[BuffID.Venom] = true;
+                Player.buffImmune[BuffID.Poisoned] = true;
+                Player.buffImmune[BuffID.Bleeding] = true;
+                Player.buffImmune[BuffID.BrokenArmor] = true;
+                Player.buffImmune[BuffID.Weak] = true;
+                Player.buffImmune[BuffID.Confused] = true;
+                Player.buffImmune[BuffID.Slow] = true;
+                Player.buffImmune[BuffID.Silenced] = true;
+                Player.buffImmune[BuffID.Cursed] = true;
+                Player.buffImmune[BuffID.Darkness] = true;
+                Player.buffImmune[BuffID.Blackout] = true;
+                Player.buffImmune[BuffID.Chilled] = true;
+                Player.buffImmune[BuffID.Frozen] = true;
+                Player.buffImmune[BuffID.WitheredArmor] = true;
+                Player.buffImmune[BuffID.WitheredWeapon] = true;
+                Player.buffImmune[BuffID.Horrified] = true;
+                Player.buffImmune[BuffID.TheTongue] = true;
+                Player.buffImmune[BuffID.Webbed] = true;
+                Player.buffImmune[BuffID.Stinky] = true;
+
+                // [水银相位] 每10秒进入3秒无敌
+                if (mercuryPhaseTimer > 0)
+                {
+                    Player.SetImmuneTimeForAllTypes(2);
+                    // 银色半透明表现
+                    if (Main.myPlayer == Player.whoAmI)
+                    {
+                        // 玩家中心持续银色拖影
+                        for (int k = 0; k < 5; k++)
+                        {
+                            Vector2 offset = Main.rand.NextVector2Circular(20, 30);
+                            Dust d = Dust.NewDustPerfect(Player.Center + offset,
+                                DustID.SilverCoin, Main.rand.NextVector2Circular(2, 2), 0, default, 1.6f);
+                            d.noGravity = true;
+                            d.fadeIn = 1.2f;
+                        }
+                    }
+                }
+
+            }
+        }
+        public override void ModifyLuck(ref float luck)
+        {
+            bool hasBadLuckBuff = Player.HasBuff(ModContent.BuffType<ExtremeBadLuckBuff>());
+            bool isWinner = currentWheelSequence <= 5 && currentWheelSequence > 0;
+
+            // --- 逻辑核心 ---
+
+            if (hasBadLuckBuff)
+            {
+                luck -= 10.0f;
+            }
+            // --- 序列9：怪物 ---
+            if (currentWheelSequence <= 9)
+            {
+                luck += 0.2f; 
+            }
+
+            // --- 序列7：幸运儿 ---
+            if (currentWheelSequence <= 7)
+            {
+                luck += 0.5f; 
+                luck += luckFluctuation * 0.01f; 
+            }
+            if (currentWheelSequence <= 6)
+            {
+                luck += 0.3f; 
+            }
+            if (currentWheelSequence <= 5)
+            {
+                luck += 1.0f;
+            }
+            if (currentWheelSequence <= 4)
+            {
+                luck += 1.0f;
+            }
+            // --- 序列3：怪人 ---
+            if (currentWheelSequence <= 3)
+            {
+                luck += 0.5f;                              // 怪人本体加成
+                luck += anomalyDebuffStack * 0.2f;         // 概率反噬：每个减益+0.2
+            }
+            // --- 序列2：先知 (累加) ---
+            if (currentWheelSequence <= 2)
+            {
+                luck += 2.0f;                              // 命运的宠儿
+                // 水银之躯回避CD结束后, 持续+1幸运
+                if (mercuryDodgeTimer == 0 && mercuryDodgeCooldown == 0)
+                {
+                    luck += 1.0f;
+                }
+            }
+            // --- 序列1：巨蛇 (从神级累加) ---
+            if (currentWheelSequence <= 1)
+            {
+                luck += 5.0f;                              // 命运的化身
             }
         }
         private void ProcessRealmOfMysteries()
@@ -2340,6 +3233,7 @@ namespace zhashi.Content
             float giantMult = GetSequenceMultiplier(currentSequence);
             float hunterMult = GetSequenceMultiplier(currentHunterSequence);
 
+
             if (SubworldSystem.IsActive<SpiritWorld>())
             {
                 // 设定每帧消耗的灵性 (60帧 = 1秒)
@@ -2452,7 +3346,7 @@ namespace zhashi.Content
                         }
                     }
                 }
-                else if (Main.GameUpdateCount % 20 == 0) // 序列7的旧特效
+                else if (Main.GameUpdateCount % 20 == 0)
                 {
                     // 画一个淡淡的金圈
                     for (int i = 0; i < 360; i += 10)
@@ -2837,17 +3731,16 @@ namespace zhashi.Content
 
             if (config.EnableSanitySystem)
             {
-                float spiritRatio = spiritualityCurrent / spiritualityMax;
+                float spiritRatio = (float)spiritualityCurrent / spiritualityMax;
 
                 // ---------------------------------------------------------
-                // 1. 【危险阶段】灵性 < 30% -> 显示 [灵性枯竭] Buff
+                // 1. 【危险阶段】灵性 < 30% -> 警告 + 惩罚
                 // ---------------------------------------------------------
                 if (spiritRatio < 0.3f)
                 {
-                    // 【UI】添加 Buff 图标
                     Player.AddBuff(ModContent.BuffType<Content.Buffs.Curse.SanityDangerBuff>(), 2);
 
-                    // --- A. 视觉特效 ---
+                    // 视觉特效
                     if (Main.netMode != NetmodeID.Server && Player.whoAmI == Main.myPlayer)
                     {
                         Player.AddBuff(BuffID.Blackout, 20);
@@ -2856,11 +3749,11 @@ namespace zhashi.Content
                             SkyManager.Instance.Activate("MoonLord");
                     }
 
-                    // --- B. 文字提示 ---
+                    // 文字提示
                     if (Main.GameUpdateCount % 300 == 0)
-                        CombatText.NewText(Player.getRect(), new Color(120, 0, 0), "灵性枯竭...意识模糊...", true);
+                        CombatText.NewText(Player.getRect(), new Color(120, 0, 0), "灵性枯竭...疯狂临近...", true);
 
-                    // --- C. 属性惩罚 ---
+                    // 属性惩罚
                     float penaltyFactor = 0.5f + (spiritRatio / 0.6f);
                     if (penaltyFactor > 1f) penaltyFactor = 1f;
                     Player.statDefense *= penaltyFactor;
@@ -2868,6 +3761,7 @@ namespace zhashi.Content
                 }
                 else
                 {
+                    // 恢复正常时关闭特效
                     if (Main.netMode != NetmodeID.Server && Player.whoAmI == Main.myPlayer)
                     {
                         if (SkyManager.Instance["MoonLord"].IsActive())
@@ -2875,31 +3769,39 @@ namespace zhashi.Content
                     }
                 }
 
-                bool isMirrorCloneActive = Player.ownedProjectileCounts[ModContent.ProjectileType<Projectiles.Demoness.MirrorCloneProjectile>()] > 0;
-
-                // 2. 【失控阶段】(逻辑保持不变)
-                bool isHighLoad = isFireForm || isMercuryForm || isCalamityGiant || isSunMessenger || isSpiritForm || isVampireWings || isMirrorCloneActive;
-                if (spiritualityCurrent <= 1.0f && isHighLoad)
+                // ---------------------------------------------------------
+                // 2. 【死亡阶段】灵性归零 -> 强制暴毙
+                // ---------------------------------------------------------
+                // 只要灵性小于等于 1 (防止浮点数计算误差导致正好是0.0001没死)，直接判定死亡
+                if (spiritualityCurrent <= 1.0f)
                 {
+                    // 1. 强制关闭所有变身/高耗能状态
+                    // (防止复活瞬间因为状态还在，每帧扣灵性，导致刚复活又瞬间暴毙的死循环)
                     isFireForm = false; isMercuryForm = false; isCalamityGiant = false;
                     isSunMessenger = false; isSpiritForm = false; isVampireWings = false;
                     isGuardianStance = false;
                     isDeceitDomainActive = false; isTimeClockActive = false;
                     isFullMoonActive = false; isCreationDomain = false;
 
+                    // 2. 播放恐怖音效
                     SoundEngine.PlaySound(SoundID.Roar, Player.position);
-                    Main.NewText("灵性彻底枯竭！你失控了！", 255, 50, 50);
-                    int backlashDmg = (int)(Player.statLifeMax2 * 0.4f);
-                    Player.Hurt(PlayerDeathReason.ByCustomReason(NetworkText.FromLiteral(Player.name + " 因灵性枯竭而失控畸变")), backlashDmg, 0);
+                    SoundEngine.PlaySound(SoundID.NPCDeath10, Player.position); // 添加一个血液飞溅/惨叫的声音
 
-                    Player.AddBuff(BuffID.Blackout, 180);
-                    Player.AddBuff(BuffID.Obstructed, 180);
-                    Player.AddBuff(BuffID.Slow, 600);
-                    Player.AddBuff(BuffID.Confused, 180);
+                    // 3. 红色文字警告
+                    Main.NewText("灵性彻底枯竭！你的精神崩溃了！", 255, 0, 0);
+
+                    // 4. 【核心】强制处决
+                    // 这里的 999999 伤害 + CustomReason 确保无视防御和闪避
+                    Player.KillMe(
+                        PlayerDeathReason.ByCustomReason(NetworkText.FromLiteral(Player.name + " 灵性耗尽，当场失控暴毙！")),
+                        999999.0,
+                        0
+                    );
                 }
             }
             else
             {
+                // 如果在配置里关闭了SanitySystem，确保特效被移除
                 if (Main.netMode != NetmodeID.Server && Player.whoAmI == Main.myPlayer)
                 {
                     if (SkyManager.Instance["MoonLord"].IsActive())
@@ -3211,6 +4113,116 @@ namespace zhashi.Content
         }
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            if (currentWheelSequence <= 9)
+            {
+                // === 性能保护 ===
+                // 1. 节流: 全局限频, 每15帧最多触发一次该段(避免多发武器/AOE炸帧)
+                // 2. 不在递归中触发: 防止"炸膛"二次调用OnHitNPC造成调用爆栈
+                // 3. 持续型buff改用RefreshOnly(已有就不刷新), 减小buff写入压力
+                if (!preventRecursiveOp && wheelOnHitCooldown <= 0)
+                {
+                    wheelOnHitCooldown = 15; // 1/4 秒间隔
+
+                    // 1. 基础诅咒 (仅在敌人未持有该 buff 时施加, 不每次刷新)
+                    int baseDuration = 300 + (int)(Player.luck > 0 ? Player.luck * 120 : 0);
+                    if (!target.HasBuff(BuffID.BetsysCurse))
+                        target.AddBuff(BuffID.BetsysCurse, baseDuration);
+                    if (!target.HasBuff(BuffID.Midas))
+                        target.AddBuff(BuffID.Midas, baseDuration);
+
+                    // 2. 只有在玩家运气 > 0 时触发特殊厄运
+                    if (Player.luck > 0)
+                    {
+                        // [事件A] 致命弱点 - 概率事件，伤害不会触发递归
+                        float weakChance = 0.10f + (Player.luck * 0.15f);
+                        if (Main.rand.NextFloat() < weakChance)
+                        {
+                            float damageMult = 0.5f + (Player.luck * 0.25f);
+                            int extraDmg = (int)(damageDone * damageMult);
+                            // 用 SimpleStrikeNPC 而非 ApplyDamageToNPC,后者会再次走OnHitNPC造成递归
+                            target.SimpleStrikeNPC(extraDmg, 0, false, 0, DamageClass.Default, true);
+                            CombatText.NewText(target.getRect(), Color.Gray, "弱点!", true);
+                        }
+
+                        // [事件B] 炸膛 - 改用 SimpleStrikeNPC(同样绕开OnHitNPC递归)
+                        float backfireChance = 0.05f + (Player.luck * 0.10f);
+                        if (Main.rand.NextFloat() < backfireChance)
+                        {
+                            float backfireMult = 2f + Player.luck;
+                            int backfireDamage = (int)(target.damage * backfireMult);
+                            if (backfireDamage < 50) backfireDamage = 50;
+                            target.SimpleStrikeNPC(backfireDamage, 0, false, 0, DamageClass.Default, true);
+
+                            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item14, target.position);
+                            // 烟雾粒子数量减半,大型战斗时少生成
+                            for (int i = 0; i < 5; i++) Dust.NewDust(target.position, target.width, target.height, DustID.Smoke, 0, 0, 100, default, 1.5f);
+                            CombatText.NewText(target.getRect(), Color.OrangeRed, "炸膛!", true);
+                        }
+
+                        // [事件C] 手滑 - 仅在敌人未持有时施加
+                        float disarmChance = 0.10f + (Player.luck * 0.10f);
+                        if (Main.rand.NextFloat() < disarmChance)
+                        {
+                            int debuffTime = 300 + (int)(Player.luck * 180);
+                            if (!target.HasBuff(BuffID.Weak))
+                                target.AddBuff(BuffID.Weak, debuffTime);
+                            if (!target.HasBuff(BuffID.BrokenArmor))
+                                target.AddBuff(BuffID.BrokenArmor, debuffTime);
+                            CombatText.NewText(target.getRect(), Color.LightYellow, "手滑!", true);
+                        }
+                    }
+                }
+            }
+
+            // === 序列2 先知 - 预言术 ===
+            if (currentWheelSequence <= 2 && !preventRecursiveOp)
+            {
+                // [1] 命中已被"预言"的敌人 -> 直接秒杀(非Boss)或扣20%血(Boss)
+                if (prophecyMarked && prophecyDuration > 0)
+                {
+                    prophecyMarked = false;
+                    prophecyDuration = 0;
+
+                    int prophDmg;
+                    if (target.boss)
+                        prophDmg = (int)(target.life * 0.20f);
+                    else
+                        prophDmg = target.life;
+
+                    if (prophDmg > 0)
+                    {
+                        target.SimpleStrikeNPC(prophDmg, 0, false, 0, DamageClass.Default, true);
+                        target.netUpdate = true;
+                        CombatText.NewText(target.getRect(), new Color(200, 100, 255), "预言应验!", true);
+
+                        if (Main.myPlayer == Player.whoAmI)
+                        {
+                            for (int i = 0; i < 25; i++)
+                            {
+                                Dust d = Dust.NewDustPerfect(target.Center,
+                                    DustID.PurpleCrystalShard, Main.rand.NextVector2Circular(5, 5), 0, default, 1.5f);
+                                d.noGravity = true;
+                            }
+                            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item122, target.position);
+                        }
+                    }
+                }
+                // [2] 杀死敌人时15%概率预言下一击 (启示中提升至30%)
+                if (target.life <= 0)
+                {
+                    float prophChance = (revelationActiveTimer > 0) ? 1.0f : 0.15f;
+                    if (Main.rand.NextFloat() < prophChance && !prophecyMarked)
+                    {
+                        prophecyMarked = true;
+                        prophecyDuration = 600; // 10秒内有效
+                        if (Main.myPlayer == Player.whoAmI)
+                        {
+                            CombatText.NewText(Player.getRect(), new Color(180, 100, 255), "已预言下一击!", true);
+                        }
+                    }
+                }
+            }
+
             if (preventRecursiveOp) return;
             ApplyHitEffects(target); CheckRitualKill(target); CheckExecution(target); if (isPassiveStealEnabled)
             {
@@ -3518,6 +4530,22 @@ namespace zhashi.Content
                 modifiers.CritDamage += 0.5f;
             }
 
+            // 序列3 怪人 - 怪人之眼: 暴击伤害+30%
+            if (currentWheelSequence <= 3)
+            {
+                modifiers.CritDamage += 0.3f;
+            }
+            // 序列2 先知 - 命运洞察: 暴击伤害再+20% (叠加共+50%)
+            if (currentWheelSequence <= 2)
+            {
+                modifiers.CritDamage += 0.2f;
+            }
+            // 序列1 巨蛇 - 万物之蛇: 暴击伤害再+30% (叠加共+80%)
+            if (currentWheelSequence <= 1)
+            {
+                modifiers.CritDamage += 0.3f;
+            }
+
             if (currentFoolSequence <= 1 && graftingMode == 2)
             {
                 bool nerf = ModContent.GetInstance<LotMConfig>().NerfDivineAbilities;
@@ -3571,7 +4599,7 @@ namespace zhashi.Content
             // 保持基类逻辑 (通常放在最后)
             base.ModifyHitNPC(target, ref modifiers);
         }
-        public override void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers) { if (currentHunterSequence <= 5) modifiers.CritDamage += 0.5f; }
+        public override void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers) { if (currentHunterSequence <= 5) modifiers.CritDamage += 0.5f; if (currentWheelSequence <= 3) modifiers.CritDamage += 0.3f; if (currentWheelSequence <= 2) modifiers.CritDamage += 0.2f; if (currentWheelSequence <= 1) modifiers.CritDamage += 0.3f; }
         private void CheckExecution(NPC target) { if (currentHunterSequence <= 5 && !target.boss && target.life < target.lifeMax * 0.2f) target.SimpleStrikeNPC(9999, 0); }
         private void CheckRitualKill(NPC target) { if (target.life <= 0) { if (currentSequence == 5 && demonHunterRitualProgress < DEMON_HUNTER_RITUAL_TARGET) { if (target.type == NPCID.RedDevil) { demonHunterRitualProgress++; } } }
             if (currentMarauderSequence == 4 && mentorRitualProgress < MENTOR_RITUAL_TARGET)
@@ -3651,6 +4679,69 @@ namespace zhashi.Content
         }
         public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource)
         {
+            // =================================================
+            // 【序列1 巨蛇】重启循环 - 死亡时自动重置到10秒前的状态
+            // =================================================
+            if (currentWheelSequence <= 1 && restartAutoCooldown <= 0 && TryConsumeSpirituality(5000))
+            {
+                restartAutoCooldown = RESTART_AUTO_CD_MAX;
+
+                // 满血+清debuff+50%灵性
+                Player.statLife = Player.statLifeMax2;
+                Player.HealEffect(Player.statLifeMax2);
+                spiritualityCurrent = spiritualityMax * 0.5f;
+                for (int b = 0; b < Player.MaxBuffs; b++)
+                {
+                    int bt = Player.buffType[b];
+                    if (bt > 0 && Main.debuff[bt]) Player.DelBuff(b);
+                }
+                Player.immune = true;
+                Player.immuneTime = 300; // 5秒无敌防连击死
+
+                // 回到10秒前的位置
+                if (positionHistoryFilled)
+                {
+                    Vector2 pastPos = positionHistory[positionHistoryIdx]; // 缓冲区下一个写入位置即"最早"的记录
+                    Player.position = pastPos - Player.Size / 2f;
+                    Player.velocity = Vector2.Zero;
+                }
+
+                // 视觉震撼: 屏幕全白 + 时间倒流回放
+                Terraria.Audio.SoundEngine.PlaySound(SoundID.Item104, Player.position);
+                Terraria.Audio.SoundEngine.PlaySound(SoundID.NPCDeath52, Player.position);
+                Main.NewText("【重启循环】命运被你逆转 — 死亡只是另一个时间线。", 200, 200, 255);
+                Main.NewText("（自动复活已使用，10 分钟后可再次触发）", 150, 150, 200);
+
+                if (Main.myPlayer == Player.whoAmI)
+                {
+                    // 拖影回放: 在历史位置上洒满银色拖影
+                    for (int i = 0; i < positionHistory.Length; i += 10)
+                    {
+                        int idx = (positionHistoryIdx + i) % positionHistory.Length;
+                        Vector2 hp = positionHistory[idx];
+                        if (hp == Vector2.Zero) continue;
+                        Dust d = Dust.NewDustPerfect(hp, DustID.SilverCoin, Vector2.Zero, 0, default, 1.6f);
+                        d.noGravity = true;
+                        d.fadeIn = 1.5f;
+                    }
+                    // 中心爆发: 200颗银紫粒子+360度发散
+                    for (int k = 0; k < 200; k++)
+                    {
+                        float ang = (k / 200f) * MathHelper.TwoPi;
+                        Dust d = Dust.NewDustPerfect(Player.Center,
+                            (k % 2 == 0) ? DustID.SilverCoin : DustID.PurpleCrystalShard,
+                            new Vector2((float)System.Math.Cos(ang), (float)System.Math.Sin(ang)) * 8f, 0, default, 2.5f);
+                        d.noGravity = true;
+                        d.fadeIn = 1.8f;
+                    }
+                    // 镜头大幅震动
+                    Main.instance.CameraModifiers.Add(new Terraria.Graphics.CameraModifiers.PunchCameraModifier(
+                        Player.Center, new Vector2(0.5f, -0.5f), 20f, 10f, 30, 1000f));
+                }
+
+                return false; // 取消死亡
+            }
+
             // =================================================
             // 【新增】序列1：概念嫁接 (防御模式)
             // =================================================
@@ -3869,11 +4960,65 @@ namespace zhashi.Content
 
             return true; // 允许死亡 (如果上面都没触发)
         }
-        
+
 
         // 【美神被动】
         public override bool FreeDodge(Player.HurtInfo info)
         {
+            // --- 序列2 先知 "水银之躯" ---
+            // 受到伤害时,10秒内进入命运回避状态(免疫一切伤害与减益), CD 60秒
+            if (currentWheelSequence <= 2 && mercuryDodgeCooldown <= 0 && mercuryDodgeTimer <= 0)
+            {
+                mercuryDodgeTimer = MERCURY_DODGE_DURATION;
+                mercuryDodgeCooldown = MERCURY_DODGE_CD_MAX;
+                Player.SetImmuneTimeForAllTypes(60);
+
+                if (Main.myPlayer == Player.whoAmI)
+                {
+                    CombatText.NewText(Player.getRect(), Color.Silver, "水银之躯!", true);
+                    Main.NewText("水银之躯：命运与你融为一体，10秒内不会被任何事物影响。", 192, 192, 220);
+                }
+                for (int i = 0; i < 40; i++)
+                {
+                    Dust d = Dust.NewDustPerfect(Player.Center,
+                        DustID.SilverCoin, Main.rand.NextVector2Circular(6, 6), 0, default, 1.8f);
+                    d.noGravity = true;
+                }
+                Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29, Player.position);
+                return true; // 第一次受伤直接抹掉
+            }
+
+            // --- 序列3 怪人 "不可定数" ---
+            // 致命伤30%几率被命运抹除(改为1点伤害),30秒CD
+            if (currentWheelSequence <= 3 && fateNullifyCooldown <= 0 && info.Damage >= Player.statLife)
+            {
+                if (Main.rand.NextFloat() < 0.30f)
+                {
+                    fateNullifyCooldown = FATE_NULLIFY_CD_MAX;
+                    Player.SetImmuneTimeForAllTypes(60); // 1秒无敌避免连击死
+
+                    // 先知仪式计数: 每次不可定数成功触发, 计1次
+                    if (baseWheelSequence == 3 && !prophetRitualComplete && Main.myPlayer == Player.whoAmI)
+                    {
+                        prophetRitualProgress++;
+                        CombatText.NewText(Player.getRect(), new Color(200, 100, 255),
+                            $"必死之劫 ({prophetRitualProgress}/{PROPHET_RITUAL_TARGET})", true);
+                        Main.NewText($"你又一次见证了命运拒绝死亡... ({prophetRitualProgress}/{PROPHET_RITUAL_TARGET})", 200, 100, 255);
+                    }
+
+                    // 视觉:命运齿轮特效
+                    for (int i = 0; i < 30; i++)
+                    {
+                        Dust d = Dust.NewDustPerfect(Player.Center,
+                            DustID.GoldCoin, Main.rand.NextVector2Circular(8, 8), 0, default, 2f);
+                        d.noGravity = true;
+                    }
+                    CombatText.NewText(Player.getRect(), new Color(255, 215, 0), "命运拒绝!", true);
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29, Player.position);
+                    return true; // 完全免疫此次伤害
+                }
+            }
+
             if (currentSunSequence <= 2 && Main.rand.NextFloat() < 0.35f)
             {
                 // 1. 赋予无敌时间 (90帧 = 1.5秒)
@@ -3904,6 +5049,7 @@ namespace zhashi.Content
                 CombatText.NewText(Player.getRect(), Color.Gold, "光化重组!", true);
                 return true; // 成功闪避，不再执行后续判定
             }
+
             // 【新增】序列1：诡秘侍者 (灵体状态下免疫大部分伤害)
             if (isSpiritForm)
             {
@@ -3912,6 +5058,7 @@ namespace zhashi.Content
                     Dust.NewDust(Player.position, Player.width, Player.height, DustID.SpectreStaff, 0, 0, 150, default, 1.5f);
                 return true; // 直接免疫此次伤害
             }
+
             // 1. 序列1 美神 (月亮途径) - 25% 几率
             if (currentMoonSequence <= 1 && Main.rand.NextFloat() < 0.25f)
             {
@@ -3921,46 +5068,72 @@ namespace zhashi.Content
             }
 
             // 2. 序列7 魔术师 & 序列6 无面人 (愚者途径)
-            // 序列6几率提升至 40%，序列7为 25%
-            float paperChance = (currentFoolSequence <= 6) ? 0.4f : 0.25f;
-
             if (currentFoolSequence <= 7)
             {
-                int paperItemType = ModContent.ItemType<Content.Items.Consumables.PaperFigurine>();
+                // 序列6几率提升至 40%，序列7为 25%
+                float paperChance = (currentFoolSequence <= 6) ? 0.4f : 0.25f;
 
-                if (Player.CountItem(paperItemType) > 0)
+                if (Main.rand.NextFloat() < paperChance) // 修正：需要先判定触发概率
                 {
-                    Player.ConsumeItem(paperItemType);
-                    Player.SetImmuneTimeForAllTypes(120); // 2秒无敌
+                    int paperItemType = ModContent.ItemType<Content.Items.Consumables.PaperFigurine>();
 
-                    // 特效
-                    SoundEngine.PlaySound(SoundID.Item65, Player.position);
-                    for (int i = 0; i < 20; i++) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Confetti, 0, 0, 0, default, 1.5f);
+                    if (Player.CountItem(paperItemType) > 0)
+                    {
+                        Player.ConsumeItem(paperItemType);
+                        Player.SetImmuneTimeForAllTypes(120); // 2秒无敌
 
-                    // 随机位移
-                    for (int i = 0; i < 10; i++) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Smoke, 0, 0, 100, Color.Gray, 2f);
-                    Vector2 randomPos = Player.position + Main.rand.NextVector2Circular(200, 200);
-                    if (!Collision.SolidCollision(randomPos, Player.width, Player.height)) Player.position = randomPos;
+                        // 特效
+                        Terraria.Audio.SoundEngine.PlaySound(SoundID.Item65, Player.position);
+                        for (int i = 0; i < 20; i++) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Confetti, 0, 0, 0, default, 1.5f);
 
-                    CombatText.NewText(Player.getRect(), Color.White, "纸人替身!", true);
-                    return true; // 闪避成功
+                        // 随机位移
+                        for (int i = 0; i < 10; i++) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Smoke, 0, 0, 100, Color.Gray, 2f);
+                        Vector2 randomPos = Player.position + Main.rand.NextVector2Circular(200, 200);
+                        if (!Collision.SolidCollision(randomPos, Player.width, Player.height)) Player.position = randomPos;
+
+                        CombatText.NewText(Player.getRect(), Color.White, "纸人替身!", true);
+                        return true; // 闪避成功
+                    }
                 }
             }
 
-            float dodgeChance = info.PvP ? 0.05f : 0.15f;
+            // -------------------------------------------------------------
+            // C. 执行闪避判定
+            // -------------------------------------------------------------
+            float baseDodgeChance = info.PvP ? 0.05f : 0.15f;
 
-            // B. 愚者牌特权计算：如果是愚者途径且有牌，概率提升50%
-            if (currentFoolSequence <= 9 && isFoolCardEquipped)
+            bool isRobot = currentWheelSequence <= 8;   // 序列8 机器
+            bool isLucky = currentWheelSequence <= 7;   // 序列7 幸运儿
+            bool isWinner = currentWheelSequence <= 5;  // 序列5 赢家
+            bool isFaceless = currentFoolSequence <= 6; // 序列6 无面人
+
+            // 【核心】计算幸运系数 (Luck Factor)
+            float luckFactor = 0f;
+            if (Player.luck > 0)
             {
-                dodgeChance *= 1.5f;
+                // 运气越高闪避越高，比如运气1.0时，系数为 1.2
+                luckFactor = 1.0f + (Player.luck * 0.2f);
+            }
+            if (Player.luck <= 0)
+            {
+                // 如果厄运缠身 (运气<=0)，除了无面人外的依靠概率的闪避通通失效！
+                luckFactor = 0f;
             }
 
-            // C. 执行判定：(序列6以上 或 开启反占卜) 且 随机数小于概率
-            if ((currentFoolSequence <= 6 || isAntiDivinationActive) && Main.rand.NextFloat() < dodgeChance)
-            {
-                Player.SetImmuneTimeForAllTypes(60); // 1秒无敌
+            float finalChance = baseDodgeChance * luckFactor;
 
-                // 非 PVP 模式下清除负面状态
+            // 愚者牌特权加成：如果是愚者途径且有牌，概率提升 50%
+            if (currentFoolSequence <= 9 && isFoolCardEquipped)
+            {
+                finalChance *= 1.5f; // 修正：将dodgeChance改为了正确的finalChance
+            }
+
+            // 1. 常规反占卜闪避
+            if ((isFaceless || (luckFactor > 0 && (isRobot || isAntiDivinationActive))) && Main.rand.NextFloat() < finalChance)
+            {
+                Player.SetImmuneTimeForAllTypes(60);
+
+                // 修正：确保清理Debuff不会报错
                 if (!info.PvP)
                 {
                     for (int i = 0; i < Player.MaxBuffs; i++)
@@ -3973,30 +5146,40 @@ namespace zhashi.Content
                     }
                 }
 
-                // 视觉特效
-                for (int i = 0; i < 15; i++)
-                {
-                    Dust d = Dust.NewDustPerfect(Player.Center, DustID.DungeonSpirit, Main.rand.NextVector2Circular(3f, 3f), 150, default, 1.2f);
-                    d.noGravity = true;
-                }
+                for (int i = 0; i < 15; i++) Dust.NewDustPerfect(Player.Center, DustID.DungeonSpirit, Main.rand.NextVector2Circular(3f, 3f), 150, default, 1.2f).noGravity = true;
 
-                // 提示文本：有牌且是愚者途径显示紫色，否则显示灰色
-                if (isFoolCardEquipped && currentFoolSequence <= 9)
-                    CombatText.NewText(Player.getRect(), new Color(186, 85, 211), "命运隐匿!", true);
-                else
-                    CombatText.NewText(Player.getRect(), Color.Gray, "反占卜!", true);
-
-                return true; // 成功闪避
+                if (isFoolCardEquipped && currentFoolSequence <= 9) CombatText.NewText(Player.getRect(), new Color(186, 85, 211), "命运隐匿!", true);
+                else CombatText.NewText(Player.getRect(), Color.Gray, "反占卜!", true);
+                return true;
             }
 
-            // 3. 直觉闪避 (序列8 小丑) - 低保被动
-            // 如果上面两个都没触发，最后判定这个 10%
-            else if (currentFoolSequence <= 8 && Main.rand.NextFloat() < 0.1f)
+            // 2. 序列7：人体描边 (高度依赖幸运)
+            if (isLucky && luckFactor > 0)
             {
-                Player.SetImmuneTimeForAllTypes(60);
-                for (int i = 0; i < 10; i++) Dust.NewDust(Player.position, Player.width, Player.height, DustID.Confetti, 0, 0, 0, default, 1.2f);
-                CombatText.NewText(Player.getRect(), Color.Orange, "直觉闪避!", true);
-                return true;
+                float drawChance = 0.15f * luckFactor;
+                if (drawChance > 0.4f) drawChance = 0.4f; // 封顶40%
+                if (Main.rand.NextFloat() < drawChance)
+                {
+                    Player.SetImmuneTimeForAllTypes(40);
+                    for (int i = 0; i < 10; i++) Dust.NewDustPerfect(Player.Center, DustID.GoldCoin, Main.rand.NextVector2Circular(2f, 2f));
+                    string text = Main.rand.NextBool() ? "人体描边!" : "就差一点!";
+                    CombatText.NewText(Player.getRect(), new Color(255, 215, 0), text, true);
+                    return true;
+                }
+            }
+
+            // 3. 序列5：戏剧性逆转 (高度依赖幸运)
+            if (isWinner && luckFactor > 0)
+            {
+                float dramaChance = 0.33f * luckFactor;
+                if (dramaChance > 0.6f) dramaChance = 0.6f; // 封顶60%
+                if (Main.rand.NextFloat() < dramaChance)
+                {
+                    Player.SetImmuneTimeForAllTypes(90);
+                    for (int i = 0; i < 20; i++) Dust.NewDustPerfect(Player.Center, DustID.RainbowMk2, Main.rand.NextVector2Circular(4f, 4f));
+                    CombatText.NewText(Player.getRect(), Color.Gold, "戏剧性逆转!", true);
+                    return true;
+                }
             }
 
             // 4. 特殊变身形态 (默认拥有闪避/虚化效果)
@@ -4004,7 +5187,6 @@ namespace zhashi.Content
                 return true;
 
             return base.FreeDodge(info);
-            
         }
 
         // 7. 按键
@@ -4626,7 +5808,7 @@ namespace zhashi.Content
             }
 
             // J: 占卜 (序列9)
-            if (LotMKeybinds.Fool_Divination.JustPressed && currentFoolSequence <= 9)
+            if (LotMKeybinds.Fool_Divination.JustPressed && (currentFoolSequence <= 9 || currentWheelSequence <= 8))
             {
                 if (divinationCooldown <= 0 && TryConsumeSpirituality(10))
                 {
@@ -4695,6 +5877,634 @@ namespace zhashi.Content
                     Main.NewText("灵性不足。", 255, 50, 50);
                 }
             }
+            if (currentWheelSequence <= 6 && LotMKeybinds.Wheel_PsychicStorm.JustPressed && psychicStormCooldown <= 0)
+            {
+                CastPsychicStorm();
+            }
+
+            // 2. 【新增】命运赐福 / 群体赐福 (按 B 键)
+            if (currentWheelSequence <= 4 && LotMKeybinds.Wheel_Blessing.JustPressed && fateBlessingCooldown <= 0)
+            {
+                // 赐福代价：极大地透支自己的运气 (持续1分钟的倒霉)
+                Player.AddBuff(ModContent.BuffType<ExtremeBadLuckBuff>(), 3600);
+                fateBlessingCooldown = 7200; // 2分钟CD
+
+                // 赐福自己
+                Player.AddBuff(BuffID.Lucky, 3600);
+                Player.AddBuff(BuffID.RapidHealing, 3600);
+                Player.AddBuff(BuffID.Lifeforce, 3600);
+                Player.AddBuff(BuffID.Endurance, 3600);
+                Player.AddBuff(BuffID.Rage, 3600);
+                Player.AddBuff(BuffID.Wrath, 3600);
+
+                // 赐福周围队友
+                foreach (Player p in Main.player)
+                {
+                    if (p.active && p.whoAmI != Player.whoAmI && p.Distance(Player.Center) < 1000f)
+                    {
+                        p.AddBuff(BuffID.Lucky, 3600);
+                        p.AddBuff(BuffID.Lifeforce, 3600);
+                        p.AddBuff(BuffID.RapidHealing, 3600);
+                        CombatText.NewText(p.getRect(), Color.Gold, "命运赐福!", true);
+                    }
+                }
+
+                Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29, Player.position);
+                for (int i = 0; i < 50; i++) Dust.NewDust(Player.position, Player.width, Player.height, DustID.GoldCoin, 0, -3, 0, default, 2f);
+                Main.NewText("你透支了命运，降下了群体赐福！", 255, 215, 0);
+            }
+            // 2. 厄运领域 / 灾祸光环 开关 (按键触发)
+            if (currentWheelSequence <= 6 && LotMKeybinds.Wheel_Domain.JustPressed)
+            {
+                isMisfortuneDomainActive = !isMisfortuneDomainActive;
+                if (isMisfortuneDomainActive)
+                {
+                    SoundEngine.PlaySound(SoundID.Item119, Player.position);
+                    if (currentWheelSequence <= 4)
+                        Main.NewText("厄运领域：展开 (范围内敌人将遭受厄运吞噬)", 148, 0, 211);
+                    else
+                        Main.NewText("灾祸光环：开启 (自动引来天灾轰击敌人)", 255, 69, 0);
+                }
+                else
+                {
+                    Main.NewText("领域已收起。", 150, 150, 150);
+                }
+            }
+
+            // 3. 命运主动技能 - 独立按键, 独立CD
+            // - M键: 命运骰子(序列3+) - 200灵性 - 30s CD
+            // - K键: 福祸之福(序列2+)  - 300灵性 - 30s CD
+            // - L键: 福祸之祸(序列2+)  - 300灵性 - 30s CD
+            // - U键: 命运启示(序列2+)  - 500灵性 - 60s CD
+
+            // [先知·福祸之福] K键: 给60秒强力10种Buff + 治愈 + 灵性恢复
+            if (currentWheelSequence <= 2 && LotMKeybinds.Wheel_WordsOfFortune.JustPressed)
+            {
+                if (wordsOfFortuneCooldown > 0)
+                {
+                    Main.NewText($"福祸之福冷却中... ({wordsOfFortuneCooldown / 60}秒)", 255, 100, 100);
+                }
+                else if (!TryConsumeSpirituality(300))
+                {
+                    Main.NewText("灵性不足 (福祸之福需 300 点)", 255, 50, 50);
+                }
+                else
+                {
+                    wordsOfFortuneCooldown = FORTUNE_CD_MAX;
+                    int buffed = 0;
+
+                    // 给4000像素范围内所有友军施加10种Buff(60秒)
+                    for (int i = 0; i < Main.maxPlayers; i++)
+                    {
+                        Player p = Main.player[i];
+                        if (p.active && !p.dead && p.Distance(Player.Center) < 4000f)
+                        {
+                            int dur = 3600; // 60秒
+                            p.AddBuff(BuffID.Heartreach, dur);
+                            p.AddBuff(BuffID.WellFed3, dur);
+                            p.AddBuff(BuffID.Lifeforce, dur);
+                            p.AddBuff(BuffID.Endurance, dur);
+                            p.AddBuff(BuffID.AmmoReservation, dur);
+                            p.AddBuff(BuffID.Rage, dur);
+                            p.AddBuff(BuffID.Wrath, dur);
+                            p.AddBuff(BuffID.Ironskin, dur);
+                            p.AddBuff(BuffID.Regeneration, dur);
+                            p.AddBuff(BuffID.Panic, 600); // 短10秒急速
+
+                            // 即时治愈到满
+                            int healDelta = p.statLifeMax2 - p.statLife;
+                            if (healDelta > 0)
+                            {
+                                p.statLife = p.statLifeMax2;
+                                p.HealEffect(healDelta, true);
+                            }
+                            // 灵性补满
+                            var pmp = p.GetModPlayer<LotMPlayer>();
+                            pmp.spiritualityCurrent = pmp.spiritualityMax;
+
+                            // 每个友军周围一圈金色光环
+                            for (int k = 0; k < 80; k++)
+                            {
+                                float angle = (k / 80f) * MathHelper.TwoPi;
+                                Vector2 ringPos = p.Center + new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * 60f;
+                                Dust d = Dust.NewDustPerfect(ringPos, DustID.GoldCoin,
+                                    new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * 4f, 0, default, 2f);
+                                d.noGravity = true;
+                            }
+                            // 金币雨 (从天而降)
+                            for (int k = 0; k < 25; k++)
+                            {
+                                Vector2 rainStart = p.Center + new Vector2(Main.rand.NextFloat(-200, 200), -300);
+                                Dust d = Dust.NewDustPerfect(rainStart, DustID.GoldCoin,
+                                    new Vector2(0, Main.rand.NextFloat(5, 9)), 0, Color.Gold, 1.8f);
+                                d.noGravity = false;
+                            }
+                            buffed++;
+                        }
+                    }
+
+                    // 释放者中心: 巨大金色法阵爆发
+                    if (Main.myPlayer == Player.whoAmI)
+                    {
+                        for (int ring = 0; ring < 3; ring++) // 3 圈光环
+                        {
+                            float radius = 120 + ring * 80;
+                            int count = 60 + ring * 30;
+                            for (int k = 0; k < count; k++)
+                            {
+                                float angle = (k / (float)count) * MathHelper.TwoPi;
+                                Vector2 pos = Player.Center + new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * radius;
+                                Dust d = Dust.NewDustPerfect(pos, DustID.YellowTorch,
+                                    Vector2.Zero, 0, default, 2.5f);
+                                d.noGravity = true;
+                                d.fadeIn = 1.5f;
+                            }
+                        }
+                        // 中心垂直光柱
+                        for (int k = 0; k < 100; k++)
+                        {
+                            Vector2 pos = Player.Center + new Vector2(Main.rand.NextFloat(-15, 15), Main.rand.NextFloat(-400, 0));
+                            Dust d = Dust.NewDustPerfect(pos, DustID.GoldCoin,
+                                new Vector2(0, -Main.rand.NextFloat(3, 7)), 0, default, 2f);
+                            d.noGravity = true;
+                        }
+                    }
+
+                    Main.NewText($"【福祸之言·福】 你与周围 {buffed} 名友军被命运彻底眷顾,60秒强力增益,生命与灵性涌泉而出。", 255, 215, 100);
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item123, Player.position);
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29, Player.position);
+                }
+            }
+
+            // [先知·福祸之祸] L键: 给60秒强力8种Debuff + 当前血25%真伤 + Boss削10%血 + 厄运闪电
+            if (currentWheelSequence <= 2 && LotMKeybinds.Wheel_WordsOfMisfortune.JustPressed)
+            {
+                if (wordsOfMisfortuneCooldown > 0)
+                {
+                    Main.NewText($"福祸之祸冷却中... ({wordsOfMisfortuneCooldown / 60}秒)", 255, 100, 100);
+                }
+                else if (!TryConsumeSpirituality(300))
+                {
+                    Main.NewText("灵性不足 (福祸之祸需 300 点)", 255, 50, 50);
+                }
+                else
+                {
+                    wordsOfMisfortuneCooldown = MISFORTUNE_CD_MAX;
+                    int affected = 0;
+
+                    foreach (NPC npc in Main.ActiveNPCs)
+                    {
+                        if (!npc.friendly && !npc.dontTakeDamage && npc.Distance(Player.Center) < 4000f)
+                        {
+                            int dur = 3600; // 60秒
+                            // 8种Debuff
+                            if (!npc.HasBuff(BuffID.BetsysCurse)) npc.AddBuff(BuffID.BetsysCurse, dur);
+                            if (!npc.HasBuff(BuffID.OnFire3)) npc.AddBuff(BuffID.OnFire3, dur);
+                            if (!npc.HasBuff(BuffID.Weak)) npc.AddBuff(BuffID.Weak, dur);
+                            if (!npc.HasBuff(BuffID.BrokenArmor)) npc.AddBuff(BuffID.BrokenArmor, dur);
+                            if (!npc.HasBuff(BuffID.Slow)) npc.AddBuff(BuffID.Slow, dur);
+                            if (!npc.HasBuff(BuffID.Confused)) npc.AddBuff(BuffID.Confused, dur);
+                            if (!npc.HasBuff(BuffID.Ichor)) npc.AddBuff(BuffID.Ichor, dur);
+                            if (!npc.HasBuff(BuffID.Daybreak)) npc.AddBuff(BuffID.Daybreak, dur);
+
+                            // 即时真伤: 非Boss 25% 当前血, Boss 10% 当前血
+                            int instDmg;
+                            if (npc.boss) instDmg = (int)(npc.life * 0.10f);
+                            else instDmg = (int)(npc.life * 0.25f);
+                            if (instDmg > 0)
+                            {
+                                npc.SimpleStrikeNPC(instDmg, 0, false, 0, DamageClass.Default, true);
+                            }
+                            npc.netUpdate = true;
+                            affected++;
+                            CombatText.NewText(npc.getRect(), new Color(180, 60, 220), "厄运降临!", true);
+
+                            // 华丽特效: 每个敌人头顶降下紫色厄运闪电(粒子柱)
+                            Vector2 lightTop = npc.Center + new Vector2(0, -500);
+                            // 闪电柱: 从天而降的紫色粒子
+                            for (int k = 0; k < 35; k++)
+                            {
+                                float t = k / 35f;
+                                Vector2 pos = Vector2.Lerp(lightTop, npc.Center, t)
+                                    + new Vector2(Main.rand.NextFloat(-8, 8), 0);
+                                Dust d = Dust.NewDustPerfect(pos, DustID.PurpleCrystalShard,
+                                    Vector2.Zero, 0, default, 2f);
+                                d.noGravity = true;
+                                d.fadeIn = 1.2f;
+                            }
+                            // 着地点: 紫黑色爆裂环
+                            for (int k = 0; k < 40; k++)
+                            {
+                                float angle = (k / 40f) * MathHelper.TwoPi;
+                                Vector2 vel = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * 6f;
+                                Dust d = Dust.NewDustPerfect(npc.Center, DustID.ShadowbeamStaff,
+                                    vel, 0, default, 1.8f);
+                                d.noGravity = true;
+                            }
+                            // 阴影乌鸦感: 黑色烟雾
+                            for (int k = 0; k < 12; k++)
+                            {
+                                Dust d = Dust.NewDustPerfect(npc.Center,
+                                    DustID.Shadowflame, Main.rand.NextVector2Circular(4, 4), 0, default, 1.6f);
+                                d.noGravity = true;
+                            }
+                        }
+                    }
+
+                    // 释放者中心: 紫色暗黑法阵
+                    if (Main.myPlayer == Player.whoAmI)
+                    {
+                        for (int ring = 0; ring < 3; ring++)
+                        {
+                            float radius = 120 + ring * 80;
+                            int count = 60 + ring * 30;
+                            for (int k = 0; k < count; k++)
+                            {
+                                float angle = (k / (float)count) * MathHelper.TwoPi;
+                                Vector2 pos = Player.Center + new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * radius;
+                                Dust d = Dust.NewDustPerfect(pos, DustID.PurpleCrystalShard,
+                                    Vector2.Zero, 0, default, 2.5f);
+                                d.noGravity = true;
+                                d.fadeIn = 1.5f;
+                            }
+                        }
+                        // 释放者头顶降下黑紫色雷云感
+                        for (int k = 0; k < 60; k++)
+                        {
+                            Vector2 pos = Player.Center + new Vector2(Main.rand.NextFloat(-100, 100), -250 + Main.rand.NextFloat(-60, 60));
+                            Dust d = Dust.NewDustPerfect(pos, DustID.Shadowflame,
+                                Main.rand.NextVector2Circular(2, 2), 0, default, 2.2f);
+                            d.noGravity = true;
+                        }
+                    }
+
+                    Main.NewText($"【福祸之言·祸】 你诅咒了周围 {affected} 个敌人,厄运闪电降临,60秒重度厄运缠身。", 180, 60, 220);
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item122, Player.position);
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item62, Player.position); // 厚重轰鸣
+                }
+            }
+
+            // [先知·命运启示] U键: 10秒所有概率事件偏向最优解
+            if (currentWheelSequence <= 2 && LotMKeybinds.Wheel_Revelation.JustPressed)
+            {
+                if (revelationCooldown > 0)
+                {
+                    Main.NewText($"命运启示冷却中... ({revelationCooldown / 60}秒)", 255, 100, 100);
+                }
+                else if (!TryConsumeSpirituality(500))
+                {
+                    Main.NewText("灵性不足 (启示需 500 点)", 255, 50, 50);
+                }
+                else
+                {
+                    revelationCooldown = REVELATION_CD_MAX;
+                    revelationActiveTimer = 600; // 10秒启示状态
+
+                    // 序列1 巨蛇仪式: 每次启示+1
+                    if (baseWheelSequence == 2 && !serpentRitualComplete && Main.myPlayer == Player.whoAmI)
+                    {
+                        serpentRitualProgress++;
+                        Main.NewText($"凝视命运长河... ({serpentRitualProgress}/{SERPENT_RITUAL_TARGET}) | 巨蛇仪式进度", 200, 150, 255);
+                    }
+
+                    // 双重音效叠加: 启示之声 + 厚重轰鸣
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item104, Player.position);
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item122, Player.position);
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item62, Player.position);
+                    Main.NewText("【命运启示】你凝视命运长河,看到了所有可能性中的最优解...", 200, 150, 255);
+                    Main.NewText("时间在你眼中扭曲缓慢，万物都被命运之线所牵...", 180, 130, 230);
+
+                    if (Main.myPlayer == Player.whoAmI)
+                    {
+                        // [开场震撼A] 五圈同心紫金法阵从内向外炸开
+                        for (int ring = 0; ring < 5; ring++)
+                        {
+                            float radius = 80 + ring * 60;
+                            int count = 50 + ring * 25;
+                            for (int k = 0; k < count; k++)
+                            {
+                                float angle = (k / (float)count) * MathHelper.TwoPi;
+                                Vector2 pos = Player.Center + new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * radius;
+                                // 内圈紫, 外圈金
+                                int dustType = ring < 2 ? DustID.PurpleCrystalShard
+                                            : ring < 4 ? DustID.YellowTorch : DustID.GoldCoin;
+                                Dust d = Dust.NewDustPerfect(pos, dustType,
+                                    new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * 3f, 0, default, 2.5f);
+                                d.noGravity = true;
+                                d.fadeIn = 1.5f;
+                            }
+                        }
+
+                        // [开场震撼B] 玩家正上方降下"命运光柱"
+                        for (int k = 0; k < 120; k++)
+                        {
+                            Vector2 pos = Player.Center + new Vector2(Main.rand.NextFloat(-25, 25), Main.rand.NextFloat(-600, 0));
+                            int t = Main.rand.NextBool() ? DustID.GoldCoin : DustID.PurpleCrystalShard;
+                            Dust d = Dust.NewDustPerfect(pos, t,
+                                new Vector2(0, Main.rand.NextFloat(2, 5)), 0, default, 2f);
+                            d.noGravity = true;
+                        }
+
+                        // [开场震撼C] 屏幕全角发散粒子(像启示画面般四散)
+                        for (int k = 0; k < 200; k++)
+                        {
+                            float angle = Main.rand.NextFloat() * MathHelper.TwoPi;
+                            Vector2 dir = new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle));
+                            Vector2 startPos = Player.Center + dir * Main.rand.NextFloat(50, 800);
+                            Dust d = Dust.NewDustPerfect(startPos, DustID.YellowTorch,
+                                dir * Main.rand.NextFloat(-3, 0), 0, default, 1.6f);
+                            d.noGravity = true;
+                            d.fadeIn = 1.2f;
+                        }
+
+                        // [开场震撼D] 镜头震动
+                        Main.instance.CameraModifiers.Add(new Terraria.Graphics.CameraModifiers.PunchCameraModifier(
+                            Player.Center, new Vector2(0.3f, -0.7f), 12f, 8f, 18, 1000f));
+
+                        // [玩法层E] 命运的偏移 - 屏幕内所有敌人被吸引向玩家
+                        // (代表"你已看到他们所有可能的位置,把他们拉到对你最有利的那个")
+                        foreach (NPC npc in Main.ActiveNPCs)
+                        {
+                            if (!npc.friendly && !npc.dontTakeDamage && !npc.boss
+                                && npc.Distance(Player.Center) < 1500f
+                                && npc.Distance(Player.Center) > 100f)
+                            {
+                                Vector2 dir = (Player.Center - npc.Center).SafeNormalize(Vector2.Zero);
+                                npc.velocity = dir * 25f; // 强力推向玩家
+                                npc.netUpdate = true;
+                                for (int k = 0; k < 8; k++)
+                                {
+                                    Dust d = Dust.NewDustPerfect(npc.Center,
+                                        DustID.GoldCoin, -dir * 3f, 0, default, 1.2f);
+                                    d.noGravity = true;
+                                }
+                            }
+                        }
+
+                        // [玩法层F] 随机生成一行"预言文字"作为预告
+                        string[] prophecies = new string[] {
+                            "命运预言: 你将在下一击中送一个敌人入死亡之河...",
+                            "命运预言: 黄金将从天而降,如往昔的丰收。",
+                            "命运预言: 你的攻击将穿透所有可能性。",
+                            "命运预言: 时间为你停滞,空间向你折叠。",
+                            "命运预言: 敌人的死亡已成定数。",
+                            "命运预言: 你将看到长河的对岸。",
+                            "命运预言: 此刻的你,即是命运本身。"
+                        };
+                        Main.NewText(prophecies[Main.rand.Next(prophecies.Length)], 200, 160, 255);
+                    }
+                }
+            }
+
+            // ==========================================================
+            // [序列1·命运循环] Y键: 5秒后回滚范围内NPC位置 (Boss除外)
+            // ==========================================================
+            if (currentWheelSequence <= 1 && LotMKeybinds.Wheel_FateLoop.JustPressed)
+            {
+                if (fateLoopCooldown > 0)
+                {
+                    Main.NewText($"命运循环冷却中... ({fateLoopCooldown / 60}秒)", 255, 100, 100);
+                }
+                else if (fateLoopActive)
+                {
+                    Main.NewText("命运循环已经在生效中。", 255, 200, 100);
+                }
+                else if (!TryConsumeSpirituality(1000))
+                {
+                    Main.NewText("灵性不足 (命运循环需 1000 点)", 255, 50, 50);
+                }
+                else
+                {
+                    fateLoopCooldown = FATE_LOOP_CD_MAX;
+                    fateLoopActive = true;
+                    fateLoopExpireTick = Main.GameUpdateCount + (uint)FATE_LOOP_DURATION;
+                    fateLoopActiveTimer = FATE_LOOP_DURATION;
+                    fateLoopCenter = Player.Center;
+                    _loopedNpcStartPos.Clear();
+
+                    // 快照所有范围内NPC的位置
+                    foreach (NPC npc in Main.ActiveNPCs)
+                    {
+                        if (!npc.friendly && !npc.dontTakeDamage
+                            && npc.Distance(fateLoopCenter) < 800f
+                            && !_loopedNpcStartPos.ContainsKey(npc.whoAmI))
+                        {
+                            _loopedNpcStartPos[npc.whoAmI] = npc.position;
+                        }
+                    }
+
+                    Main.NewText($"【命运循环·展开】 {_loopedNpcStartPos.Count} 个目标的位置已被记录,5秒后回滚到此刻。", 200, 150, 255);
+                    Main.NewText("（5秒内的伤害和血量变化将被保留,但位置回到现在）", 180, 180, 220);
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item104, Player.position);
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item122, Player.position);
+
+                    if (Main.myPlayer == Player.whoAmI)
+                    {
+                        // [开场特效] 巨大齿轮领域展开
+                        for (int ring = 0; ring < 4; ring++)
+                        {
+                            float radius = 200 + ring * 200;
+                            int count = 80 + ring * 30;
+                            for (int k = 0; k < count; k++)
+                            {
+                                float angle = (k / (float)count) * MathHelper.TwoPi;
+                                Vector2 pos = fateLoopCenter + new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * radius;
+                                int t = (ring % 2 == 0) ? DustID.GoldCoin : DustID.PurpleCrystalShard;
+                                Dust d = Dust.NewDustPerfect(pos, t,
+                                    new Vector2((float)System.Math.Cos(angle), (float)System.Math.Sin(angle)) * 2f, 0, default, 2f);
+                                d.noGravity = true;
+                                d.fadeIn = 1.5f;
+                            }
+                        }
+                        // 镜头震
+                        Main.instance.CameraModifiers.Add(new Terraria.Graphics.CameraModifiers.PunchCameraModifier(
+                            Player.Center, new Vector2(0.2f, -0.5f), 10f, 7f, 15, 1000f));
+                    }
+                }
+            }
+
+            // ==========================================================
+            // [序列1·主动重启] H键: 主动撤退 - 回到10秒前位置+满血+清debuff
+            // ==========================================================
+            if (currentWheelSequence <= 1 && LotMKeybinds.Wheel_Restart.JustPressed)
+            {
+                if (restartManualCooldown > 0)
+                {
+                    Main.NewText($"主动重启冷却中... ({restartManualCooldown / 60}秒)", 255, 100, 100);
+                }
+                else if (!TryConsumeSpirituality(3000))
+                {
+                    Main.NewText("灵性不足 (主动重启需 3000 点)", 255, 50, 50);
+                }
+                else
+                {
+                    restartManualCooldown = RESTART_MANUAL_CD_MAX;
+
+                    // 回到10秒前位置
+                    if (positionHistoryFilled)
+                    {
+                        Vector2 pastPos = positionHistory[positionHistoryIdx];
+                        if (pastPos != Vector2.Zero)
+                        {
+                            // 拖影回放
+                            if (Main.myPlayer == Player.whoAmI)
+                            {
+                                for (int i = 0; i < positionHistory.Length; i += 8)
+                                {
+                                    int idx = (positionHistoryIdx + i) % positionHistory.Length;
+                                    Vector2 hp = positionHistory[idx];
+                                    if (hp == Vector2.Zero) continue;
+                                    Dust d = Dust.NewDustPerfect(hp, DustID.SilverCoin, Vector2.Zero, 0, default, 1.4f);
+                                    d.noGravity = true;
+                                    d.fadeIn = 1.3f;
+                                }
+                            }
+                            Player.position = pastPos - Player.Size / 2f;
+                            Player.velocity = Vector2.Zero;
+                        }
+                    }
+
+                    // 满血+清debuff
+                    Player.statLife = Player.statLifeMax2;
+                    Player.HealEffect(Player.statLifeMax2);
+                    for (int b = 0; b < Player.MaxBuffs; b++)
+                    {
+                        int bt = Player.buffType[b];
+                        if (bt > 0 && Main.debuff[bt]) Player.DelBuff(b);
+                    }
+                    Player.immune = true;
+                    Player.immuneTime = 120;
+
+                    Main.NewText("【主动重启】你撕开了10秒前的存档,把自己覆盖了回去。", 200, 200, 255);
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item104, Player.position);
+
+                    if (Main.myPlayer == Player.whoAmI)
+                    {
+                        // 中心爆发: 100颗银色粒子
+                        for (int k = 0; k < 100; k++)
+                        {
+                            float ang = (k / 100f) * MathHelper.TwoPi;
+                            Dust d = Dust.NewDustPerfect(Player.Center,
+                                (k % 3 == 0) ? DustID.GoldCoin : DustID.SilverCoin,
+                                new Vector2((float)System.Math.Cos(ang), (float)System.Math.Sin(ang)) * 6f, 0, default, 2f);
+                            d.noGravity = true;
+                            d.fadeIn = 1.5f;
+                        }
+                    }
+                }
+            }
+
+            // [命运骰子] M键: 序列3+均可
+            if (currentWheelSequence <= 3 && LotMKeybinds.Wheel_Dice.JustPressed)
+            {
+                if (fateDiceCooldown > 0)
+                {
+                    Main.NewText($"命运骰子冷却中... ({fateDiceCooldown / 60}秒)", 255, 100, 100);
+                }
+                else if (!TryConsumeSpirituality(200))
+                {
+                    Main.NewText("灵性不足 (需 200 点)", 255, 50, 50);
+                }
+                else
+                {
+                    fateDiceCooldown = FATE_DICE_CD_MAX;
+                    int diceResult = Main.rand.Next(1, 7); // 1-6
+
+                    // 公共特效:大量金色粒子+音效
+                    Terraria.Audio.SoundEngine.PlaySound(SoundID.Item29, Player.position);
+                    for (int i = 0; i < 60; i++)
+                    {
+                        Dust d = Dust.NewDustPerfect(Player.Center,
+                            DustID.GoldCoin, Main.rand.NextVector2Circular(10, 10), 0, default, 2f);
+                        d.noGravity = true;
+                    }
+
+                    Main.NewText($"骰子落地: {diceResult} 点", 255, 215, 0);
+
+                        switch (diceResult)
+                        {
+                            case 1: // 厄: 自身倒霉1分钟
+                                Player.AddBuff(ModContent.BuffType<ExtremeBadLuckBuff>(), 3600);
+                                Main.NewText("命运嘲弄你... 1点!", 200, 50, 50);
+                                CombatText.NewText(Player.getRect(), Color.Red, "1", true);
+                                break;
+                            case 2: // 治愈: 恢复30%生命
+                                int healAmount = (int)(Player.statLifeMax2 * 0.30f);
+                                Player.statLife += healAmount;
+                                if (Player.statLife > Player.statLifeMax2) Player.statLife = Player.statLifeMax2;
+                                Player.HealEffect(healAmount, true);
+                                Main.NewText("命运眷顾，伤口愈合! 2点!", 100, 255, 100);
+                                CombatText.NewText(Player.getRect(), Color.Lime, "2", true);
+                                break;
+                            case 3: // 灾厄: 周围1500像素内非Boss敌人各受1000真实伤害
+                                int hitCount = 0;
+                                foreach (NPC npc in Main.ActiveNPCs)
+                                {
+                                    if (!npc.friendly && !npc.dontTakeDamage && !npc.boss
+                                        && npc.Distance(Player.Center) < 1500f)
+                                    {
+                                        npc.SimpleStrikeNPC(1000, 0, false, 0, DamageClass.Default, true);
+                                        npc.netUpdate = true;
+                                        CombatText.NewText(npc.getRect(), Color.Crimson, "天罚!", true);
+                                        hitCount++;
+                                    }
+                                }
+                                Main.NewText($"命运的天罚降临 ({hitCount} 个敌人)! 3点!", 255, 100, 0);
+                                CombatText.NewText(Player.getRect(), Color.Orange, "3", true);
+                                break;
+                            case 4: // 庇护: 30秒命运庇护(50%伤害减免)
+                                fateBlessingActiveTimer = 1800; // 30秒
+                                Main.NewText("命运庇护笼罩你 30 秒! 4点!", 255, 215, 0);
+                                CombatText.NewText(Player.getRect(), Color.Gold, "4", true);
+                                break;
+                            case 5: // 滞: 全屏减速敌人15秒
+                                foreach (NPC npc in Main.ActiveNPCs)
+                                {
+                                    if (!npc.friendly && !npc.dontTakeDamage)
+                                    {
+                                        npc.AddBuff(BuffID.Slow, 900);
+                                        npc.AddBuff(BuffID.Confused, 900);
+                                        npc.netUpdate = true;
+                                    }
+                                }
+                                Main.NewText("命运凝滞，所有敌人陷入混乱! 5点!", 100, 200, 255);
+                                CombatText.NewText(Player.getRect(), Color.Cyan, "5", true);
+                                break;
+                            case 6: // 大吉: Boss削15%血,无Boss则全屏非精英秒杀
+                                bool hitBoss = false;
+                                foreach (NPC npc in Main.ActiveNPCs)
+                                {
+                                    if (npc.boss && !npc.friendly && !npc.dontTakeDamage
+                                        && npc.Distance(Player.Center) < 4000f)
+                                    {
+                                        int bossDmg = (int)(npc.life * 0.15f);
+                                        npc.SimpleStrikeNPC(bossDmg, 0, false, 0, DamageClass.Default, true);
+                                        npc.netUpdate = true;
+                                        CombatText.NewText(npc.getRect(), Color.Purple, "厄运降临!", true);
+                                        hitBoss = true;
+                                        break;
+                                    }
+                                }
+                                if (!hitBoss)
+                                {
+                                    foreach (NPC npc in Main.ActiveNPCs)
+                                    {
+                                        if (!npc.friendly && !npc.dontTakeDamage && !npc.boss
+                                            && npc.lifeMax < 2000
+                                            && npc.Distance(Player.Center) < 4000f)
+                                        {
+                                            npc.SimpleStrikeNPC(npc.lifeMax, 0, false, 0, DamageClass.Default, true);
+                                            npc.netUpdate = true;
+                                            CombatText.NewText(npc.getRect(), Color.Purple, "厄运降临!", true);
+                                        }
+                                    }
+                                }
+                                Main.NewText("命运大吉! 6点!", 255, 0, 255);
+                                CombatText.NewText(Player.getRect(), Color.Magenta, "6", true);
+                                break;
+                        }
+                    }
+                }
             //   错误途径 (Marauder) 完整按键逻辑整合
             // 获取按键状态
             bool isShiftDown = Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift);
@@ -4855,7 +6665,7 @@ namespace zhashi.Content
                             // 稍微扩大一点鼠标判定范围，防止点不到怪
                             for (int i = 0; i < Main.maxNPCs; i++)
                             {
-                                if (Main.npc[i].active && !Main.npc[i].friendly && Main.npc[i].getRect().Intersects(Utils.CenteredRectangle(Main.MouseWorld, new Vector2(50, 50))))
+                                if (Main.npc[i].active && !Main.npc[i].friendly && Main.npc[i].getRect().Intersects(Terraria.Utils.CenteredRectangle(Main.MouseWorld, new Vector2(50, 50))))
                                 {
                                     targetIdx = i;
                                     break;
@@ -5739,7 +7549,6 @@ namespace zhashi.Content
         }
         public override void PostUpdateBuffs()
         {
-            // 药师序列9以上：强制清除所有毒素
             if (currentMoonSequence <= 9)
             {
                 if (Player.HasBuff(BuffID.Poisoned)) Player.ClearBuff(BuffID.Poisoned);
@@ -5750,12 +7559,497 @@ namespace zhashi.Content
         // 8. 辅助
         public float GetSequenceMultiplier(int seq) { if (seq > 9) return 1f; return 1f + (9 - seq) * 0.3f; }
         public bool TryConsumeSpirituality(float amount, bool isMaintenance = false) { if (isCalamityGiant && !isMaintenance) return true; if (spiritualityCurrent >= amount) { spiritualityCurrent -= amount; return true; } return false; }
+
+        // ==============================================================
+        // 命运多面骰: 延迟60帧执行效果(等动画播完)
+        // ==============================================================
+        public void QueuePolyhedronEffect(int faces, int result)
+        {
+            polyhedronDelayTimer = 60;
+            polyhedronQueuedFaces = faces;
+            polyhedronQueuedResult = result;
+        }
+
+        private void ExecutePolyhedronEffect()
+        {
+            int faces = polyhedronQueuedFaces;
+            int result = polyhedronQueuedResult;
+            polyhedronQueuedFaces = 0;
+            polyhedronQueuedResult = 0;
+            if (faces == 0) return;
+
+            string title = $"【命运多面骰·D{faces}】 落定: {result} 点";
+            Color titleColor;
+            switch (faces)
+            {
+                case 4: titleColor = new Color(100, 160, 255); break;
+                case 6: titleColor = new Color(120, 230, 130); break;
+                case 8: titleColor = new Color(180, 110, 255); break;
+                case 10: titleColor = new Color(255, 215, 80); break;
+                case 12: titleColor = new Color(255, 140, 60); break;
+                case 20: titleColor = new Color(255, 60, 80); break;
+                default: titleColor = Color.White; break;
+            }
+            Main.NewText(title, titleColor.R, titleColor.G, titleColor.B);
+
+            // 派发到对应面数的效果池
+            switch (faces)
+            {
+                case 4: D4_Effect(result); break;
+                case 6: D6_Effect(result); break;
+                case 8: D8_Effect(result); break;
+                case 10: D10_Effect(result); break;
+                case 12: D12_Effect(result); break;
+                case 20: D20_Effect(result); break;
+            }
+        }
+
+        // === D4 四元素之骰 (蓝): 四种小型环境效果 ===
+        private void D4_Effect(int r)
+        {
+            switch (r)
+            {
+                case 1: // 火: 范围1500内敌人灼烧10秒
+                    foreach (NPC n in Main.ActiveNPCs)
+                    {
+                        if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 1500f)
+                        {
+                            n.AddBuff(BuffID.OnFire3, 600);
+                            n.AddBuff(BuffID.Daybreak, 600);
+                            n.netUpdate = true;
+                        }
+                    }
+                    Main.NewText("◆ 元素·火 - 全场敌人被神圣火焰灼烧 10 秒", 255, 100, 50);
+                    break;
+                case 2: // 冰: 全场敌人冰冻5秒
+                    foreach (NPC n in Main.ActiveNPCs)
+                    {
+                        if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 1500f && !n.boss)
+                        {
+                            n.AddBuff(BuffID.Frozen, 300);
+                            n.AddBuff(BuffID.Chilled, 600);
+                            n.netUpdate = true;
+                        }
+                        else if (n.boss && n.Distance(Player.Center) < 1500f)
+                        {
+                            n.AddBuff(BuffID.Chilled, 600); // Boss仅减速
+                            n.netUpdate = true;
+                        }
+                    }
+                    Main.NewText("◆ 元素·冰 - 全场凝固 (Boss减速)", 100, 200, 255);
+                    break;
+                case 3: // 雷: 8道连锁闪电随机击中敌人
+                    int strikeCount = 0;
+                    foreach (NPC n in Main.ActiveNPCs)
+                    {
+                        if (strikeCount >= 8) break;
+                        if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 1500f)
+                        {
+                            int dmg = n.boss ? (int)(n.lifeMax * 0.03f) : (int)(n.life * 0.5f);
+                            if (dmg < 200) dmg = 200;
+                            n.SimpleStrikeNPC(dmg, 0, false, 0, DamageClass.Default, true);
+                            n.netUpdate = true;
+                            CombatText.NewText(n.getRect(), Color.Cyan, $"⚡{dmg}", true);
+                            strikeCount++;
+                        }
+                    }
+                    Main.NewText($"◆ 元素·雷 - 八道闪电连锁 ({strikeCount} 个目标)", 100, 200, 255);
+                    break;
+                case 4: // 毒: 全场剧毒+腐蚀
+                    foreach (NPC n in Main.ActiveNPCs)
+                    {
+                        if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 1500f)
+                        {
+                            n.AddBuff(BuffID.Venom, 900);
+                            n.AddBuff(BuffID.Poisoned, 900);
+                            n.AddBuff(BuffID.CursedInferno, 900);
+                            n.netUpdate = true;
+                        }
+                    }
+                    Main.NewText("◆ 元素·毒 - 全场被诅咒之毒侵蚀 15 秒", 100, 255, 100);
+                    break;
+            }
+        }
+
+        // === D6 经典六元 (绿): 中等增益/治疗 ===
+        private void D6_Effect(int r)
+        {
+            switch (r)
+            {
+                case 1: // 全队治愈
+                    foreach (Player p in Main.player)
+                    {
+                        if (p.active && !p.dead && p.Distance(Player.Center) < 3000f)
+                        {
+                            int delta = p.statLifeMax2 - p.statLife;
+                            if (delta > 0) { p.statLife = p.statLifeMax2; p.HealEffect(delta, true); }
+                        }
+                    }
+                    Main.NewText("◇ 六元·治愈 - 全队回满生命", 100, 255, 100);
+                    break;
+                case 2: // 灵性大补
+                    spiritualityCurrent = spiritualityMax;
+                    Main.NewText("◇ 六元·灵涌 - 灵性回满", 200, 200, 255);
+                    break;
+                case 3: // 双倍金币掉落 60秒(BattleStrong + 自定义)
+                    Player.AddBuff(BuffID.Heartreach, 3600);
+                    Player.AddBuff(BuffID.Lifeforce, 3600);
+                    Player.AddBuff(BuffID.Endurance, 3600);
+                    Main.NewText("◇ 六元·守护 - 60 秒三重防御增益", 200, 200, 100);
+                    break;
+                case 4: // 攻击狂热 60秒
+                    Player.AddBuff(BuffID.Rage, 3600);
+                    Player.AddBuff(BuffID.Wrath, 3600);
+                    Player.AddBuff(BuffID.AmmoBox, 3600);
+                    Main.NewText("◇ 六元·狂热 - 60 秒三重攻击增益", 255, 100, 100);
+                    break;
+                case 5: // 全队加速
+                    foreach (Player p in Main.player)
+                    {
+                        if (p.active && !p.dead && p.Distance(Player.Center) < 3000f)
+                        {
+                            p.AddBuff(BuffID.Swiftness, 3600);
+                            p.AddBuff(BuffID.Panic, 3600);
+                        }
+                    }
+                    Main.NewText("◇ 六元·疾风 - 全队加速 60 秒", 200, 255, 200);
+                    break;
+                case 6: // 范围真伤
+                    foreach (NPC n in Main.ActiveNPCs)
+                    {
+                        if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 1500f)
+                        {
+                            int dmg = n.boss ? (int)(n.lifeMax * 0.05f) : (int)(n.life * 0.6f);
+                            n.SimpleStrikeNPC(dmg, 0, false, 0, DamageClass.Default, true);
+                            n.netUpdate = true;
+                        }
+                    }
+                    Main.NewText("◇ 六元·裁决 - 范围内敌人受重创", 255, 200, 100);
+                    break;
+            }
+        }
+
+        // === D8 命运之骰 (紫): 中等概率事件 ===
+        private void D8_Effect(int r)
+        {
+            switch (r)
+            {
+                case 1:
+                case 2:
+                    // 全场敌人受 10% 当前血真伤 + 4 种 Debuff
+                    foreach (NPC n in Main.ActiveNPCs)
+                    {
+                        if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 1500f)
+                        {
+                            int dmg = (int)(n.life * 0.10f);
+                            n.SimpleStrikeNPC(dmg, 0, false, 0, DamageClass.Default, true);
+                            n.AddBuff(BuffID.Ichor, 1800);
+                            n.AddBuff(BuffID.BetsysCurse, 1800);
+                            n.AddBuff(BuffID.OnFire3, 1800);
+                            n.AddBuff(BuffID.Confused, 1800);
+                            n.netUpdate = true;
+                        }
+                    }
+                    Main.NewText("◈ 命运·撕裂 - 全场10%血量真伤+重度厄运", 200, 100, 255);
+                    break;
+                case 3:
+                case 4:
+                    // 玩家暴击爆表 30秒
+                    Player.AddBuff(BuffID.Wrath, 1800);
+                    Player.AddBuff(BuffID.Rage, 1800);
+                    Player.AddBuff(BuffID.Sharpened, 1800);
+                    Player.AddBuff(BuffID.MagicPower, 1800);
+                    Player.AddBuff(BuffID.AmmoBox, 1800);
+                    Main.NewText("◈ 命运·精准 - 30 秒全攻击Buff", 255, 180, 100);
+                    break;
+                case 5:
+                case 6:
+                    // 全队疾风+无敌3秒
+                    foreach (Player p in Main.player)
+                        if (p.active && !p.dead && p.Distance(Player.Center) < 3000f)
+                        {
+                            p.AddBuff(BuffID.Swiftness, 1800);
+                            p.AddBuff(BuffID.Panic, 180);
+                            p.immune = true;
+                            p.immuneTime = 180; // 3秒无敌
+                        }
+                    Main.NewText("◈ 命运·闪光 - 全队疾速 + 3 秒无敌", 200, 200, 255);
+                    break;
+                case 7:
+                case 8:
+                    // Boss削15%, 非Boss秒杀
+                    foreach (NPC n in Main.ActiveNPCs)
+                    {
+                        if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 3000f)
+                        {
+                            int dmg = n.boss ? (int)(n.life * 0.15f) : n.life;
+                            n.SimpleStrikeNPC(dmg, 0, false, 0, DamageClass.Default, true);
+                            n.netUpdate = true;
+                            CombatText.NewText(n.getRect(), Color.Purple, n.boss ? "命运伤痕" : "湮灭", true);
+                        }
+                    }
+                    Main.NewText("◈ 命运·终结 - Boss削15%血，非Boss湮灭", 200, 100, 255);
+                    break;
+            }
+        }
+
+        // === D10 命运十契 (金): 强力 buff + 精英伤害 ===
+        private void D10_Effect(int r)
+        {
+            if (r <= 3)
+            {
+                Player.AddBuff(BuffID.Endurance, 5400);
+                Player.AddBuff(BuffID.Ironskin, 5400);
+                Player.AddBuff(BuffID.Lifeforce, 5400);
+                Player.AddBuff(BuffID.Regeneration, 5400);
+                Player.AddBuff(BuffID.Wrath, 5400);
+                Player.AddBuff(BuffID.Rage, 5400);
+                Player.AddBuff(BuffID.Swiftness, 5400);
+                Player.AddBuff(BuffID.Heartreach, 5400);
+                Main.NewText($"♦ 十契·{r} - 90 秒八重强力Buff", 255, 215, 80);
+            }
+            else if (r <= 7)
+            {
+                foreach (NPC n in Main.ActiveNPCs)
+                {
+                    if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 2000f)
+                    {
+                        int dmg = n.boss ? (int)(n.life * 0.20f) : (int)(n.life * 0.80f);
+                        n.SimpleStrikeNPC(dmg, 0, false, 0, DamageClass.Default, true);
+                        n.netUpdate = true;
+                        CombatText.NewText(n.getRect(), Color.Gold, $"-{dmg}", true);
+                    }
+                }
+                Main.NewText($"♦ 十契·{r} - 全场重创 (Boss削20%, 普通80%)", 255, 215, 80);
+            }
+            else
+            {
+                foreach (NPC n in Main.ActiveNPCs)
+                {
+                    if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 2500f)
+                    {
+                        int dmg = n.boss ? (int)(n.life * 0.30f) : n.life;
+                        n.SimpleStrikeNPC(dmg, 0, false, 0, DamageClass.Default, true);
+                        n.netUpdate = true;
+                        CombatText.NewText(n.getRect(), Color.Yellow, n.boss ? "命运刻印" : "蒸发", true);
+                    }
+                }
+                Main.NewText($"♦ 十契·{r} - 命运的判决 (Boss削30%, 非Boss蒸发)", 255, 230, 100);
+            }
+        }
+
+        // === D12 黄道十二宫 (橙): 每一面对应一个星座的独特效果 ===
+        private void D12_Effect(int r)
+        {
+            string[] zodiacNames = { "白羊", "金牛", "双子", "巨蟹", "狮子", "处女", "天秤", "天蝎", "射手", "摩羯", "水瓶", "双鱼" };
+            string sign = zodiacNames[r - 1];
+            switch (r)
+            {
+                case 1: // 白羊·冲锋
+                    Player.AddBuff(BuffID.Swiftness, 5400);
+                    Player.AddBuff(BuffID.Wrath, 5400);
+                    Player.AddBuff(BuffID.Rage, 5400);
+                    break;
+                case 2: // 金牛·坚韧
+                    Player.AddBuff(BuffID.Ironskin, 5400);
+                    Player.AddBuff(BuffID.Endurance, 5400);
+                    Player.AddBuff(BuffID.Lifeforce, 5400);
+                    break;
+                case 3: // 双子·分身
+                    Player.AddBuff(BuffID.Summoning, 5400);
+                    Player.AddBuff(BuffID.BeetleEndurance3, 5400);
+                    break;
+                case 4: // 巨蟹·庇护
+                    foreach (Player p in Main.player)
+                        if (p.active && !p.dead && p.Distance(Player.Center) < 3000f)
+                        {
+                            p.immune = true; p.immuneTime = 360;
+                            p.AddBuff(BuffID.Endurance, 3600);
+                            p.statLife = p.statLifeMax2;
+                            p.HealEffect(0);
+                        }
+                    break;
+                case 5: // 狮子·王威
+                    foreach (NPC n in Main.ActiveNPCs)
+                        if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 2500f)
+                        {
+                            n.AddBuff(BuffID.Weak, 3600);
+                            n.AddBuff(BuffID.BrokenArmor, 3600);
+                            n.AddBuff(BuffID.WitheredArmor, 3600);
+                            n.AddBuff(BuffID.WitheredWeapon, 3600);
+                            n.netUpdate = true;
+                        }
+                    break;
+                case 6: // 处女·净化
+                    for (int b = 0; b < Player.MaxBuffs; b++)
+                    {
+                        int bt = Player.buffType[b];
+                        if (bt > 0 && Main.debuff[bt]) Player.DelBuff(b);
+                    }
+                    foreach (NPC n in Main.ActiveNPCs)
+                        if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 2500f)
+                        {
+                            for (int b = 0; b < NPC.maxBuffs; b++) n.buffTime[b] = 0;
+                            n.netUpdate = true;
+                        }
+                    break;
+                case 7: // 天秤·平衡
+                    NPC closest = null;
+                    float minDist = 1000f;
+                    foreach (NPC n in Main.ActiveNPCs)
+                    {
+                        if (n.friendly || n.dontTakeDamage) continue;
+                        float d = n.Distance(Player.Center);
+                        if (d < minDist) { minDist = d; closest = n; }
+                    }
+                    if (closest != null && !closest.boss)
+                    {
+                        int nLife = closest.life;
+                        closest.life = Math.Min(Player.statLife, closest.lifeMax);
+                        Player.statLife = Math.Min(nLife, Player.statLifeMax2);
+                        closest.netUpdate = true;
+                    }
+                    else { Player.statLife = Player.statLifeMax2; Player.HealEffect(0); }
+                    break;
+                case 8: // 天蝎·剧毒
+                    foreach (NPC n in Main.ActiveNPCs)
+                        if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 2500f)
+                        {
+                            n.AddBuff(BuffID.Venom, 5400);
+                            n.AddBuff(BuffID.ShadowFlame, 5400);
+                            n.AddBuff(BuffID.CursedInferno, 5400);
+                            n.netUpdate = true;
+                        }
+                    break;
+                case 9: // 射手·穿透
+                    foreach (NPC n in Main.ActiveNPCs)
+                        if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 2500f)
+                        {
+                            int dmg = (int)(n.life * 0.20f);
+                            n.SimpleStrikeNPC(dmg, 0, false, 0, DamageClass.Default, true);
+                            n.netUpdate = true;
+                        }
+                    break;
+                case 10: // 摩羯·攀升
+                    Player.AddBuff(BuffID.WellFed3, 7200);
+                    Player.AddBuff(BuffID.Wrath, 7200);
+                    Player.AddBuff(BuffID.Rage, 7200);
+                    Player.AddBuff(BuffID.Endurance, 7200);
+                    Player.AddBuff(BuffID.Lifeforce, 7200);
+                    Player.AddBuff(BuffID.Ironskin, 7200);
+                    Player.AddBuff(BuffID.Regeneration, 7200);
+                    Player.AddBuff(BuffID.Swiftness, 7200);
+                    Player.AddBuff(BuffID.Heartreach, 7200);
+                    Player.AddBuff(BuffID.AmmoBox, 7200);
+                    break;
+                case 11: // 水瓶·恩泽
+                    foreach (Player p in Main.player)
+                        if (p.active && !p.dead && p.Distance(Player.Center) < 3000f)
+                        {
+                            p.statLife = p.statLifeMax2; p.HealEffect(p.statLifeMax2, true);
+                            var pmp = p.GetModPlayer<LotMPlayer>();
+                            pmp.spiritualityCurrent = pmp.spiritualityMax;
+                        }
+                    break;
+                case 12: // 双鱼·梦境
+                    foreach (NPC n in Main.ActiveNPCs)
+                        if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 2500f)
+                        {
+                            n.AddBuff(BuffID.Confused, 3600);
+                            n.AddBuff(BuffID.Slow, 3600);
+                            n.AddBuff(BuffID.Webbed, 600);
+                            n.netUpdate = true;
+                        }
+                    break;
+            }
+            Main.NewText($"♚ 十二宫·{sign} ({r}) - 星座之力降临", 255, 140, 60);
+
+            // 【连星图视觉特效已在此处被安全移除】
+        }
+
+        // === D20 致命二十面 (红): 史诗效果 ===
+        private void D20_Effect(int r)
+        {
+            if (r == 1)
+            {
+                Player.statLife = Math.Max(1, Player.statLife / 4);
+                Player.AddBuff(BuffID.Wrath, 600);
+                Player.AddBuff(BuffID.Rage, 600);
+                Player.AddBuff(BuffID.AmmoBox, 600);
+                Main.NewText("★ 致命暴击·1 - 代价是你自己的血肉，但命运将怒火借给你 10 秒", 255, 50, 50);
+            }
+            else if (r == 20)
+            {
+                foreach (NPC n in Main.ActiveNPCs)
+                {
+                    if (!n.friendly && !n.dontTakeDamage)
+                    {
+                        int dmg = n.boss ? (int)(n.life * 0.50f) : n.life;
+                        n.SimpleStrikeNPC(dmg, 0, false, 0, DamageClass.Default, true);
+                        n.netUpdate = true;
+                        CombatText.NewText(n.getRect(), Color.Red, n.boss ? "命运一击!" : "终焉", true);
+                    }
+                }
+                foreach (Player p in Main.player)
+                {
+                    if (p.active && !p.dead && p.Distance(Player.Center) < 6000f)
+                    {
+                        p.statLife = p.statLifeMax2;
+                        p.HealEffect(p.statLifeMax2, true);
+                        var pmp = p.GetModPlayer<LotMPlayer>();
+                        pmp.spiritualityCurrent = pmp.spiritualityMax;
+                    }
+                }
+                Main.NewText("★★★ 完美二十·20 - 命运裁决:全场敌人受最高判决,全队彻底恢复 ★★★", 255, 60, 80);
+            }
+            else if (r <= 5)
+            {
+                Player.statLife = Math.Max(1, Player.statLife - 100);
+                Player.AddBuff(BuffID.Wrath, 5400);
+                Player.AddBuff(BuffID.Rage, 5400);
+                Player.AddBuff(BuffID.Endurance, 5400);
+                Player.AddBuff(BuffID.Ironskin, 5400);
+                Main.NewText($"★ 二十·{r} - 代价100血,90秒强化", 255, 100, 100);
+            }
+            else if (r <= 15)
+            {
+                foreach (NPC n in Main.ActiveNPCs)
+                {
+                    if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 3000f)
+                    {
+                        int dmg = (int)(n.life * 0.25f);
+                        n.SimpleStrikeNPC(dmg, 0, false, 0, DamageClass.Default, true);
+                        n.netUpdate = true;
+                    }
+                }
+                Main.NewText($"★ 二十·{r} - 全场25%血量重创", 255, 80, 80);
+            }
+            else
+            {
+                foreach (NPC n in Main.ActiveNPCs)
+                {
+                    if (!n.friendly && !n.dontTakeDamage && n.Distance(Player.Center) < 4000f)
+                    {
+                        int dmg = n.boss ? (int)(n.life * 0.30f) : n.life;
+                        n.SimpleStrikeNPC(dmg, 0, false, 0, DamageClass.Default, true);
+                        n.netUpdate = true;
+                    }
+                }
+                Main.NewText($"★ 二十·{r} - Boss削30%, 非Boss湮灭", 255, 60, 60);
+            }
+        }
         public override void ModifyScreenPosition() { if (shakeTime > 0) { Main.screenPosition += Main.rand.NextVector2Circular(shakePower, shakePower); shakeTime--; }
             if (screenShakeMagnitude > 0f)
             {
                 Main.screenPosition += Main.rand.NextVector2Circular(screenShakeMagnitude, screenShakeMagnitude);
                 screenShakeMagnitude *= 0.9f; // 逐渐衰减
                 if (screenShakeMagnitude < 0.1f) screenShakeMagnitude = 0f;
+            }
+            // 命运启示: 屏幕浮动 (命运长河水波感)
+            if (revelationActiveTimer > 0 && Player.whoAmI == Main.myPlayer)
+            {
+                Main.screenPosition.Y += (float)System.Math.Sin(Main.GameUpdateCount / 12f) * 4f;
+                Main.screenPosition.X += (float)System.Math.Cos(Main.GameUpdateCount / 14f) * 3f;
             }
             base.ModifyScreenPosition(); }
         public override bool CanUseItem(Item item) { if (isFireForm || isGuardianStance || isMoonlightized || isBatSwarm) return false; return base.CanUseItem(item); }
@@ -5805,7 +8099,7 @@ namespace zhashi.Content
             if (currentSequence <= 4) max = Math.Max(max, 1200);
             if (currentSequence <= 3) max = Math.Max(max, 3000); 
             if (currentSequence <= 2) max = Math.Max(max, 10000); 
-            if (currentSequence <= 1) max = Math.Max(max, 30000);
+            if (currentSequence <= 1) max = Math.Max(max, 50000);
 
             //5.错误途径
             if (currentMarauderSequence <= 9) max = Math.Max(max, 100);
@@ -5830,8 +8124,8 @@ namespace zhashi.Content
             if (currentSunSequence <= 1) max = Math.Max(max, 60000);
 
             //7.魔女途径
-            if (currentDemonessSequence <= 9) max = Math.Max(max, 120);
-            if (currentDemonessSequence <= 8) max = Math.Max(max, 200);
+            if (currentDemonessSequence <= 9) max = Math.Max(max, 150);
+            if (currentDemonessSequence <= 8) max = Math.Max(max, 250);
             if (currentDemonessSequence <= 7) max = Math.Max(max, 500);
             if (currentDemonessSequence <= 6) max = Math.Max(max, 1000);
             if (currentDemonessSequence <= 5) max = Math.Max(max, 2000);
@@ -5839,6 +8133,19 @@ namespace zhashi.Content
             if (currentDemonessSequence <= 3) max = Math.Max(max, 10000);
             if (currentDemonessSequence <= 2) max = Math.Max(max, 20000);
             if (currentDemonessSequence <= 1) max = Math.Max(max, 60000);
+
+            //8.命运途径
+            if (currentWheelSequence <= 9) max = Math.Max(max, 200);
+            if (currentWheelSequence <= 8) max = Math.Max(max, 400);
+            if (currentWheelSequence <= 7) max = Math.Max(max, 600);
+            if (currentWheelSequence <= 6) max = Math.Max(max, 1000);
+            if (currentWheelSequence <= 5) max = Math.Max(max, 2000);
+            if (currentWheelSequence <= 4) max = Math.Max(max, 5000);
+            if (currentWheelSequence <= 3) max = Math.Max(max, 10000);
+            if (currentWheelSequence <= 2) max = Math.Max(max, 20000);
+            if (currentWheelSequence <= 1) max = Math.Max(max, 60000);
+
+
 
             spiritualityMax = max;
         }
@@ -5874,7 +8181,6 @@ namespace zhashi.Content
 
         public override void PostUpdate()
         {
-            // 1. 调用寄生逻辑修复 (防脱战/防卡死)
             UpdateParasiteLogic();
 
             // ----------------------------------------------------
@@ -5882,9 +8188,7 @@ namespace zhashi.Content
             // ----------------------------------------------------
             if (PetrificationGazeTimer > 0)
             {
-                PetrificationGazeTimer--; // 倒计时
-
-                // 如果倒计时结束，或者玩家死亡，强制关闭特效
+                PetrificationGazeTimer--; 
                 if (PetrificationGazeTimer <= 0 || Player.dead || !Player.active)
                 {
                     PetrificationGazeTimer = 0;
@@ -5905,16 +8209,13 @@ namespace zhashi.Content
 
         private void UpdateParasiteLogic()
         {
-            // 如果没有处于寄生状态，直接返回
             if (!isParasitizing || parasiteTargetIndex == -1)
                 return;
             if (parasiteIsPlayer)
             {
-                // 获取目标玩家
                 if (parasiteTargetIndex >= Main.maxPlayers) return; // 防止索引越界
                 Player targetPlayer = Main.player[parasiteTargetIndex];
 
-                // 1. 安全检查：队友下线或死亡
                 if (!targetPlayer.active || targetPlayer.dead)
                 {
                     EndParasiteState();
@@ -6199,7 +8500,6 @@ namespace zhashi.Content
                 holyOathCooldown = 1800; // 30秒冷却
                 SoundEngine.PlaySound(SoundID.Item29, Player.position);
 
-                // 随机念诵誓约
                 int type = Main.rand.Next(3);
                 string text = "";
 
@@ -6235,7 +8535,6 @@ namespace zhashi.Content
         {
             if (currentSunSequence <= 4)
             {
-                // 消耗 500 灵性
                 if (fireOceanCooldown <= 0 && TryConsumeSpirituality(500))
                 {
                     fireOceanCooldown = 3600; // 60秒冷却 (超级大招)
@@ -6331,27 +8630,25 @@ namespace zhashi.Content
 
                         // 计算目标的最高序列 (取最小值)
                         int targetBest = 10;
-                        targetBest = Math.Min(targetBest, targetLotM.currentSequence); // 这里读 current 没问题，因为ResetEffects保证了它是准的
+                        targetBest = Math.Min(targetBest, targetLotM.currentSequence);
                         targetBest = Math.Min(targetBest, targetLotM.currentHunterSequence);
                         targetBest = Math.Min(targetBest, targetLotM.currentMoonSequence);
                         targetBest = Math.Min(targetBest, targetLotM.currentFoolSequence);
                         targetBest = Math.Min(targetBest, targetLotM.currentMarauderSequence);
                         targetBest = Math.Min(targetBest, targetLotM.currentSunSequence);
+                        targetBest = Math.Min(targetBest, targetLotM.currentDemonessSequence);
 
                         // 只有对方位格不高于自己时才生效
                         if (targetBest >= currentSunSequence)
                         {
-                            // === 核心修改：联机发包 ===
                             int buffType = ModContent.BuffType<Buffs.SunSuppressionDebuff>();
 
                             if (Main.netMode == NetmodeID.SinglePlayer)
                             {
-                                // 单人模式直接加
                                 target.AddBuff(buffType, debuffDuration);
                             }
                             else
                             {
-                                // 联机模式：告诉服务器“给这家伙加Buff”
                                 ModPacket packet = Mod.GetPacket();
                                 packet.Write((byte)LotMNetMsg.ApplySunSuppression);
                                 packet.Write((byte)target.whoAmI);
@@ -6359,7 +8656,6 @@ namespace zhashi.Content
                                 packet.Send();
                             }
 
-                            // 视觉特效 (本地播放即可)
                             CombatText.NewText(target.getRect(), Color.Gold, "无暗序列压制!", true);
                             for (int k = 0; k < 30; k++)
                                 Dust.NewDust(target.position, target.width, target.height, DustID.GoldFlame, 0, 0, 0, default, 2f);
@@ -6556,7 +8852,162 @@ namespace zhashi.Content
 
             Player.SetImmuneTimeForAllTypes(600);
         }
+        private void SpawnCalamity()
+        {
+            if (Main.myPlayer != Player.whoAmI) return; // 仅本地执行
 
+            NPC target = null;
+            float maxDist = 800f;
+            foreach (NPC npc in Main.npc)
+            {
+                if (npc.active && !npc.friendly && !npc.dontTakeDamage && npc.Distance(Player.Center) < maxDist)
+                {
+                    target = npc;
+                    maxDist = npc.Distance(Player.Center);
+                }
+            }
+
+            if (target != null)
+            {
+                int choice = Main.rand.Next(3);
+                Vector2 spawnPos = target.Center + new Vector2(Main.rand.Next(-100, 100), -400);
+                Vector2 velocity = Vector2.Normalize(target.Center - spawnPos) * 15f;
+
+                // 【修复处】统一计算 damage，移除了重复声明
+                int damage = (int)(50 * Systems.BalanceSystem.GetWorldTierMultiplier());
+                if (Player.luck > 0)
+                {
+                    damage = (int)(damage * (1f + Player.luck * 0.5f));
+                }
+
+                int projType = ProjectileID.Meteor1;
+
+                switch (choice)
+                {
+                    case 0: projType = ProjectileID.Meteor1; break;
+                    case 1: projType = ProjectileID.BallofFire; break;
+                    case 2:
+                        spawnPos = target.Center;
+                        velocity = Vector2.Zero;
+                        projType = ProjectileID.Grenade;
+                        break;
+                }
+
+                Projectile.NewProjectile(Player.GetSource_FromThis(), spawnPos, velocity, projType, damage, 2f, Main.myPlayer);
+                CombatText.NewText(target.getRect(), Color.OrangeRed, "灾祸!", true);
+            }
+        }
+        public override bool CanConsumeAmmo(Item weapon, Item ammo)
+        {
+            // ---------------------------------------------------------
+            // A. 厄运判定：如果你正处于“倒霉”状态 (仪式中或喝了假酒)
+            // ---------------------------------------------------------
+            if (Player.HasBuff(ModContent.BuffType<ExtremeBadLuckBuff>()))
+            {
+                if (Main.rand.NextFloat() < 0.3f)
+                {
+                    Player.ConsumeItem(ammo.type); // 手动扣除额外一发
+                }
+
+                return true; 
+            }
+
+            // ---------------------------------------------------------
+            // B. 赢家判定：序列5 动态省弹药逻辑
+            // ---------------------------------------------------------
+            if (currentWheelSequence <= 5)
+            {
+                if (Player.luck <= 0)
+                {
+                    return true; // 必须消耗，无特殊效果
+                }
+                float saveChance = 0.20f + (Player.luck * 0.1f);
+
+                if (saveChance > 0.6f) saveChance = 0.6f;
+
+                if (Main.rand.NextFloat() < saveChance)
+                {
+                    if (Main.rand.NextBool(10))
+                    {
+                        Dust.NewDust(Player.Center, 5, 5, DustID.GoldCoin, 0, -1, 0, default, 0.5f);
+                    }
+                    return false; // 返回 false = 不消耗弹药
+                }
+            }
+            return base.CanConsumeAmmo(weapon, ammo);
+        }
+        private void CastPsychicStorm()
+        {
+            if (spiritualityCurrent < 50)
+            {
+                CombatText.NewText(Player.getRect(), Color.Red, "灵性不足!", true);
+                return;
+            }
+            spiritualityCurrent -= 50;
+            psychicStormCooldown = 300;
+            Terraria.Audio.SoundEngine.PlaySound(SoundID.Item15, Player.position);
+
+            for (int i = 0; i < 40; i++)
+            {
+                Vector2 speed = Main.rand.NextVector2Circular(12, 12);
+                Dust d = Dust.NewDustPerfect(Player.Center, DustID.PurpleCrystalShard, speed, 150, default, 2f);
+                d.noGravity = true;
+            }
+
+            // 【修复处】使用 stormRadius 替代容易冲突的 radius，统一定义 damage
+            bool isDemigod = currentWheelSequence <= 4;
+            float stormRadius = isDemigod ? 800f : 450f;
+            int stormDamage = (int)((isDemigod ? 200 : 80) * Systems.BalanceSystem.GetWorldTierMultiplier());
+
+            bool hitAny = false;
+
+            foreach (NPC npc in Main.npc)
+            {
+                if (npc.active && !npc.friendly && npc.Distance(Player.Center) < stormRadius)
+                {
+                    hitAny = true;
+                    Player.ApplyDamageToNPC(npc, stormDamage, 0f, 0, crit: Main.rand.Next(100) < Player.GetCritChance(DamageClass.Generic));
+
+                    npc.AddBuff(BuffID.Confused, 240);
+
+                    if (isDemigod)
+                    {
+                        npc.AddBuff(BuffID.Venom, 600);
+                        npc.AddBuff(BuffID.CursedInferno, 600);
+                        CombatText.NewText(npc.getRect(), Color.Purple, "疯狂迷失!", true);
+                    }
+                    else
+                    {
+                        npc.AddBuff(BuffID.ShadowFlame, 300);
+                        CombatText.NewText(npc.getRect(), new Color(147, 112, 219), "混乱!", true);
+                    }
+                }
+            }
+
+            if (hitAny)
+            {
+                Main.NewText("你引爆了灵性，制造了一场精神风暴！", 180, 100, 255);
+            }
+            else
+            {
+                CombatText.NewText(Player.getRect(), Color.Gray, "周围没有目标", true);
+            }
+        }
+
+        public override void OnRespawn()
+        {
+            // 复活时将灵性回满，防止刚复活就因为灵性为0而再次暴毙
+            spiritualityCurrent = spiritualityMax;
+
+            // 顺便重置所有可能导致扣蓝的状态
+            isFireForm = false;
+            isMercuryForm = false;
+            isCalamityGiant = false;
+            isSunMessenger = false;
+            isSpiritForm = false;
+            isVampireWings = false;
+            // ... 其他你需要关闭的状态
+        }
         // 判断是否为不死/邪恶/克制生物的通用方法
         public bool IsUndeadCreature(NPC npc)
         {
